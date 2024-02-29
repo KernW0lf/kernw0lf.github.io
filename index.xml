@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>kernw0lf blog</title>
+    <link>http://kernw0lf.github.io/</link>
+    <description>Recent content on kernw0lf blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
+    <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
+    <lastBuildDate>Thu, 29 Feb 2024 03:51:35 -0500</lastBuildDate>
+    <atom:link href="http://kernw0lf.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>06</title>
+      <link>http://kernw0lf.github.io/posts/windows_exp_dev/06/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:35 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/06/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>05</title>
+      <link>http://kernw0lf.github.io/posts/windows_exp_dev/05/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:32 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/05/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>04</title>
+      <link>http://kernw0lf.github.io/posts/windows_exp_dev/04/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:29 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/04/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>03</title>
+      <link>http://kernw0lf.github.io/posts/windows_exp_dev/03/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:27 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/03/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>02</title>
+      <link>http://kernw0lf.github.io/posts/windows_exp_dev/02/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:26 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/02/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>01</title>
+      <link>http://kernw0lf.github.io/posts/windows_exp_dev/01/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/01/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>00</title>
+      <link>http://kernw0lf.github.io/posts/windows_exp_dev/00/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:22 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/00/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Module 5: Linux Advanced Exploitation</title>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/05/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:07 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/05/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Module 4: Linux Shellcoding</title>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/04/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:05 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/04/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Module 3: Linux Return Oriented Programming</title>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/03/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:04 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/03/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Module 2: Linux Exploit Countermeasures &amp; Bypasses</title>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/02/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:03 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/02/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Module 1: Linux Stack Smashing</title>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/01/</link>
+      <pubDate>Thu, 29 Feb 2024 03:51:01 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/01/</guid>
+      <description>Decoding the Binary: A Prelude to Linux Stack Smashing and Exploit Development Before diving into the world of Linux stack smashing, it&amp;rsquo;s crucial to begin with binary analysis. Analyzing the binary executable provides us with valuable insights into its structure, functions, and potential vulnerabilities. Through binary analysis, we can identify the layout of the stack, the presence of buffer overflows, and other crucial details that will aid us in crafting our exploit.</description>
+    </item>
+    <item>
+      <title>BinAnalyze</title>
+      <link>http://kernw0lf.github.io/projects/01/</link>
+      <pubDate>Thu, 29 Feb 2024 03:48:50 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/projects/01/</guid>
+      <description>BinAnalyze BinAnalyze is a PyQt5-based application for analyzing binary files using various tools like readelf and hexdump. This application provides a graphical interface to examine the structure and content of binary files, displaying information such as headers, program headers, section headers, symbol tables, and hexdumps.&#xA;Download</description>
+    </item>
+    <item>
+      <title>About</title>
+      <link>http://kernw0lf.github.io/about/about/</link>
+      <pubDate>Thu, 29 Feb 2024 03:43:01 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/about/about/</guid>
+      <description>🔒🌐 Cybersecurity Enthusiast | 💻 Mobile App Developer | 🚀 Tech Explorer&#xA;Dedicated and versatile software engineer with a passion for cybersecurity and mobile application development. Proficient in fuzzing vulnerability research, with hands-on experience uncovering and mitigating security vulnerabilities across various platforms. Skilled in Android app development, from concept to deployment, with a focus on creating secure and user-friendly applications. Possessing a strong foundation in software engineering principles, including debugging, testing, and code optimization.</description>
+    </item>
+    <item>
+      <title>JNI Unleashed: Integrating Native Code on Android (NDK) and Linux Enviornments</title>
+      <link>http://kernw0lf.github.io/posts/jni/</link>
+      <pubDate>Thu, 29 Feb 2024 03:42:55 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/jni/</guid>
+      <description>Building JNI from NDK for Android JNI allows Java Code running in a Java Virtual Machine (JVM) to call and be called by native applications and libraries written in other languages, such as C and C++. Here&amp;rsquo;s a simple example using Android Studio.&#xA;Step 1: Set up your Android Studio Open Android Studio and create a new Android Project In your project, create a new directory called jni at the same level as your src and res directories Step 2: Write a native method in Java Create a new Java Class with a native method.</description>
+    </item>
+    <item>
+      <title>GDB: Zero to Hero</title>
+      <link>http://kernw0lf.github.io/posts/gdb/</link>
+      <pubDate>Thu, 29 Feb 2024 03:42:52 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/gdb/</guid>
+      <description>After analyzing the binaries using tools like objdump, strace, and nm as explored in our Linux Binary Analysis series, it&amp;rsquo;s time to delve into debugging with GDB.&#xA;What is GDB? GDB is a command-line debugger that allows developers to inspect and manipulate the execution of programs. It provides a range of features for analyzing the state of a program, examining variables, setting breakpoints, and stepping through code. GDB, short for the GNU Debugger, is a versatile and portable debugging tool designed to run on a wide range of Unix-like systems.</description>
+    </item>
+  </channel>
+</rss>

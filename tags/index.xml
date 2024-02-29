@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on kernw0lf blog</title>
+    <link>http://kernw0lf.github.io/tags/</link>
+    <description>Recent content in Tags on kernw0lf blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
+    <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
+    <lastBuildDate>Thu, 29 Feb 2024 03:42:52 -0500</lastBuildDate>
+    <atom:link href="http://kernw0lf.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>debug</title>
+      <link>http://kernw0lf.github.io/tags/debug/</link>
+      <pubDate>Thu, 29 Feb 2024 03:42:52 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/debug/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>gdb</title>
+      <link>http://kernw0lf.github.io/tags/gdb/</link>
+      <pubDate>Thu, 29 Feb 2024 03:42:52 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/gdb/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

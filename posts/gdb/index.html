@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <title>
+GDB: Zero to Hero | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.121.2">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/gdb/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+
+
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>GDB: Zero to Hero</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+                
+<dt>tags</dt>
+<dd><span></span>
+    <a href="/tags/gdb/">#gdb</a><span></span>
+    <a href="/tags/debug/">#debug</a></dd>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-02-29">February 29, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>24 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <p>After analyzing the binaries using tools like objdump, strace, and nm as explored in our Linux Binary Analysis series, it&rsquo;s time to delve into debugging with GDB.</p>
+<h2 id="what-is-gdb">What is GDB?</h2>
+<p>GDB is a command-line debugger that allows developers to inspect and manipulate the execution of programs. It provides a range of features for analyzing the state of a program, examining variables, setting breakpoints, and stepping through code.
+GDB, short for the GNU Debugger, is a versatile and portable debugging tool designed to run on a wide range of Unix-like systems. It offers support for various programming languages, including Ada, Assembly, C, C++, D, Fortran, Haskell, Go, Objective-C, OpenCL C, Modula-2, Pascal, Rust, and more. This broad language support makes GDB an indispensable companion for developers working across diverse software projects and languages.
+GDB was first written by Richard Stallman in 1986 as part of his GNU system, after his GNU Emacs was &ldquo;reasonably stable&rdquo;.</p>
+<p>For quick reference, you can download our <a href="https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf">GDB Cheat Sheet</a> to have key GDB commands and shortcuts at your fingertips.</p>
+<p>Let&rsquo;s explore GDB in a step-by-step fashion, covering essential tasks from running your program to examining variables and memory. These steps will give you a solid foundation for debugging with GDB.</p>
+<p>For basic debugging with GDB demonstration, I&rsquo;ve used simple debugMe binary here:</p>
+<h2 id="source-code">Source Code:</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#75715e">// debugMe.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> a<span style="color:#f92672">=</span><span style="color:#ae81ff">1337</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,a);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">20</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc -m32 -g debugMe.c -o debugMe
+</span></span></code></pre></div><p>Now we will compile the above source code. -m32 specifies that the target architecture for the compilation should be 32-bit. -g is used to enable debugging symbols while debugging.</p>
+<p>Let&rsquo;s keep this handy:</p>
+<p><strong>Basic Commands</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>- run: Start the program from the beginning.
+</span></span><span style="display:flex;"><span>- break: Set a breakpoint at a specific line of code or function.
+</span></span><span style="display:flex;"><span>      Example: break main or break filename.c:line_number
+</span></span><span style="display:flex;"><span>- continue: Continue execution after hitting a breakpoint.
+</span></span><span style="display:flex;"><span>- next: Execute the next line of code (step over function calls).
+</span></span><span style="display:flex;"><span>- step: Execute the next line of code (step into function calls).
+</span></span><span style="display:flex;"><span>- print: Print the value of a variable.
+</span></span><span style="display:flex;"><span>      Example: print my_variable
+</span></span><span style="display:flex;"><span>- quit: Exit GDB.
+</span></span></code></pre></div><h2 id="1-running-your-program">1. Running Your Program</h2>
+<p>To start debugging with GDB, run your program with the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gdb ./debugMe
+</span></span><span style="display:flex;"><span>Reading symbols from ./debugMe...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>No debugging symbols found in ./debugMe<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>If you didn’t specify a program to debug, you’ll have to load it in now:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gdb
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> file debugMe
+</span></span></code></pre></div><p>To facilitate the debugging of a running process with a known Process ID (PID), developers can utilize the -p or --pid options with GDB (GNU Debugger).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gdb --pid PID
+</span></span></code></pre></div><p><em>If you’re ever confused about a command or just want more information, use the “help” command, with or without an argument:</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> help <span style="color:#f92672">[</span>command<span style="color:#f92672">]</span>
+</span></span></code></pre></div><h2 id="2-setting-breakpoints">2. Setting Breakpoints</h2>
+<p>Breakpoints are markers that tell GDB to pause the program&rsquo;s execution at a specific point. We can set breakpoints at functions or specific lines of code.</p>
+<p>Often, we want to start debugging from the main function. We can set a breakpoint at main using:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break main
+</span></span></code></pre></div><p>When debugging symbols are enabled during compilation, we can set breakpoints using specific lines of code from the source file. To enable symbols during compilation use -g flag with gcc.</p>
+<p>The list command in GDB is used to display the source code around the current point of execution. This is helpful for seeing the context of the code where the program is currently paused. list command also provides the flexibility to specify a range of lines for a more focused inspection. We can set how many lines to show in <code>list</code> by using <code>set listsize &lt;count&gt;</code> command.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> list
+</span></span><span style="display:flex;"><span>1	// debugMe.c
+</span></span><span style="display:flex;"><span>2	
+</span></span><span style="display:flex;"><span>3	<span style="color:#75715e">#include &lt;stdio.h&gt;</span>
+</span></span><span style="display:flex;"><span>4	
+</span></span><span style="display:flex;"><span>5	int main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>6	    int a<span style="color:#f92672">=</span>1337;
+</span></span><span style="display:flex;"><span>7	    printf<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;%d\n&#34;</span>,a<span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>8	    <span style="color:#66d9ef">return</span> 20;
+</span></span><span style="display:flex;"><span>9	<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break debugMe.c:5
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x11a9: file debugMe.c, line 6.
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> list 1,3
+</span></span><span style="display:flex;"><span>1	// debugMe.c
+</span></span><span style="display:flex;"><span>2	
+</span></span><span style="display:flex;"><span>3	<span style="color:#75715e">#include &lt;stdio.h&gt;</span>
+</span></span></code></pre></div><p>By setting a breakpoint at line 6 of debugMe.c, we establish a designated pause point within our program. If the program execution reaches this line during runtime, it will halt, providing an opportunity to inspect variables, analyze the program&rsquo;s state, and issue further commands within the debugging session. This strategic breakpoint empowers us to precisely control the flow of execution and gain deeper insights into our code&rsquo;s behavior.</p>
+<h2 id="3-listing-breakpoints">3. Listing Breakpoints</h2>
+<p>To list all active breakpoints, we can use the <code>info breakpoints</code> command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> info breakpoints
+</span></span><span style="display:flex;"><span>Num     Type           Disp Enb Address    What
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span>       breakpoint     keep y   0x000011a9 in main at debugMe.c:6
+</span></span></code></pre></div><p><strong>Disabling, Enabling, Deleting and Clearing Breakpoints</strong></p>
+<p>We can disable or enable breakpoints without removing them.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> enable <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> disable <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> delete <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> clear <span style="color:#75715e"># This will remove all breakpoints</span>
+</span></span></code></pre></div><h2 id="4-running-the-program">4. Running the Program</h2>
+<p>Once a breakpoint is set, you can use the <code>run</code> command to start the program. Upon reaching the breakpoint, the program will pause, allowing you to inspect variables and analyze the program&rsquo;s state. You can then proceed to the next breakpoint by entering the <code>continue</code> command. It&rsquo;s important to note that re-entering <code>run</code> would restart the program from the beginning, which is typically not desired during a debugging session.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
+</span></span><span style="display:flex;"><span>Starting program: /home/kali/Desktop/Bl0gs/Resources/gdb/debugMe 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Thread debugging using libthread_db enabled<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Using host libthread_db library <span style="color:#e6db74">&#34;/lib/x86_64-linux-gnu/libthread_db.so.1&#34;</span>.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Breakpoint 1, main <span style="color:#f92672">()</span> at debugMe.c:6
+</span></span><span style="display:flex;"><span>6	    int a<span style="color:#f92672">=</span>1337;
+</span></span></code></pre></div><p>The program execution has paused at the main() function.
+Now, we can single-step through the program by typing <code>next</code>.
+The <code>next</code> command is used to execute the next line of code in the program, without stepping into any function calls. This means that if the current line of code contains a function call, the <code>next</code> command will execute that entire function and pause at the line immediately following the function call.
+This grants precise control over the program&rsquo;s execution, allowing us to proceed one line of code at a time.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> next
+</span></span><span style="display:flex;"><span>7	    printf<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;%d\n&#34;</span>,a<span style="color:#f92672">)</span>;
+</span></span></code></pre></div><p>We have now paused at line no. 8.</p>
+<p>We can proceed onto the next breakpoint by typing <code>continue</code> (Typing <code>run</code> again would restart the program from the beginning, which isn’t very useful.) If no further breakpoints are encountered, the program will continue its execution until it exits.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1337</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Inferior <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>process 45522<span style="color:#f92672">)</span> exited with code 024<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>The final line, &ldquo;[Inferior 1 (process 45522) exited with code 024],&rdquo; informs us that the program has exited with an exit code of 024. Now refer the <a href="#source-code">source code</a>, you can see the return status code for incorrect input which is 1.</p>
+<p>If you just press ENTER, gdb will repeat the same command you just gave it. You can do this a bunch of times.</p>
+<p>Up to this point, you&rsquo;ve mastered the art of interrupting program flow at specific breakpoints and navigating line-by-line. However, as your debugging journey progresses, you&rsquo;ll inevitably want to inspect variables, view memory contents, and delve deeper into the program&rsquo;s state.</p>
+<h2 id="5-inspecting-variables">5. Inspecting Variables</h2>
+<p>In the debugging realm, gaining insights into variable values is crucial for understanding program behavior. GDB provides the print command, allowing developers to examine variable values during a debugging session. Additionally, the print/x command is handy for displaying values in hexadecimal format.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break main
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
+</span></span><span style="display:flex;"><span>Breakpoint 1, main <span style="color:#f92672">()</span> at debugMe.c:6
+</span></span><span style="display:flex;"><span>6	    int a<span style="color:#f92672">=</span>1337;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> next
+</span></span><span style="display:flex;"><span>7	    printf<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;%d\n&#34;</span>,a<span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print a
+</span></span><span style="display:flex;"><span>$1 <span style="color:#f92672">=</span> <span style="color:#ae81ff">1337</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print/x a
+</span></span><span style="display:flex;"><span>$2 <span style="color:#f92672">=</span> 0x539
+</span></span></code></pre></div><p>The hexadecimal value 0x539 corresponds to the decimal value 1337.</p>
+<h2 id="6-setting-watchpoints">6. Setting Watchpoints</h2>
+<p>While breakpoints allow us to interrupt the program flow at specific lines or functions, watchpoints provide a targeted approach by focusing on variables. These powerful tools pause the program whenever a watched variable&rsquo;s value is modified.</p>
+<p>Let&rsquo;s examine the command using the same binary named &lsquo;debugMe&rsquo;:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break main
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> watch a <span style="color:#75715e"># Setting a watchpoint on variable &#39;a&#39;</span>
+</span></span><span style="display:flex;"><span>Watchpoint 2: a
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Watchpoint 2: a
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Old value <span style="color:#f92672">=</span> -134470656
+</span></span><span style="display:flex;"><span>New value <span style="color:#f92672">=</span> <span style="color:#ae81ff">1337</span>
+</span></span><span style="display:flex;"><span>main <span style="color:#f92672">()</span> at debugMe.c:7
+</span></span><span style="display:flex;"><span>7	    printf<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;%d\n&#34;</span>,a<span style="color:#f92672">)</span>;
+</span></span></code></pre></div><p>In the given C program, an integer variable a is initialized with the value 1337 in the main function. However, upon debugging with GDB, setting a watchpoint on a revealed an initial value of -134470656, indicating uninitialized memory. As the program executed and a was assigned the value 1337, the watchpoint triggered, displaying the transition from the old value to the new value. This showcases how watchpoints in GDB can be invaluable for tracking variable modifications, particularly in cases where variables are initialized or modified unexpectedly during program execution.</p>
+<h2 id="7-kill">7. Kill</h2>
+<p>The kill command in GDB is used to terminate the current debugging session. This can be useful when you no longer need to continue debugging or if you want to exit GDB entirely.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> kill
+</span></span><span style="display:flex;"><span>Kill the program being debugged? <span style="color:#f92672">(</span>y or n<span style="color:#f92672">)</span> y
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Inferior <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>process 46063<span style="color:#f92672">)</span> killed<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>After entering kill, GDB confirms if you want to terminate the program being debugged. Entering &lsquo;y&rsquo; and pressing Enter will exit the program and return you to the GDB prompt.</p>
+<h2 id="8-examining-memory">8. Examining Memory</h2>
+<p>In the world of debugging, gaining insight into memory contents can be invaluable for understanding program behavior and diagnosing issues. GDB offers several commands to examine memory locations and data structures.</p>
+<p><code>x/nfu &lt;address&gt;</code>
+The x command allows you to examine memory at a given address.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>x - Command for examining memory.
+</span></span><span style="display:flex;"><span>/n - Specifies how many units to print (default is 1).
+</span></span><span style="display:flex;"><span>f - Format character, similar to the print command&#39;s format specifiers.
+</span></span><span style="display:flex;"><span>u - Unit size:
+</span></span><span style="display:flex;"><span>    b: Byte
+</span></span><span style="display:flex;"><span>    h: Half-word (two bytes)
+</span></span><span style="display:flex;"><span>    w: Word (four bytes)
+</span></span><span style="display:flex;"><span>    g: Giant word (eight bytes)
+</span></span></code></pre></div><p>Let&rsquo;s consider a scenario where we have an array of integers:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// array.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> array[] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">20</span>, <span style="color:#ae81ff">30</span>, <span style="color:#ae81ff">40</span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>To load GDB silently, use the -q option. This option suppresses unnecessary messages and prompts, allowing for a more streamlined and efficient debugging experience.
+We can examine the memory location of the array variable using the x command in GDB:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gdb -q ./array
+</span></span><span style="display:flex;"><span>Reading symbols from ./array...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> list
+</span></span><span style="display:flex;"><span>1	// array.c
+</span></span><span style="display:flex;"><span>2	
+</span></span><span style="display:flex;"><span>3	<span style="color:#75715e">#include &lt;stdio.h&gt;</span>
+</span></span><span style="display:flex;"><span>4	
+</span></span><span style="display:flex;"><span>5	int main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>6	    int array<span style="color:#f92672">[]</span> <span style="color:#f92672">=</span> <span style="color:#f92672">{</span>10, 20, 30, 40<span style="color:#f92672">}</span>;
+</span></span><span style="display:flex;"><span>7	
+</span></span><span style="display:flex;"><span>8	    <span style="color:#66d9ef">return</span> 0;
+</span></span><span style="display:flex;"><span>9	<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break array.c:7
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print array
+</span></span><span style="display:flex;"><span>$1 <span style="color:#f92672">=</span> <span style="color:#f92672">{</span>10, 20, 30, 40<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/4xb array
+</span></span><span style="display:flex;"><span>0xffffd5f8:	0x0a	0x00	0x00	0x00
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/4*4xb array
+</span></span><span style="display:flex;"><span>0xffffd5f8:	0x0a	0x00	0x00	0x00
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/16xb array
+</span></span><span style="display:flex;"><span>0xffffd5f8:	0x0a	0x00	0x00	0x00	0x14	0x00	0x00	0x00
+</span></span><span style="display:flex;"><span>0xffffd600:	0x1e	0x00	0x00	0x00	0x28	0x00	0x00	0x00
+</span></span></code></pre></div><p>The output will display the memory contents of the array variable in hexadecimal format. Since the size of an int is typically 4 bytes, when examining memory with the x command, we can see the contents of array[1] represented by 4 bytes.
+We use array in place of &amp;array,  it is because the array name decomposes to a pointer to the first element.</p>
+<p><strong>Here is a table showing the size of common data types in C for a 64-bit system:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Data Type</th>
+<th>Size (bytes)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>char</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>short</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>int</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>long</code></td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>long long</code></td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>double</code></td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>long double</code></td>
+<td>16</td>
+</tr>
+</tbody>
+</table>
+<p>To calculate the total size of an array in bytes, you multiply the number of elements by the size of each element.
+<code>Total size of array (in bytes) = Number of elements * Size of each element (in bytes)</code></p>
+<p>For example, if we have an array arr with 5 integers (int type, which is 4 bytes on a 64-bit system), the total size would be:
+Total size of arr = 5 * 4 bytes = 20 bytes</p>
+<p>In memory inspection, we can specify unit sizes using the following formats:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>    b: Byte
+</span></span><span style="display:flex;"><span>    h: Half-word (two bytes)
+</span></span><span style="display:flex;"><span>    w: Word (four bytes)
+</span></span><span style="display:flex;"><span>    g: Giant word (eight bytes)&#34;
+</span></span></code></pre></div><p>For instance, in memory inspection, 4 bytes are considered as 1 word.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/4xw array  <span style="color:#75715e"># Hexadecimal Format</span>
+</span></span><span style="display:flex;"><span>0xffffd5f8:	0x0000000a	0x00000014	0x0000001e	0x00000028
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/4dw array  <span style="color:#75715e"># Decimal Format</span>
+</span></span><span style="display:flex;"><span>0xffffd5f8:	10	20	30	<span style="color:#ae81ff">40</span>
+</span></span></code></pre></div><p>Here are the formats for various data types in GDB:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>    a: Pointer.
+</span></span><span style="display:flex;"><span>    c: Read as integer, print as character.
+</span></span><span style="display:flex;"><span>    d: Integer, signed decimal.
+</span></span><span style="display:flex;"><span>    f: Floating point number.
+</span></span><span style="display:flex;"><span>    o: Integer, print as octal.
+</span></span><span style="display:flex;"><span>    s: Try to treat as C string.
+</span></span><span style="display:flex;"><span>    t: Integer, print as binary (t = &#34;two&#34;).
+</span></span><span style="display:flex;"><span>    u: Integer, unsigned decimal.
+</span></span><span style="display:flex;"><span>    x: Integer, print as hexadecimal.
+</span></span></code></pre></div><h2 id="9-manipulating-the-program">9. Manipulating the Program</h2>
+<p>In addition to examining memory and variables, GDB allows for the manipulation of the program&rsquo;s execution.
+The <code>set var</code> command in GDB is used to modify the value of a variable during program execution. This can be incredibly useful for debugging and testing purposes, allowing you to manipulate variables to observe how the program behaves under different conditions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gdb -q ./debugMe
+</span></span><span style="display:flex;"><span>Reading symbols from ./debugMe...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break debugMe.c:7
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x11b0: file debugMe.c, line 7.
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
+</span></span><span style="display:flex;"><span>Breakpoint 1, main <span style="color:#f92672">()</span> at debugMe.c:7
+</span></span><span style="display:flex;"><span>7	    printf<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;%d\n&#34;</span>,a<span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> set var a <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print a <span style="color:#75715e"># Verify</span>
+</span></span><span style="display:flex;"><span>$1 <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Inferior <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>process 47674<span style="color:#f92672">)</span> exited with code 024<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>Now, the value of a has been changed to 10. This can be particularly handy when you want to test how your program behaves with different variable values without having to recompile or modify the source code.</p>
+<p>The <code>set</code> command in GDB allows you to modify memory locations directly. When combined with memory addresses, you can change the value of a variable without needing to refer to its name.
+In GDB, to print the memory address of a variable, you can use the print command followed by the &lsquo;&amp;&rsquo; (address-of) operator and the variable name. This combination allows for the precise display of the memory location of the variable during debugging sessions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
+</span></span><span style="display:flex;"><span>Breakpoint 1, main <span style="color:#f92672">()</span> at debugMe.c:7
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print a
+</span></span><span style="display:flex;"><span>$1 <span style="color:#f92672">=</span> <span style="color:#ae81ff">1337</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print &amp;a
+</span></span><span style="display:flex;"><span>$2 <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>int *<span style="color:#f92672">)</span> 0xffffd5ec
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> set *0xffffd5ec <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Inferior <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>process 47674<span style="color:#f92672">)</span> exited with code 024<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>In GDB, the * symbol is used as a shorthand to indicate that you are working with the value stored at a specific memory address, rather than with the address itself. So, in essence, * in GDB acts as a dereference operator, allowing you to manipulate the value stored at a particular memory location.
+Additionally, in GDB, you have the flexibility to typecast the memory address to a different data type using C-style casting.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
+</span></span><span style="display:flex;"><span>Breakpoint 1, main <span style="color:#f92672">()</span> at debugMe.c:7
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print a
+</span></span><span style="display:flex;"><span>$1 <span style="color:#f92672">=</span> <span style="color:#ae81ff">1337</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> set var a<span style="color:#f92672">=</span>0x41
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print <span style="color:#f92672">(</span>char<span style="color:#f92672">)</span>a
+</span></span><span style="display:flex;"><span>$2 <span style="color:#f92672">=</span> <span style="color:#ae81ff">65</span> <span style="color:#e6db74">&#39;A&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">65</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Inferior <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>process 47940<span style="color:#f92672">)</span> exited with code 024<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>You can also use <code>set {char}0xffffd5ec = 'A'</code>. The {char} specifies that you are working with a character.</p>
+<p><code>print *(char*)0xffffd5ec</code>
+This prints the character value stored at 0xffffd5ec. The (char*) is a typecast indicating that you are treating the memory contents as a character.</p>
+<h2 id="10-gathering-insights">10. Gathering Insights</h2>
+<p>Under this section, we&rsquo;ll explore important GDB commands that provide valuable insights into the program&rsquo;s state and structure during debugging.</p>
+<h3 id="1-disassemble">1. disassemble</h3>
+<p><code>Usage: disassemble or disassemble &lt;where&gt;</code></p>
+<p>Description: Disassembles the current function or a specific location in the program, showing the assembly instructions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gdb -q ./debugMe
+</span></span><span style="display:flex;"><span>Reading symbols from ./debugMe...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break debugMe.c:7
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x11b0: file debugMe.c, line 7.
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> disassemble
+</span></span><span style="display:flex;"><span>Dump of assembler code <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">function</span> main:
+</span></span><span style="display:flex;"><span>   0x5655618d &lt;+0&gt;:	lea    0x4<span style="color:#f92672">(</span>%esp<span style="color:#f92672">)</span>,%ecx
+</span></span><span style="display:flex;"><span>   0x56556191 &lt;+4&gt;:	and    $0xfffffff0,%esp
+</span></span><span style="display:flex;"><span>   0x56556194 &lt;+7&gt;:	push   -0x4<span style="color:#f92672">(</span>%ecx<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>   0x56556197 &lt;+10&gt;:	push   %ebp
+</span></span><span style="display:flex;"><span>   0x56556198 &lt;+11&gt;:	mov    %esp,%ebp
+</span></span><span style="display:flex;"><span>   0x5655619a &lt;+13&gt;:	push   %ebx
+</span></span><span style="display:flex;"><span>   0x5655619b &lt;+14&gt;:	push   %ecx
+</span></span><span style="display:flex;"><span>   0x5655619c &lt;+15&gt;:	sub    $0x10,%esp
+</span></span><span style="display:flex;"><span>   0x5655619f &lt;+18&gt;:	call   0x565561d6 &lt;__x86.get_pc_thunk.ax&gt;
+</span></span><span style="display:flex;"><span>   0x565561a4 &lt;+23&gt;:	add    $0x2e50,%eax
+</span></span><span style="display:flex;"><span>   0x565561a9 &lt;+28&gt;:	movl   $0x539,-0xc<span style="color:#f92672">(</span>%ebp<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">=</span>&gt; 0x565561b0 &lt;+35&gt;:	sub    $0x8,%esp
+</span></span><span style="display:flex;"><span>   0x565561b3 &lt;+38&gt;:	push   -0xc<span style="color:#f92672">(</span>%ebp<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>   0x565561b6 &lt;+41&gt;:	lea    -0x1fec<span style="color:#f92672">(</span>%eax<span style="color:#f92672">)</span>,%edx
+</span></span><span style="display:flex;"><span>   0x565561bc &lt;+47&gt;:	push   %edx
+</span></span><span style="display:flex;"><span>   0x565561bd &lt;+48&gt;:	mov    %eax,%ebx
+</span></span><span style="display:flex;"><span>   0x565561bf &lt;+50&gt;:	call   0x56556040 &lt;printf@plt&gt;
+</span></span><span style="display:flex;"><span>   0x565561c4 &lt;+55&gt;:	add    $0x10,%esp
+</span></span><span style="display:flex;"><span>   0x565561c7 &lt;+58&gt;:	mov    $0x14,%eax
+</span></span><span style="display:flex;"><span>   0x565561cc &lt;+63&gt;:	lea    -0x8<span style="color:#f92672">(</span>%ebp<span style="color:#f92672">)</span>,%esp
+</span></span><span style="display:flex;"><span>   0x565561cf &lt;+66&gt;:	pop    %ecx
+</span></span><span style="display:flex;"><span>   0x565561d0 &lt;+67&gt;:	pop    %ebx
+</span></span></code></pre></div><p>By default, disassemble shows the assembly instructions in AT&amp;T syntax style.
+To change the syntax style to Intel, use the command:
+<code>set disassembly-flavor intel</code></p>
+<p>To disassemble <code>main</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> disassemble main
+</span></span></code></pre></div><p><code>info</code> is a very useful command. To get a list of info subcommands, type <code>info</code>.</p>
+<h3 id="2-info-args">2. info args</h3>
+<p><code>Usage: info args</code></p>
+<p>Description: Prints the arguments passed to the function of the current stack frame.</p>
+<h3 id="3-info-breakpoints">3. info breakpoints</h3>
+<p><code>Usage: info breakpoints</code></p>
+<p>Description: Provides information about the set breakpoints and watchpoints in the program.</p>
+<h3 id="5-info-locals">5. info locals</h3>
+<p><code>Usage: info locals</code></p>
+<p>Description: Prints the local variables in the currently selected stack frame.</p>
+<h3 id="6-info-sharedlibrary">6. info sharedlibrary</h3>
+<p><code>Usage: info sharedlibrary</code></p>
+<p>Description: Lists the shared libraries that are loaded into the program.</p>
+<h3 id="7-whatis-variable_name">7. whatis variable_name</h3>
+<p><code>Usage: whatis variable_name</code></p>
+<p>Description: Prints the type of the named variable.</p>
+<h3 id="8-info-registers">8. info registers</h3>
+<p><code>Usage: info registers</code></p>
+<p>Description: Displays the contents of all general-purpose registers and, depending on the CPU architecture, may also include other registers like floating-point or SIMD (Single Instruction, Multiple Data) registers.</p>
+<h3 id="9-info-functions">9. info functions</h3>
+<p><code>Usage: info functions</code></p>
+<p>Description: Displays a list of all functions defined in the program&rsquo;s code.</p>
+<h2 id="11-quit">11. Quit</h2>
+<p>And of course, when you&rsquo;re done with GDB, you&rsquo;ll want to gracefully exit. The quit command does just that:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> quit
+</span></span></code></pre></div><p>In our journey thus far, we&rsquo;ve delved into essential GDB commands that serve as indispensable tools for understanding our code&rsquo;s execution, inspecting memory, setting breakpoints, and analyzing variables. These commands offer invaluable insights into the state and structure of our programs during the intricate process of debugging.</p>
+<p>Now equipped with a solid grasp of these information-gathering tools in GDB, we are poised to venture into the captivating realm of x86 assembly language. Here, we will embark on a comprehensive exploration of fundamental concepts and syntax in assembly programming, where we will craft code that operates at the raw, elemental level of the CPU.
+Before we plunge into the captivating realm of x86 assembly language, let&rsquo;s introduce a powerful tool that eases the debugging process - pwndbg.</p>
+<p>pwndbg is a Python wrapper built around GDB, tailored specifically for exploit development and reverse engineering. It provides a plethora of additional features and enhancements over plain GDB, making the debugging experience more efficient and intuitive.</p>
+<p><strong>Installation</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ git clone https://github.com/pwndbg/pwndbg
+</span></span><span style="display:flex;"><span>$ cd pwndbg
+</span></span><span style="display:flex;"><span>$ ./setup.sh
+</span></span></code></pre></div><p>Type gdb in your terminal to launch GDB. Upon launching GDB with pwndbg installed, you should see a message indicating that pwndbg has been successfully loaded:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gdb
+</span></span><span style="display:flex;"><span>pwndbg: loaded <span style="color:#ae81ff">147</span> pwndbg commands and <span style="color:#ae81ff">48</span> shell commands. Type pwndbg <span style="color:#f92672">[</span>--shell | --all<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>filter<span style="color:#f92672">]</span> <span style="color:#66d9ef">for</span> a list.
+</span></span><span style="display:flex;"><span>pwndbg: created $rebase, $ida GDB functions <span style="color:#f92672">(</span>can be used with print/break<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>------- tip of the day <span style="color:#f92672">(</span>disable with set show-tips off<span style="color:#f92672">)</span> -------
+</span></span><span style="display:flex;"><span>Want to NOP some instructions? Use patch &lt;address&gt; <span style="color:#e6db74">&#39;nop; nop; nop&#39;</span>
+</span></span><span style="display:flex;"><span>pwndbg&gt; 
+</span></span></code></pre></div><p>Now you are equipped with numerous pwndbg commands and features, significantly enhancing your debugging capabilities.</p>
+<h2 id="an-introduction-to-x86-assembly-language">An Introduction to x86 Assembly Language</h2>
+<p>x86 is a family of backward-compatible instruction set architectures originally developed by Intel. It has been the dominant architecture for personal computers since the 1980s and remains widely used today. x86 assembly language is the low-level programming language specific to the x86 family of processors.
+In this guide, we&rsquo;ll explore the basics of x86 assembly language, a widely-used instruction set architecture found in many modern computers.</p>
+<h2 id="basic-concepts">Basic Concepts</h2>
+<h3 id="registers">Registers</h3>
+<p>Registers are small storage locations within the CPU. x86 architecture has several general-purpose registers:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>    eax, ebx, ecx, edx: General-purpose data registers used for arithmetic and data manipulation.
+</span></span><span style="display:flex;"><span>    esi, edi: Index registers often used for pointer arithmetic and accessing arrays.
+</span></span><span style="display:flex;"><span>    esp: Stack pointer, points to the top of the stack.
+</span></span><span style="display:flex;"><span>    ebp: Base pointer, used as a reference point for accessing function arguments and local variables.
+</span></span><span style="display:flex;"><span>    eip: Instruction pointer, points to the next instruction to be executed.
+</span></span></code></pre></div><h3 id="instructions">Instructions</h3>
+<p>x86 assembly instructions are low-level commands that perform operations like arithmetic, logic, or control flow. Some common instructions include:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>    mov: Move data between registers or memory.
+</span></span><span style="display:flex;"><span>    add, sub: Perform addition or subtraction.
+</span></span><span style="display:flex;"><span>    cmp: Compare two values.
+</span></span><span style="display:flex;"><span>    jmp: Unconditional jump to another part of the code.
+</span></span><span style="display:flex;"><span>    je, jne, jl, jg: Conditional jumps based on comparison results.
+</span></span></code></pre></div><h3 id="memory-access">Memory Access</h3>
+<p>Memory can be accessed using the mov instruction.
+Syntax: [address] or [register].</p>
+<h2 id="practical-time">Practical Time</h2>
+<p>Let&rsquo;s put our newfound knowledge to use by demonstrating the debugging process on a simple binary called <a href="https://crackmes.one/crackme/644af68433c5d43938912c6b">My first crackme</a> by <a href="https://crackmes.one/user/ss1ned">ss1ned</a> downloaded from <a href="https://crackmes.one/">crackmes.one</a>. For this example, we&rsquo;ll use a basic crackme binary that prompts the user for a password.</p>
+<p>Let&rsquo;s load the binary crackme into pwndbg and let&rsquo;s display a list of all functions defined in the binary.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gdb ./crackme 
+</span></span><span style="display:flex;"><span>pwndbg&gt; info functions 
+</span></span><span style="display:flex;"><span>All defined functions:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Non-debugging symbols:
+</span></span><span style="display:flex;"><span>0x0000000000001000  _init
+</span></span><span style="display:flex;"><span>0x0000000000001080  __cxa_finalize@plt
+</span></span><span style="display:flex;"><span>0x0000000000001090  strncpy@plt
+</span></span><span style="display:flex;"><span>0x00000000000010a0  puts@plt
+</span></span><span style="display:flex;"><span>0x00000000000010b0  __stack_chk_fail@plt
+</span></span><span style="display:flex;"><span>0x00000000000010c0  fgets@plt
+</span></span><span style="display:flex;"><span>0x00000000000010d0  strcmp@plt
+</span></span><span style="display:flex;"><span>0x00000000000010e0  _start
+</span></span><span style="display:flex;"><span>0x0000000000001110  deregister_tm_clones
+</span></span><span style="display:flex;"><span>0x0000000000001140  register_tm_clones
+</span></span><span style="display:flex;"><span>0x0000000000001180  __do_global_dtors_aux
+</span></span><span style="display:flex;"><span>0x00000000000011c0  frame_dummy
+</span></span><span style="display:flex;"><span>0x00000000000011c9  main
+</span></span><span style="display:flex;"><span>0x00000000000013f0  __libc_csu_init
+</span></span><span style="display:flex;"><span>0x0000000000001460  __libc_csu_fini
+</span></span><span style="display:flex;"><span>0x0000000000001468  _fini
+</span></span></code></pre></div><p>Now as we don&rsquo;t see any user defined function, we will set a breakpoint at main function and run the program.</p>
+<p>First, we set a breakpoint at the main function:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; b main
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x11d1
+</span></span></code></pre></div><p>Next, we run the program:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; run
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># As the program executes, pwndbg offers a wealth of information. Don&#39;t feel overwhelmed—I&#39;ll simplify it for you step by step.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 1. You will see the current values of all registers.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. Next, you&#39;ll see the disassembled code at the current instruction pointer (EIP).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3. Then, the stack contents.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 4. Finally, the backtrace showing the call stack.</span>
+</span></span></code></pre></div><p>While cracking binaries, especially where password checks are implemented, one common technique is to inspect string comparison functions such as strcmp(). These functions are pivotal as they are often used to check if a provided password matches the expected one within the program.</p>
+<p>Let&rsquo;s examine the disassembly of the main function.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; disassemble <span style="color:#75715e"># As we are already in main, disassemble will be same as disassemble main</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>   0x0000555555555368 &lt;+415&gt;:	call   0x5555555550a0 &lt;puts@plt&gt;
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>   0x0000555555555380 &lt;+439&gt;:	call   0x5555555550c0 &lt;fgets@plt&gt;
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>   0x0000555555555393 &lt;+458&gt;:	call   0x5555555550d0 &lt;strcmp@plt&gt;
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>   0x00005555555553a8 &lt;+479&gt;:	call   0x5555555550a0 &lt;puts@plt&gt;
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>   0x00005555555553b6 &lt;+493&gt;:	call   0x5555555550a0 &lt;puts@plt&gt;
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>   0x00005555555553e1 &lt;+536&gt;:	ret
+</span></span><span style="display:flex;"><span>End of assembler dump.
+</span></span></code></pre></div><p><strong>From this disassembly, we can infer the program flow:</strong></p>
+<ul>
+<li>It starts by displaying a message using <code>puts</code>.</li>
+<li>Then it reads user input using <code>fgets</code>.</li>
+<li>Next, it likely compares the user input with a predefined value using <code>strcmp</code>.</li>
+<li>Based on the result of the comparison, it displays different messages using <code>puts</code>.</li>
+<li>Finally, it reaches the end of the main function and returns.</li>
+</ul>
+<p>So we will set a breakpoint at <code>puts@plt</code> and <code>strcmp@plt</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; break *main+415 <span style="color:#75715e"># break *0x5555555550a0 should also work</span>
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">2</span> at 0x555555555368
+</span></span><span style="display:flex;"><span>pwndbg&gt; break *main+458 <span style="color:#75715e"># break *0x5555555550d0 should also work</span>
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">3</span> at 0x555555555393
+</span></span></code></pre></div><p>Now, we will continue the execution.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>──────────────────────<span style="color:#f92672">[</span> DISASM / x86-64 / set emulate on <span style="color:#f92672">]</span>──────────────────────
+</span></span><span style="display:flex;"><span> ► 0x555555555368 &lt;main+415&gt;    call   puts@plt                &lt;puts@plt&gt;
+</span></span><span style="display:flex;"><span>        s: 0x55555555600d ◂— <span style="color:#e6db74">&#39;Enter password:&#39;</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>As seen in the DISASM section, a call to <code>puts@plt</code> has been made with the argument &lsquo;Enter password:&rsquo;. Let&rsquo;s proceed step by step using the <code>next</code> command.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; next
+</span></span><span style="display:flex;"><span>Enter password:
+</span></span><span style="display:flex;"><span>0x000055555555536d in main <span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Hence, we verified that the argument passed was indeed &lsquo;Enter password:&rsquo;.
+Now, it&rsquo;s time to hit our next breakpoint. Let&rsquo;s proceed!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span>AAAA
+</span></span><span style="display:flex;"><span>Breakpoint 3, 0x0000555555555393 in main <span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>─────────────<span style="color:#f92672">[</span> REGISTERS / show-flags off / show-compact-regs off <span style="color:#f92672">]</span>─────────────
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>*RDX  0x7fffffffe3a0 ◂— <span style="color:#e6db74">&#39;Password&#39;</span>
+</span></span><span style="display:flex;"><span>*RDI  0x7fffffffe3b0 ◂— 0xa41414141 /* <span style="color:#e6db74">&#39;AAAA\n&#39;</span> */
+</span></span><span style="display:flex;"><span>*RSI  0x7fffffffe3a0 ◂— <span style="color:#e6db74">&#39;Password&#39;</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>──────────────────────<span style="color:#f92672">[</span> DISASM / x86-64 / set emulate on <span style="color:#f92672">]</span>──────────────────────
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span> ► 0x555555555393 &lt;main+458&gt;    call   strcmp@plt                &lt;strcmp@plt&gt;
+</span></span><span style="display:flex;"><span>        s1: 0x7fffffffe3b0 ◂— 0xa41414141 /* <span style="color:#e6db74">&#39;AAAA\n&#39;</span> */
+</span></span><span style="display:flex;"><span>        s2: 0x7fffffffe3a0 ◂— <span style="color:#e6db74">&#39;Password&#39;</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>───────────────────────────────────<span style="color:#f92672">[</span> STACK <span style="color:#f92672">]</span>────────────────────────────────────
+</span></span><span style="display:flex;"><span>00:0000│ rdx rsi rsp 0x7fffffffe3a0 ◂— <span style="color:#e6db74">&#39;Password&#39;</span>
+</span></span><span style="display:flex;"><span>01:0008│             0x7fffffffe3a8 ◂— 0x0
+</span></span><span style="display:flex;"><span>02:0010│ rax rdi     0x7fffffffe3b0 ◂— 0xa41414141 /* <span style="color:#e6db74">&#39;AAAA\n&#39;</span> */
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>After entering &lsquo;AAAA&rsquo; as the password, we noticed that it was received as &lsquo;AAAA\n&rsquo;. As we analyzed the disassembled code, we observed that our program indeed reached the <code>strcmp@plt</code> function. pwndbg beautifully displays the arguments passed to the function: s1 was 0xa41414141, which corresponds to the hex value of &lsquo;AAAA\n&rsquo;, and s2 was 0x7fffffffe3a0, a pointer to the buffer containing the string &lsquo;Password&rsquo;.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ echo AAAA | xxd -p  <span style="color:#75715e"># Display output in continuous hex dump style</span>
+</span></span><span style="display:flex;"><span>414141410a
+</span></span></code></pre></div><p>Additionally, in the STACK Frame, you can observe that the first argument is actually the last argument, and the last argument is the first. This is because arguments are pushed from right to left on the stack. Therefore, the first argument will be at the top of the stack, which in this case is &lsquo;Password&rsquo;.
+To display the string at memory location 0x7fffffffe3a0, we can use the <code>x</code> command in pwndbg.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; x/s 0x7fffffffe3a0
+</span></span><span style="display:flex;"><span>0x7fffffffe3a0:	<span style="color:#e6db74">&#34;Password&#34;</span>
+</span></span></code></pre></div><p>Now, let&rsquo;s start the program by using the <code>run</code> or <code>r</code> command. We will keep the breakpoints for verification.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; run
+</span></span><span style="display:flex;"><span>pwndbg&gt; <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span>Enter password:
+</span></span><span style="display:flex;"><span>Password
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>──────────────────────<span style="color:#f92672">[</span> DISASM / x86-64 / set emulate on <span style="color:#f92672">]</span>──────────────────────
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span> ► 0x555555555393 &lt;main+458&gt;    call   strcmp@plt                &lt;strcmp@plt&gt;
+</span></span><span style="display:flex;"><span>        s1: 0x7fffffffe3b0 ◂— <span style="color:#e6db74">&#39;Password&#39;</span>
+</span></span><span style="display:flex;"><span>        s2: 0x7fffffffe3a0 ◂— <span style="color:#e6db74">&#39;Password&#39;</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>pwndbg&gt; <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span>Welcome!
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Inferior <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>process 53980<span style="color:#f92672">)</span> exited normally<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>BINGO!
+We&rsquo;ve cracked it!
+Now, let&rsquo;s explore a sneaky method to crack the above binary by entering the wrong password. I call it &lsquo;WRONG PASS, RIGHT RETURN&rsquo;.
+If you&rsquo;ve noticed the disassembly of the main function, you may have observed some <code>JE</code> and <code>JMP</code> instructions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># main disassembly</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>   0x0000555555555393 &lt;+458&gt;:	call   0x5555555550d0 &lt;strcmp@plt&gt;
+</span></span><span style="display:flex;"><span>   0x0000555555555398 &lt;+463&gt;:	mov    DWORD PTR <span style="color:#f92672">[</span>rbp-0x4c<span style="color:#f92672">]</span>,eax
+</span></span><span style="display:flex;"><span>   0x000055555555539b &lt;+466&gt;:	cmp    DWORD PTR <span style="color:#f92672">[</span>rbp-0x4c<span style="color:#f92672">]</span>,0x0
+</span></span><span style="display:flex;"><span>   0x000055555555539f &lt;+470&gt;:	je     0x5555555553af &lt;main+486&gt;
+</span></span><span style="display:flex;"><span>   0x00005555555553a1 &lt;+472&gt;:	lea    rdi,<span style="color:#f92672">[</span>rip+0xc75<span style="color:#f92672">]</span>        <span style="color:#75715e"># 0x55555555601d</span>
+</span></span><span style="display:flex;"><span>   0x00005555555553a8 &lt;+479&gt;:	call   0x5555555550a0 &lt;puts@plt&gt;
+</span></span><span style="display:flex;"><span>   0x00005555555553ad &lt;+484&gt;:	jmp    0x5555555553bb &lt;main+498&gt;
+</span></span><span style="display:flex;"><span>   0x00005555555553af &lt;+486&gt;:	lea    rdi,<span style="color:#f92672">[</span>rip+0xc70<span style="color:#f92672">]</span>        <span style="color:#75715e"># 0x555555556026</span>
+</span></span><span style="display:flex;"><span>   0x00005555555553b6 &lt;+493&gt;:	call   0x5555555550a0 &lt;puts@plt&gt;
+</span></span><span style="display:flex;"><span>   0x00005555555553bb &lt;+498&gt;:	mov    eax,0x0
+</span></span><span style="display:flex;"><span>   0x00005555555553c0 &lt;+503&gt;:	mov    rsp,rbx
+</span></span><span style="display:flex;"><span>   0x00005555555553c3 &lt;+506&gt;:	mov    rbx,QWORD PTR <span style="color:#f92672">[</span>rbp-0x28<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x00005555555553c7 &lt;+510&gt;:	xor    rbx,QWORD PTR fs:0x28
+</span></span><span style="display:flex;"><span>   0x00005555555553d0 &lt;+519&gt;:	je     0x5555555553d7 &lt;main+526&gt;
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p><strong>NOTE:</strong></p>
+<p>In x86-64 assembly language, <code>RAX</code> is indeed used as the register to store the return value of a function. When a function finishes executing and is ready to return a value to its caller, it places that value in the <code>RAX</code> register.
+This convention is used for functions that return a single value, such as integers or pointers. When a function finishes, the value in <code>RAX</code> is typically what will be used by the calling code.</p>
+<p>So the return value of function <code>strcmp@plt</code> which is an integer will be stored in <code>RAX</code>.
+strcmp is a C library function used to compare two strings. It returns an integer value that indicates the result of the comparison.
+Here&rsquo;s what strcmp returns in short:</p>
+<ul>
+<li>If the two strings are equal, strcmp returns 0.</li>
+<li>If the first string is lexicographically less than the second string, strcmp returns a negative value.</li>
+<li>If the first string is lexicographically greater than the second string, strcmp returns a positive value.</li>
+</ul>
+<p>So, if the user-entered password is correct, in that case, 0 will be returned&hellip; Hmm&hellip; What if I just change the returned value? HuiHui&hellip;</p>
+<p>Let&rsquo;s set up a breakpoint at *main+463. We cannot directly use the address 0x0000555555555398, even though they refer to the same thing. This is because PIE (Position Independent Executable) is enabled, so we need to use the symbol name main+463. In my upcoming blog, we will dive into various Binary Protections such as DEP/NX, RELRO, Stack Protection, PIE, FORTIFY, and more.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; b *main+463
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x1398
+</span></span><span style="display:flex;"><span>pwndbg&gt; run
+</span></span><span style="display:flex;"><span>Starting program: /home/kali/Desktop/Bl0gs/Resources/gdb/crackme 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Thread debugging using libthread_db enabled<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Using host libthread_db library <span style="color:#e6db74">&#34;/lib/x86_64-linux-gnu/libthread_db.so.1&#34;</span>.
+</span></span><span style="display:flex;"><span>Enter password:
+</span></span><span style="display:flex;"><span>AAAA
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>─────────────<span style="color:#f92672">[</span> REGISTERS / show-flags off / show-compact-regs off <span style="color:#f92672">]</span>─────────────
+</span></span><span style="display:flex;"><span>*RAX  0xfffffff1
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>As you can see, <code>RAX</code> contains a non-zero value. Let&rsquo;s disassemble once more and see what happens next.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; disassemble
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">=</span>&gt; 0x0000555555555398 &lt;+463&gt;:	mov    DWORD PTR <span style="color:#f92672">[</span>rbp-0x4c<span style="color:#f92672">]</span>,eax
+</span></span><span style="display:flex;"><span>   0x000055555555539b &lt;+466&gt;:	cmp    DWORD PTR <span style="color:#f92672">[</span>rbp-0x4c<span style="color:#f92672">]</span>,0x0
+</span></span><span style="display:flex;"><span>   0x000055555555539f &lt;+470&gt;:	je     0x5555555553af &lt;main+486&gt;
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>   0x00005555555553ad &lt;+484&gt;:	jmp    0x5555555553bb &lt;main+498&gt;
+</span></span><span style="display:flex;"><span>   0x00005555555553af &lt;+486&gt;:	lea    rdi,<span style="color:#f92672">[</span>rip+0xc70<span style="color:#f92672">]</span>        <span style="color:#75715e"># 0x555555556026</span>
+</span></span><span style="display:flex;"><span>   0x00005555555553b6 &lt;+493&gt;:	call   0x5555555550a0 &lt;puts@plt&gt;
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>The value in <code>RAX</code> will be copied into [rbp-0x4c], and this value will then be compared to 0x0. As we know, this comparison will fail, resulting in the ZERO flag not being set. Therefore, the JUMP will not be taken at address 0x5555555553af &lt;main+486&gt;. Instead, the JUMP will be taken at 0x5555555553bb &lt;main+498&gt;.</p>
+<p>Now we have an idea of how to manipulate the flow of the program.</p>
+<p>Let&rsquo;s once again run the program, but this time we&rsquo;ll set the <code>RAX</code> value to 0x0 and observe what happens.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; b *main+463
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x1398
+</span></span><span style="display:flex;"><span>pwndbg&gt; run
+</span></span><span style="display:flex;"><span>Starting program: /home/kali/Desktop/Bl0gs/Resources/gdb/crackme 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Thread debugging using libthread_db enabled<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Using host libthread_db library <span style="color:#e6db74">&#34;/lib/x86_64-linux-gnu/libthread_db.so.1&#34;</span>.
+</span></span><span style="display:flex;"><span>Enter password:
+</span></span><span style="display:flex;"><span>AAAA
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>pwndbg&gt; set $rax<span style="color:#f92672">=</span>0x0
+</span></span><span style="display:flex;"><span>pwndbg&gt; info registers rax
+</span></span><span style="display:flex;"><span>rax            0x0                 <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>pwndbg&gt; <span style="color:#66d9ef">continue</span> 
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span>Welcome!
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Inferior <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>process 54930<span style="color:#f92672">)</span> exited normally<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>YEAH!! We&rsquo;ve successfully fooled the program!</p>
+<p>We will now learn another technique which I call &ldquo;WRONG PASS, RIGHT FLAG&rdquo;. Here, we will set the Zero Flag to 1.
+On X86/X64:
+setflag ZF 1        &ndash; set zero flag
+setflag CF 0        &ndash; unset carry flag
+On ARM:
+setflag Z 0         &ndash; unset the Z cpsr/xpsr flag</p>
+<p><strong>WARNING!</strong></p>
+<p>Change flag after <code>CMP</code> instruction.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pwndbg&gt; b *main+463
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x1398
+</span></span><span style="display:flex;"><span>pwndbg&gt; run
+</span></span><span style="display:flex;"><span>Starting program: /home/kali/Desktop/Bl0gs/Resources/gdb/crackme 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Thread debugging using libthread_db enabled<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Using host libthread_db library <span style="color:#e6db74">&#34;/lib/x86_64-linux-gnu/libthread_db.so.1&#34;</span>.
+</span></span><span style="display:flex;"><span>Enter password:
+</span></span><span style="display:flex;"><span>AAAA
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>pwndbg&gt; next
+</span></span><span style="display:flex;"><span>pwndbg&gt; next
+</span></span><span style="display:flex;"><span>pwndbg&gt; info registers eflags
+</span></span><span style="display:flex;"><span>eflags         0x282               <span style="color:#f92672">[</span> SF IF <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>pwndbg&gt; setflag ZF <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>Set flag ZF<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> in flag register eflags <span style="color:#f92672">(</span>old val<span style="color:#f92672">=</span>0x283, new val<span style="color:#f92672">=</span>0x2c3<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>pwndbg&gt; info registers eflags
+</span></span><span style="display:flex;"><span>eflags         0x2c2               <span style="color:#f92672">[</span> ZF SF IF <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>pwndbg&gt; <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span>Welcome!
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Inferior <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>process 55171<span style="color:#f92672">)</span> exited normally<span style="color:#f92672">]</span>
+</span></span></code></pre></div><h2 id="extra-tips">Extra Tips</h2>
+<ul>
+<li>To execute Linux commands directly within the GDB prompt, use <code>!</code> as a prefix. For example, <code>!ls</code> to list files.</li>
+<li>GDB provides shorthand commands for convenience like <code>r</code> for <code>run</code>, <code>c</code>for <code>continue</code>, <code>i r</code> for <code>info registers</code>&hellip;</li>
+<li>Refer pwndbg <a href="https://browserpwndbg.readthedocs.io/en/docs/">docs</a>.</li>
+</ul>
+<h2 id="refer">Refer</h2>
+<ul>
+<li><a href="https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf">Darkdust Cheatsheet</a></li>
+<li><a href="https://www.cs.umd.edu/~srhuang/teaching/cmsc212/gdb-tutorial-handout.pdf">GDB Tutorial</a></li>
+</ul>
+<p>In this journey through the world of GDB, we&rsquo;ve covered a wide range of topics, from the basics of setting breakpoints and inspecting memory to the thrilling experience of cracking a program. We started with understanding how GDB can be a powerful ally in debugging, allowing us to step through our code, examine variables, and understand the flow of our programs.
+I hope this guide has been informative and has sparked your curiosity to dive deeper into the realm of debugging and beyond. Keep exploring, keep learning, and let GDB be your trusted companion on your coding adventures.</p>
+<p>Happy debugging!</p>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>

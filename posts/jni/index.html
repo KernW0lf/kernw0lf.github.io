@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <title>
+JNI Unleashed: Integrating Native Code on Android (NDK) and Linux Enviornments | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.121.2">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/jni/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+
+
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>JNI Unleashed: Integrating Native Code on Android (NDK) and Linux Enviornments</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-02-29">February 29, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>2 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <h1 id="building-jni-from-ndk-for-android">Building JNI from NDK for Android</h1>
+<p>JNI allows Java Code running in a Java Virtual Machine (JVM) to call and be called by native applications and libraries written in other languages, such as C and C++. Here&rsquo;s a simple example using Android Studio.</p>
+<h2 id="step-1-set-up-your-android-studio">Step 1: Set up your Android Studio</h2>
+<ul>
+<li>Open Android Studio and create a new Android Project</li>
+<li>In your project, create a new directory called <strong><code>jni</code></strong> at the same level as your <strong><code>src</code></strong> and <strong><code>res</code></strong> directories</li>
+</ul>
+<h2 id="step-2-write-a-native-method-in-java">Step 2: Write a native method in Java</h2>
+<p>Create a new Java Class with a native method. This will be the class that contains the JNI interface.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// MyClass.java</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> MyClass {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> {
+</span></span><span style="display:flex;"><span>    System.<span style="color:#a6e22e">loadLibrary</span>(<span style="color:#e6db74">&#34;mylibrary&#34;</span>); <span style="color:#75715e">// Load the native library</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Native method declaration</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">native</span> String <span style="color:#a6e22e">helloFromJNI</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="step-3-generate-the-header-file">Step 3: Generate the header file</h2>
+<p>Use the following command to generate a header file from your Java Class:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ javac -h . MyClass.java
+</span></span></code></pre></div><p>This will generate a file named <strong><code>MyClass.h</code></strong></p>
+<h2 id="step-4-write-the-native-implementation">Step 4: Write the Native Implementation</h2>
+<p>Create a new C or C++ file, e.g., <strong><code>MyClass.c</code></strong> and implement the natie method.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// MyClass.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;MyClass.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>JNIExport jstring JNICALL <span style="color:#a6e22e">Java_MyClass_helloFromJNI</span>(JNIEnv <span style="color:#f92672">*</span>env, jobject instance){
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (<span style="color:#f92672">*</span>env)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">NewStringUTF</span>(env,<span style="color:#e6db74">&#34;Hello from JNI&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="step-5-create-the-androidmk-file">Step 5: Create the Android.mk file</h2>
+<p>Create a file named Android.mk in the <strong><code>jni</code></strong> directory to specify how the native code should be built.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Makefile" data-lang="Makefile"><span style="display:flex;"><span><span style="color:#75715e"># Android.mk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>LOCAL_PATH  <span style="color:#f92672">:=</span>  <span style="color:#66d9ef">$(</span>call my-dir<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">include</span> <span style="color:#66d9ef">$(</span>CLEAR_VARS<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>LOCAL_MODULE  <span style="color:#f92672">:=</span>  mylibrary
+</span></span><span style="display:flex;"><span>LOCAL_SRC_FILES <span style="color:#f92672">:=</span>  MyClass.c
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">include</span> <span style="color:#66d9ef">$(</span>BUILD_SHARED_LIBRARY<span style="color:#66d9ef">)</span>
+</span></span></code></pre></div><h2 id="for-building-on-linux">For building on Linux</h2>
+<p>Make two separate directories <strong><code>libs</code></strong> and <strong><code>jni</code></strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ mkdir libs jni
+</span></span><span style="display:flex;"><span>$ mv Android.mk MyClass.c MyClass.class MyClass.h MyClass.h jni
+</span></span><span style="display:flex;"><span>$ cd jni
+</span></span><span style="display:flex;"><span>$ /path/to/ndk-build
+</span></span><span style="display:flex;"><span>$ ls ../libs/
+</span></span><span style="display:flex;"><span>arm64-v8a armeabi-v7a x86 x86_64
+</span></span></code></pre></div><p>If you get &ldquo;Android NDK: APP_PLATFORM not set&rdquo; error, then Create and Open Application.mk file in the <code>jni</code> directory of your Android Project.
+Add the following line explicitly to it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Makefile" data-lang="Makefile"><span style="display:flex;"><span>APP_PLATFORM  <span style="color:#f92672">:=</span>  android-26
+</span></span></code></pre></div><h2 id="step-6-build-the-native-library">Step 6: Build the native library</h2>
+<p>Open a terminal and navigate to your project&rsquo;s root directory. Run the following commands to build the native library:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ cd app/src/main
+</span></span><span style="display:flex;"><span>$ /path/to/ndk-build
+</span></span></code></pre></div><h2 id="step-7-link-the-native-library-in-your-app">Step 7: Link the native library in your app</h2>
+<p>In your build.gradle file, add the following lines to link the native library:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gradle" data-lang="gradle"><span style="display:flex;"><span>android <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  defaultConfig <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    externalNativeBuild <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      ndkBuild <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        path <span style="color:#e6db74">&#39;src/main/jni/Android.mk&#39;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="step-8-use-the-native-method-in-java">Step 8: Use the native method in Java</h2>
+<p>Now you can use the native method in your Java code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// MainActivity.java</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MainActivity</span> <span style="color:#66d9ef">extends</span> AppCompatActivity{
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div>
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>
