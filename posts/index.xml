@@ -18,55 +18,6 @@
       <description>In this step-by-step tutorial, we&amp;rsquo;ll walk through the entire process of building a custom Linux kernel, creating a minimal filesystem using Busybox, running it on QEMU, and debugging the kernel. Finally, we&amp;rsquo;ll wrap up by learning how to compile and add custom Linux kernel modules to enhance our kernel. I&amp;rsquo;m using a Linux system for this demonstration, specifically Ubuntu 16.04.7 LTS with kernel version 4.15.0-142-generic. However, the steps should be similar for other Linux distributions.</description>
     </item>
     <item>
-      <title>06</title>
-      <link>http://kernw0lf.github.io/posts/windows_exp_dev/06/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:35 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/06/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>05</title>
-      <link>http://kernw0lf.github.io/posts/windows_exp_dev/05/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:32 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/05/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>04</title>
-      <link>http://kernw0lf.github.io/posts/windows_exp_dev/04/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:29 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/04/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>03</title>
-      <link>http://kernw0lf.github.io/posts/windows_exp_dev/03/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:27 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/03/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>02</title>
-      <link>http://kernw0lf.github.io/posts/windows_exp_dev/02/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:26 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/02/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>01</title>
-      <link>http://kernw0lf.github.io/posts/windows_exp_dev/01/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/01/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>00</title>
-      <link>http://kernw0lf.github.io/posts/windows_exp_dev/00/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:22 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/windows_exp_dev/00/</guid>
-      <description></description>
-    </item>
-    <item>
       <title>Module 5: Linux Advanced Exploitation</title>
       <link>http://kernw0lf.github.io/posts/linux_exp_dev/05/</link>
       <pubDate>Thu, 29 Feb 2024 03:51:07 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
