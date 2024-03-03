@@ -332,8 +332,8 @@ Remote &#39;g&#39; packet reply is too long: 000000000000000030c4ec81ffffffff000
 </span></span><span style="display:flex;"><span>KERN     dev      linuxrc  root     sys
 </span></span><span style="display:flex;"><span>bin      init     proc     sbin     usr
 </span></span></code></pre></div><p>There you have it! By hitting a breakpoint at the sys_mkdir() kernel function, we were able to manipulate the memory content and change the directory name. Initially, we used <code>mkdir AAAA</code>, but through modifying the memory content, we ended up creating a directory named <code>KERN</code>.</p>
-<h2 id="conclusion">Conclusion</h2>
-<p>Congratulations! You&rsquo;ve successfully built a custom Linux kernel, created a minimal filesystem with Busybox, ran it on QEMU, and even debugged the kernel using GDB. This tutorial has given you a hands-on experience in kernel development and embedded system basics.</p>
+<p>Congratulations!
+You&rsquo;ve successfully built a custom Linux kernel, created a minimal filesystem with Busybox, ran it on QEMU, and even debugged the kernel using GDB. This tutorial has given you a hands-on experience in kernel development and embedded system basics.</p>
 <p>Customizing kernels and building minimal filesystems are fundamental skills in the world of Linux and embedded systems. Feel free to explore more kernel configurations, Busybox features, and QEMU options to deepen your understanding.</p>
 <p>Now you&rsquo;re equipped with the knowledge to create and debug custom Linux kernels. Happy kernel hacking!</p>
 <h2 id="references">References</h2>
