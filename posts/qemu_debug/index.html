@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <title>
+Kernel Crafting: Building, Running, and Debugging Your Custom Linux Kernel with Busybox and QEMU | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.122.0">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/qemu_debug/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+
+
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>Kernel Crafting: Building, Running, and Debugging Your Custom Linux Kernel with Busybox and QEMU</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+                
+<dt>tags</dt>
+<dd><span></span>
+    <a href="/tags/debugging/">#debugging</a><span></span>
+    <a href="/tags/kernel/">#kernel</a></dd>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-03-03">March 3, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>10 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <p>In this step-by-step tutorial, we&rsquo;ll walk through the entire process of building a custom Linux kernel, creating a minimal filesystem using Busybox, running it on QEMU, and debugging the kernel.  Finally, we&rsquo;ll wrap up by learning how to compile and add custom Linux kernel modules to enhance our kernel. I&rsquo;m using a Linux system for this demonstration, specifically Ubuntu 16.04.7 LTS with kernel version 4.15.0-142-generic. However, the steps should be similar for other Linux distributions.
+Let&rsquo;s dive in!</p>
+<hr>
+<p>Before we begin, ensure you have all the necessary tools and libraries installed on your system. This includes development tools, compilers, and libraries essential for building the kernel.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ sudo apt update
+</span></span><span style="display:flex;"><span>$ sudo apt install build-essential libncurses5-dev bison flex libssl-dev libelf-dev qemu qemu-kvm 
+</span></span></code></pre></div><h2 id="downloading-the-custom-kernel">Downloading the Custom Kernel</h2>
+<p>First, let&rsquo;s download the Linux kernel source code. We&rsquo;ll choose version 3.16.49 for this example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ wget  https://cdn.kernel.org/pub/linux/kernel/v3.x/linux-3.16.49.tar.xz
+</span></span><span style="display:flex;"><span>$ tar xvf linux-3.16.49.tar.xz 
+</span></span><span style="display:flex;"><span>$ cd linux-3.16.49/
+</span></span></code></pre></div><h2 id="configuring-and-compiling-the-kernel">Configuring and Compiling the Kernel</h2>
+<p>Next, we&rsquo;ll configure the kernel. For simplicity, we&rsquo;ll use the default configuration:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ make defconfig
+</span></span></code></pre></div><p>When configuring the Linux kernel, you might want to use the configuration file specific to your current Linux distribution. This can help ensure that the kernel configuration matches the settings and modules already in use on your system. To do this, you can copy one of the existing configuration files from /boot/config-xxx in the Linux kernel source root directory and name it .config.</p>
+<p>The following command provides a text-based menu interface that allows us to configure various kernel options, including enabling or disabling features, selecting specific device drivers, and more.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ make menuconfig
+</span></span></code></pre></div><p>Before we compile the kernel, we need to enable some options for debug symbols, KASLR, and other useful features. Open the .config file in a text editor and ensure these options are set:</p>
+<pre tabindex="0"><code>CONFIG_KCOV=y
+CONFIG_DEBUG_INFO=y
+CONFIG_KASAN=y
+CONFIG_KASAN_INLINE=y
+CONFIG_CONFIGFS_FS=y
+CONFIG_SECURITYFS=y
+# CONFIG_RANDOMIZE_BASE is not set
+</code></pre><p>Now, let&rsquo;s compile the kernel. This process may take some time:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ make -j<span style="color:#66d9ef">$(</span>nproc<span style="color:#66d9ef">)</span>
+</span></span></code></pre></div><p>The -j flag is used to specify the number of jobs (or threads) to run simultaneously during compilation. In this case, <code>$(nproc)</code> is a command substitution that dynamically inserts the number of processing units available on your system.</p>
+<p><code>nproc</code>: This command prints the number of processing units (or CPU cores) available on your system. It&rsquo;s a handy way to utilize all available cores for faster compilation.</p>
+<p>After running the above command, the kernel image (bzImage) will be created. This file represents the compressed Linux kernel image that will be used to boot our system. This bzImage file is located in the <code>arch/x86/boot/</code> directory within the Linux kernel source tree.</p>
+<h2 id="creating-a-minimal-filesystem-with-busybox">Creating a Minimal Filesystem with Busybox</h2>
+<p>Now, let&rsquo;s work on creating a minimal filesystem with Busybox. To do this, we&rsquo;ll first need to obtain the Busybox source code and extract it.</p>
+<p><strong>Download and Configure Busybox</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ wget https://busybox.net/downloads/busybox-1.31.1.tar.bz2
+</span></span><span style="display:flex;"><span>$ tar xvf busybox-1.31.1.tar.bz2
+</span></span><span style="display:flex;"><span>$ cd busybox-1.31.1/
+</span></span><span style="display:flex;"><span>$ make defconfig  <span style="color:#75715e"># Use the default configuration</span>
+</span></span></code></pre></div><p>We’ll need to use busybox’s menuconfig interface to enable static linking:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ make menuconfig
+</span></span><span style="display:flex;"><span>-&gt; Busybox Settings
+</span></span><span style="display:flex;"><span>  -&gt; Build Options
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> Build static binary <span style="color:#f92672">(</span>no shared libs<span style="color:#f92672">)</span>  <span style="color:#75715e"># Press y to select</span>
+</span></span></code></pre></div><p>After selecting the <code>&quot;Build static binary (no shared libs)&quot;</code> option in the <code>make menuconfig</code> interface, exit the menu by selecting &ldquo;Exit&rdquo; or pressing &lsquo;Esc&rsquo; repeatedly until prompted to save changes.
+Then, proceed to build the Busybox filesystem:</p>
+<h2 id="build-busybox">Build Busybox</h2>
+<p>Build Busybox and install it to a temporary directory:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ make -j<span style="color:#66d9ef">$(</span>nproc<span style="color:#66d9ef">)</span>  <span style="color:#75715e"># Ignore &#34;Trying libraries: crypt m resolv&#34; error</span>
+</span></span><span style="display:flex;"><span>$ file busybox <span style="color:#75715e"># check if the compiled file is fine</span>
+</span></span><span style="display:flex;"><span>busybox: ELF 64-bit LSB executable, x86-64, version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>GNU/Linux<span style="color:#f92672">)</span>, statically linked, <span style="color:#66d9ef">for</span> GNU/Linux 2.6.32, BuildID<span style="color:#f92672">[</span>sha1<span style="color:#f92672">]=</span>0fb9e344357bedd1287e715dc20b71511ebff5ce, stripped
+</span></span></code></pre></div><p>The above output shows that the binary busybox is compiled as a statically linked executable, meaning all necessary libraries are included within the executable itself. This ensures that Busybox will run independently without relying on external libraries.</p>
+<p>Finally, we&rsquo;ll create the filesystem that includes Busybox. Running <code>make install</code> will generate a directory named <em>_install</em>, which mirrors a basic Linux filesystem structure.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ make install
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>  ./_install//usr/sbin/udhcpd -&gt; ../../bin/busybox
+</span></span><span style="display:flex;"><span>$ tree -d _install/
+</span></span><span style="display:flex;"><span>├── bin
+</span></span><span style="display:flex;"><span>├── sbin
+</span></span><span style="display:flex;"><span>└── usr
+</span></span><span style="display:flex;"><span>    ├── bin
+</span></span><span style="display:flex;"><span>    └── sbin
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">5</span> directories
+</span></span></code></pre></div><h2 id="create-the-minimal-filesystem-structure">Create the Minimal Filesystem Structure</h2>
+<p>Create a basic filesystem structure:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ cd _install/
+</span></span><span style="display:flex;"><span>$ mkdir dev proc sys
+</span></span></code></pre></div><h2 id="create-initialization-script">Create Initialization Script</h2>
+<p>Now create a file called init and open it with a text editor. Copy and paste the following data in it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>mount -t devtmpfs none /dev
+</span></span><span style="display:flex;"><span>mount -t proc none /proc
+</span></span><span style="display:flex;"><span>mount -t sysfs none /sys
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># clear the screen</span>
+</span></span><span style="display:flex;"><span>clear
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Banner</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34; __________&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&lt; kernw0lf &gt;&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34; ----------&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;        \   ^__^&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;         \  (oo)\_______&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;            (__)\       )\/\\&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;                ||----w |&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;                ||     ||&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Display boot time</span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;\nBoot took </span><span style="color:#66d9ef">$(</span>cut -d<span style="color:#e6db74">&#39; &#39;</span> -f1 /proc/uptime<span style="color:#66d9ef">)</span><span style="color:#e6db74"> seconds\n&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Welcome message</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;H4ppy K3rnel H4cking!&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Start the shell</span>
+</span></span><span style="display:flex;"><span>exec /bin/sh
+</span></span></code></pre></div><p>NOTE: I have added banner also in the script. It is not required.</p>
+<p><strong>Make it executable:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ chmod +x init
+</span></span></code></pre></div><p>We&rsquo;ve completed the setup for our custom Linux system using Busybox and a custom initialization script (init). Let&rsquo;s summarize the steps we&rsquo;ve taken:</p>
+<pre><code>Busybox Compilation: We compiled Busybox, which provides a single executable capable of providing various Linux utilities such as sh, echo, vi, and more.
+
+Filesystem Creation: After compiling Busybox, we used make install to create a filesystem hierarchy (_install directory) containing these utilities as links to the Busybox executable. This filesystem structure resembles a basic Linux filesystem.
+
+Custom Initialization Script: We created a shell script named init.sh. This script will be executed after the kernel loads during the boot process.
+
+Mounting Essential Directories: In the init script, we mounted essential special directories such as /dev, /proc, and /sys. These directories provide access to kernel information and system devices.
+</code></pre>
+<h2 id="create-the-initramfs">Create the Initramfs</h2>
+<p>To create the filesystem (initramfs) containing our custom Linux system, we&rsquo;ll run the following commands inside the _install directory:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ find . -print0 | cpio --null -ov --format<span style="color:#f92672">=</span>newc | gzip -9 &gt; ../initramfs.cpio.gz
+</span></span><span style="display:flex;"><span>$ cd ..
+</span></span><span style="display:flex;"><span>$ file initramfs.cpio.gz
+</span></span><span style="display:flex;"><span>initramfs.cpio.gz: gzip compressed data
+</span></span></code></pre></div><p><strong>initramfs</strong></p>
+<p>The initramfs (initial RAM filesystem) contains the files needed for the Linux kernel to mount the root filesystem and start the system. It&rsquo;s used during the early stages of the boot process.</p>
+<p>After running the command, the initramfs.cpio.gz file will be created in the parent directory. This file contains the entire filesystem structure that we created using Busybox and the init script.</p>
+<p>We&rsquo;re now ready to boot our custom Linux system using QEMU or another virtualization platform.</p>
+<h2 id="booting-the-custom-kernel-with-qemu">Booting the Custom Kernel with QEMU</h2>
+<p>Before we can boot our custom kernel with QEMU, we need to make sure QEMU is installed. If you haven&rsquo;t installed it yet, you can do so on Ubuntu or Debian-based systems with:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ sudo apt-get update
+</span></span><span style="display:flex;"><span>$ sudo apt-get install qemu-system-x86
+</span></span></code></pre></div><p>Now that we have QEMU installed, let&rsquo;s proceed to boot our custom kernel with the minimal filesystem using QEMU:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ qemu-system-x86_64 -kernel ../linux-3.16.49/arch/x86/boot/bzImage -initrd initramfs.cpio.gz -append <span style="color:#e6db74">&#34;root=/dev/ram rw console=ttyS0&#34;</span> -nographic
+</span></span></code></pre></div><pre><code>-kernel: Path to your custom kernel image (bzImage).
+-initrd: Path to the initramfs.cpio.gz file.
+-append: Specifies kernel command-line parameters. Here, we specify:
+    root=/dev/ram: Tells the kernel to use the RAM disk as the root filesystem.
+    rw: Mount the root filesystem as read-write.
+    console=ttyS0: Redirect kernel console output to the first serial port (ttyS0).
+The -nographic option ensures that the output is displayed in the terminal.
+</code></pre>
+<p>If you don&rsquo;t use the -nographic option, QEMU will open a graphical window to display the boot process of the kernel.
+We will use terminal to display as I have faced problems while debugging on QEMU Graphical Window.</p>
+<h2 id="debugging-the-kernel-with-gdb">Debugging the Kernel with GDB</h2>
+<p>To enable debugging, we need to run QEMU with the -s option to enable debug mode. We&rsquo;ll also add the -S option to freeze the CPU at startup:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ qemu-system-x86_64 -kernel ../linux-3.16.49/arch/x86/boot/bzImage -initrd initramfs.cpio.gz -append <span style="color:#e6db74">&#34;root=/dev/ram rw console=ttyS0&#34;</span> -nographic -s -S
+</span></span></code></pre></div><h2 id="gdb">GDB</h2>
+<p>In another terminal, start GDB:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb vmlinux
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> target remote localhost:1234
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> c <span style="color:#75715e">#Continue execution</span>
+</span></span></code></pre></div><p>Now you can set breakpoints, inspect memory, and step through code in GDB.</p>
+<p>To stop the execution press Ctrl+C in the gdb window.</p>
+<p><strong>NOTE:</strong></p>
+<p>If you are getting reply on gdb like the following on Pressing Ctrl+C, refer <a href="#solution">Solution</a>:</p>
+<pre tabindex="0"><code>(gdb) c
+Continuing.
+^CRemote &#39;g&#39; packet reply is too long: 000000000000000030c4ec81ffffffff0000000000000001000000000000000000000000000000000000000000000000c03ee081ffffffffb03ee081ffffffff000000000000000000000000000000003b2b3d000000000058065b8c03000000000000000000000000000000000000000000e081ffffffffedffffff000000009cc30081ffffffff4602000010000000180000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007f030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffff000000ffffffffff0000000000000000ff000000ff000000000000000000000000ff0000000000ff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000801f0000
+Remote &#39;g&#39; packet reply is too long: 000000000000000030c4ec81ffffffff0000000000000001000000000000000000000000000000000000000000000000c03ee081ffffffffb03ee081ffffffff000000000000000000000000000000003b2b3d000000000058065b8c03000000000000000000000000000000000000000000e081ffffffffedffffff000000009cc30081ffffffff4602000010000000180000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007f030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffff000000ffffffffff0000000000000000ff000000ff000000000000000000000000ff0000000000ff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000801f0000
+Remote &#39;g&#39; packet reply is too long: 000000000000000030c4ec81ffffffff0000000000000001000000000000000000000000000000000000000000000000c03ee081ffffffffb03ee081ffffffff000000000000000000000000000000003b2b3d000000000058065b8c03000000000000000000000000000000000000000000e081ffffffffedffffff000000009cc30081ffffffff4602000010000000180000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007f030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffff000000ffffffffff0000000000000000ff000000ff000000000000000000000000ff0000000000ff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000801f0000
+</code></pre><h2 id="solution">Solution</h2>
+<p>I transferred vmlinux, bzImage, and initramfs.cpio.gz to my Kali machine (2024.1).</p>
+<p>Use the following commands</p>
+<p><strong>On Terminal 1:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ qemu-system-x86_64 -kernel bzImage -initrd initramfs.cpio.gz -append <span style="color:#e6db74">&#34;root=/dev/ram rw console=ttyS0&#34;</span> -nographic -s -S
+</span></span></code></pre></div><p><strong>On Terminal 2:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb ./vmlinux
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> target remote :1234
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Hit Ctrl+C to stop execution</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># To verify that we are able to read correct kernel symbols, we will print two important functions: prepare_kernel_cred and commit_creds</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print prepare_kernel_cred 
+</span></span><span style="display:flex;"><span>$1 <span style="color:#f92672">=</span> <span style="color:#f92672">{</span>&lt;text variable, no debug info&gt;<span style="color:#f92672">}</span> 0xffffffff81071e40 &lt;prepare_kernel_cred&gt;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print commit_creds
+</span></span><span style="display:flex;"><span>$2 <span style="color:#f92672">=</span> <span style="color:#f92672">{</span>&lt;text variable, no debug info&gt;<span style="color:#f92672">}</span> 0xffffffff81071a30 &lt;commit_creds&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> c <span style="color:#75715e"># Now view the kallsyms on Terminal 1</span>
+</span></span></code></pre></div><p><strong>On Terminal 1:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># cat /proc/kallsyms | grep prepare_kernel_cred</span>
+</span></span><span style="display:flex;"><span>ffffffff81071e40 T prepare_kernel_cred
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cat /proc/kallsyms | grep commit_creds</span>
+</span></span><span style="display:flex;"><span>ffffffff81071a30 T commit_creds
+</span></span></code></pre></div><p>Till now we&rsquo;ve successfully printed the addresses of prepare_kernel_cred and commit_creds and verified them in the /proc/kallsyms file.</p>
+<p>Now, we will explore how to establish breakpoints at kernel functions and trigger them by initiating system calls. Here are several prevalent kernel functions where breakpoints can be set for effective debugging during development:</p>
+<ul>
+<li>start_kernel: This function is the entry point of the Linux kernel.</li>
+<li>do_sys_open: This function is responsible for handling the open() system call.</li>
+<li>sys_read: The sys_read system call is used by user-space programs to read data from a file descriptor (fd) into a buffer (buffer) for a specified number of bytes (count).</li>
+<li>sys_write: Writes data to a file descriptor.</li>
+<li>sys_close: Closes a file descriptor.</li>
+<li>sys_execve: Creates a new directory.</li>
+<li>sys_rmdir: Removes a directory.</li>
+<li>sys_unlink: Removes a file.</li>
+<li>sys_chmod: Changes file permissions.</li>
+<li>sys_mmap: Maps files or devices into memory.</li>
+<li>sys_exit: Handles process termination.</li>
+</ul>
+<p>We will now setup a breakpoint on sys_mkdir</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break sys_mkdir
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0xffffffff8116e364
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> c
+</span></span></code></pre></div><p>Now, we will create a directory named AAAA in Terminal 1.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># mkdir AAAA</span>
+</span></span></code></pre></div><p>On Terminal 2, we can see that we hit the function sys_mkdir().</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Breakpoint 1, 0xffffffff8116e364 in sys_mkdir <span style="color:#f92672">()</span>
+</span></span></code></pre></div><p>Now, let&rsquo;s view the registers.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> info registers  <span style="color:#75715e"># I am using pwndbg :)</span>
+</span></span><span style="display:flex;"><span>RAX  0x53
+</span></span><span style="display:flex;"><span>RBX  0xffffffff
+</span></span><span style="display:flex;"><span>RCX  0x464a40 ◂— pxor xmm0, xmm0
+</span></span><span style="display:flex;"><span>RDX  0x0
+</span></span><span style="display:flex;"><span>RDI  0x7ffcbda4cfc8 ◂— 0x4c48530041414141 /* <span style="color:#e6db74">&#39;AAAA&#39;</span> */
+</span></span><span style="display:flex;"><span>RSI  0x1ff
+</span></span><span style="display:flex;"><span>R8   0x0
+</span></span><span style="display:flex;"><span>R9   0x0
+</span></span><span style="display:flex;"><span>R10  0x464a40 ◂— pxor xmm0, xmm0
+</span></span><span style="display:flex;"><span>R11  0x246
+</span></span><span style="display:flex;"><span>R12  0x7ffcbda4cfc8 ◂— 0x4c48530041414141 /* <span style="color:#e6db74">&#39;AAAA&#39;</span> */
+</span></span><span style="display:flex;"><span>R13  0xffffffff
+</span></span><span style="display:flex;"><span>R14  0x0
+</span></span><span style="display:flex;"><span>R15  0x0
+</span></span><span style="display:flex;"><span>RBP  0xffff88000655ff78 —▸ 0x7ffcbda4cfc8 ◂— 0x4c48530041414141 /* <span style="color:#e6db74">&#39;AAAA&#39;</span> */
+</span></span><span style="display:flex;"><span>RSP  0xffff88000655ff78 —▸ 0x7ffcbda4cfc8 ◂— 0x4c48530041414141 /* <span style="color:#e6db74">&#39;AAAA&#39;</span> */
+</span></span><span style="display:flex;"><span>RIP  0xffffffff8116e364 <span style="color:#f92672">(</span>sys_mkdir+4<span style="color:#f92672">)</span> ◂— push r15
+</span></span></code></pre></div><p>We can see register RDI and R12 contains the pointer to the string &ldquo;AAAA&rdquo;. We can modify it&hellip; :)</p>
+<p><strong>VERIFY:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/c 0x7ffcbda4cfc8
+</span></span><span style="display:flex;"><span>0x7ffcbda4cfc8:	<span style="color:#ae81ff">65</span> <span style="color:#e6db74">&#39;A&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/c 0x7ffcbda4cfc9
+</span></span><span style="display:flex;"><span>0x7ffcbda4cfc9:	<span style="color:#ae81ff">65</span> <span style="color:#e6db74">&#39;A&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/c 0x7ffcbda4cfca
+</span></span><span style="display:flex;"><span>0x7ffcbda4cfca:	<span style="color:#ae81ff">65</span> <span style="color:#e6db74">&#39;A&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/c 0x7ffcbda4cfcb
+</span></span><span style="display:flex;"><span>0x7ffcbda4cfcb:	<span style="color:#ae81ff">65</span> <span style="color:#e6db74">&#39;A&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/c 0x7ffcbda4cfcc
+</span></span><span style="display:flex;"><span>0x7ffcbda4cfcc:	<span style="color:#ae81ff">0</span> <span style="color:#e6db74">&#39;\000&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> set <span style="color:#f92672">{</span>char<span style="color:#f92672">}</span>0x7ffcbda4cfc8 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;K&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> set <span style="color:#f92672">{</span>char<span style="color:#f92672">}</span>0x7ffcbda4cfc9 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;E&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> set <span style="color:#f92672">{</span>char<span style="color:#f92672">}</span>0x7ffcbda4cfca <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;R&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> set <span style="color:#f92672">{</span>char<span style="color:#f92672">}</span>0x7ffcbda4cfcb <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;N&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> c
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span></code></pre></div><p>Now, let&rsquo;s take a look at Terminal 1.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># ls</span>
+</span></span><span style="display:flex;"><span>KERN     dev      linuxrc  root     sys
+</span></span><span style="display:flex;"><span>bin      init     proc     sbin     usr
+</span></span></code></pre></div><p>There you have it! By hitting a breakpoint at the sys_mkdir() kernel function, we were able to manipulate the memory content and change the directory name. Initially, we used <code>mkdir AAAA</code>, but through modifying the memory content, we ended up creating a directory named <code>KERN</code>.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Congratulations! You&rsquo;ve successfully built a custom Linux kernel, created a minimal filesystem with Busybox, ran it on QEMU, and even debugged the kernel using GDB. This tutorial has given you a hands-on experience in kernel development and embedded system basics.</p>
+<p>Customizing kernels and building minimal filesystems are fundamental skills in the world of Linux and embedded systems. Feel free to explore more kernel configurations, Busybox features, and QEMU options to deepen your understanding.</p>
+<p>Now you&rsquo;re equipped with the knowledge to create and debug custom Linux kernels. Happy kernel hacking!</p>
+<h2 id="references">References</h2>
+<p><a href="https://medium.com/@ThyCrow/compiling-the-linux-kernel-and-creating-a-bootable-iso-from-it-6afb8d23ba22">https://medium.com/@ThyCrow/compiling-the-linux-kernel-and-creating-a-bootable-iso-from-it-6afb8d23ba22</a>
+<a href="https://ayeks.de/posts/2015-11-30-running-your-own-kernel-in-qemu/">https://ayeks.de/posts/2015-11-30-running-your-own-kernel-in-qemu/</a></p>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>

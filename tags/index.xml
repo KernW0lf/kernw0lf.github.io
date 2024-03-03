@@ -8,8 +8,22 @@
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
-    <lastBuildDate>Thu, 29 Feb 2024 03:42:52 -0500</lastBuildDate>
+    <lastBuildDate>Sun, 03 Mar 2024 02:09:24 -0500</lastBuildDate>
     <atom:link href="http://kernw0lf.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>debugging</title>
+      <link>http://kernw0lf.github.io/tags/debugging/</link>
+      <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/debugging/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>kernel</title>
+      <link>http://kernw0lf.github.io/tags/kernel/</link>
+      <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/kernel/</guid>
+      <description></description>
+    </item>
     <item>
       <title>debug</title>
       <link>http://kernw0lf.github.io/tags/debug/</link>

@@ -8,8 +8,15 @@
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
-    <lastBuildDate>Thu, 29 Feb 2024 03:51:35 -0500</lastBuildDate>
+    <lastBuildDate>Sun, 03 Mar 2024 02:09:24 -0500</lastBuildDate>
     <atom:link href="http://kernw0lf.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kernel Crafting: Building, Running, and Debugging Your Custom Linux Kernel with Busybox and QEMU</title>
+      <link>http://kernw0lf.github.io/posts/qemu_debug/</link>
+      <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/qemu_debug/</guid>
+      <description>In this step-by-step tutorial, we&amp;rsquo;ll walk through the entire process of building a custom Linux kernel, creating a minimal filesystem using Busybox, running it on QEMU, and debugging the kernel. Finally, we&amp;rsquo;ll wrap up by learning how to compile and add custom Linux kernel modules to enhance our kernel. I&amp;rsquo;m using a Linux system for this demonstration, specifically Ubuntu 16.04.7 LTS with kernel version 4.15.0-142-generic. However, the steps should be similar for other Linux distributions.</description>
+    </item>
     <item>
       <title>06</title>
       <link>http://kernw0lf.github.io/posts/windows_exp_dev/06/</link>
