@@ -192,14 +192,20 @@ Then, proceed to build the Busybox filesystem:</p>
 <p><strong>Make it executable:</strong></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ chmod +x init
 </span></span></code></pre></div><p>We&rsquo;ve completed the setup for our custom Linux system using Busybox and a custom initialization script (init). Let&rsquo;s summarize the steps we&rsquo;ve taken:</p>
-<pre><code>Busybox Compilation: We compiled Busybox, which provides a single executable capable of providing various Linux utilities such as sh, echo, vi, and more.
-
-Filesystem Creation: After compiling Busybox, we used make install to create a filesystem hierarchy (_install directory) containing these utilities as links to the Busybox executable. This filesystem structure resembles a basic Linux filesystem.
-
-Custom Initialization Script: We created a shell script named init.sh. This script will be executed after the kernel loads during the boot process.
-
-Mounting Essential Directories: In the init script, we mounted essential special directories such as /dev, /proc, and /sys. These directories provide access to kernel information and system devices.
-</code></pre>
+<ul>
+<li>
+<p>Busybox Compilation: We compiled Busybox, which provides a single executable capable of providing various Linux utilities such as sh, echo, vi, and more.</p>
+</li>
+<li>
+<p>Filesystem Creation: After compiling Busybox, we used make install to create a filesystem hierarchy (_install directory) containing these utilities as links to the Busybox executable. This filesystem structure resembles a basic Linux filesystem.</p>
+</li>
+<li>
+<p>Custom Initialization Script: We created a shell script named init.sh. This script will be executed after the kernel loads during the boot process.</p>
+</li>
+<li>
+<p>Mounting Essential Directories: In the init script, we mounted essential special directories such as /dev, /proc, and /sys. These directories provide access to kernel information and system devices.</p>
+</li>
+</ul>
 <h2 id="create-the-initramfs">Create the Initramfs</h2>
 <p>To create the filesystem (initramfs) containing our custom Linux system, we&rsquo;ll run the following commands inside the _install directory:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ find . -print0 | cpio --null -ov --format<span style="color:#f92672">=</span>newc | gzip -9 &gt; ../initramfs.cpio.gz
