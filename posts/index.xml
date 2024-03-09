@@ -53,11 +53,11 @@
       <description>Decoding the Binary: A Prelude to Linux Stack Smashing and Exploit Development Before diving into the world of Linux stack smashing, it&amp;rsquo;s crucial to begin with binary analysis. Analyzing the binary executable provides us with valuable insights into its structure, functions, and potential vulnerabilities. Through binary analysis, we can identify the layout of the stack, the presence of buffer overflows, and other crucial details that will aid us in crafting our exploit.</description>
     </item>
     <item>
-      <title>JNI Unleashed: Integrating Native Code on Android (NDK) and Linux Enviornments</title>
+      <title>Unlocking Java&#39;s Power with JNI: A Comprehensive Guide</title>
       <link>http://kernw0lf.github.io/posts/jni/</link>
       <pubDate>Thu, 29 Feb 2024 03:42:55 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
       <guid>http://kernw0lf.github.io/posts/jni/</guid>
-      <description>Building JNI from NDK for Android JNI allows Java Code running in a Java Virtual Machine (JVM) to call and be called by native applications and libraries written in other languages, such as C and C++. Here&amp;rsquo;s a simple example using Android Studio.&#xA;Step 1: Set up your Android Studio Open Android Studio and create a new Android Project In your project, create a new directory called jni at the same level as your src and res directories Step 2: Write a native method in Java Create a new Java Class with a native method.</description>
+      <description>Introduction: Java Native Interface (JNI) is a powerful tool that allows Java code running in the Java Virtual Machine (JVM) to interact with code and libraries written in other languages, such as C and C++. JNI opens up a world of possibilities for Java developers, enabling them to access native code, leverage platform-specific features, and optimize performance. In this guide, we&amp;rsquo;ll delve into the world of JNI, exploring its benefits, how it works, and how you can start using it in your Java projects.</description>
     </item>
     <item>
       <title>GDB: Zero to Hero</title>
