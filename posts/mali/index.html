@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <title>
+A Close Look at ARM Mali and its CVE History | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.122.0">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/mali/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>A Close Look at ARM Mali and its CVE History</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-03-05">March 5, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>13 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <p>In the ever-evolving landscape of technology, where innovation and progress are constant companions, there exists a parallel necessity for robust security measures. ARM Mali, renowned for its high-performance graphics processing units (GPUs) found in a multitude of devices, is no stranger to this reality. However, behind its impressive graphics capabilities lies a history of vulnerabilities, some of which have been brought to light through Common Vulnerabilities and Exposures (CVE) reports.</p>
+<p>In this blog post, we delve into the realm of ARM Mali, shining a light on the CVE reports that have surfaced over time. From understanding the intricacies of these vulnerabilities to exploring their implications on device security, join us on a journey to unravel the lesser-known aspects of ARM Mali and the vulnerabilities that have shaped its security narrative. Whether you&rsquo;re a developer, a tech enthusiast, or simply curious about the security landscape of mobile GPUs, this exploration aims to provide insights and understanding into ARM Mali&rsquo;s CVE history.</p>
+<p>Let&rsquo;s embark on this investigative journey into the vulnerabilities that have impacted ARM Mali, understanding the significance of these reports and their implications for the broader tech community.</p>
+<h2 id="a-brief-overview-of-arm-mali-history-and-gpu-architecture">A Brief Overview of ARM Mali: History and GPU Architecture</h2>
+<p>ARM Mali, a prominent name in the world of mobile graphics processing, has a rich history dating back to its inception in 2006. Developed by ARM Holdings, a British semiconductor and software design company, the Mali series of GPUs quickly gained recognition for their efficiency and performance in mobile devices.</p>
+<p><strong>History:</strong></p>
+<p>The ARM Mali GPUs were designed to cater to the growing demand for high-quality graphics in smartphones, tablets, and other mobile devices. Since its launch, the Mali series has gone through several iterations, each bringing advancements in performance and power efficiency.</p>
+<p><strong>GPU Architecture:</strong></p>
+<p>The architecture of ARM Mali GPUs is designed to deliver impressive graphics performance while maintaining a balance between power consumption and efficiency. Here are some key aspects of Mali&rsquo;s GPU architecture:</p>
+<p><strong>Unified Shader Architecture:</strong></p>
+<p>Mali GPUs utilize a unified shader architecture, allowing for flexible allocation of processing power between vertex and pixel shaders. This design choice enhances efficiency and enables better utilization of resources for different types of graphical tasks.</p>
+<p><strong>Scalability:</strong></p>
+<p>Mali GPUs are designed to be scalable, accommodating a wide range of devices with varying performance requirements. This scalability allows Mali GPUs to be integrated into entry-level to flagship smartphones and tablets.
+Texture Compression: Mali GPUs implement advanced texture compression techniques such as Adaptive Scalable Texture Compression (ASTC). This technology reduces memory bandwidth requirements while maintaining high-quality textures, resulting in improved performance and reduced power consumption.</p>
+<p><strong>Compute Capabilities:</strong></p>
+<p>In addition to graphics rendering, Mali GPUs also offer compute capabilities through APIs like OpenCL and Vulkan. This allows developers to harness the GPU&rsquo;s parallel processing power for tasks beyond traditional graphics, such as machine learning and computational photography.</p>
+<p><strong>Efficiency and Power Management:</strong></p>
+<p>Mali GPUs are known for their efficiency, achieved through optimized architecture and power management techniques. Features like Dynamic Voltage and Frequency Scaling (DVFS) dynamically adjust the GPU&rsquo;s clock speed and voltage based on workload, maximizing performance while minimizing power consumption.</p>
+<p>The names of the Mali GPU architectures are inspired by Norse mythology, starting from “Utgard”, “Midgard”, “Bifrost” to the most recent “Valhall”. Most modern Android phones are running either “Valhall” or “Bifrost” architecture and their kernel drivers share much of the code. As these newer architectures are based largely on the “Midgard” architecture, there are sometimes macros in the “Valhall” or “Bifrost” driver with the “MIDGARD” prefix (e.g. MIDGARD_MMU_LEVEL). These macros may still be in active use in the newer drivers and the “MIDGARD” prefix merely reflects their historic origin.</p>
+<p><img src="https://images.anandtech.com/doci/14385/Mali-G77-4.png" alt="Mali GPU Architecture"></p>
+<p><em>Source:</em> <a href="https://images.anandtech.com/doci/14385/Mali-G77-4.png">https://images.anandtech.com/doci/14385/Mali-G77-4.png</a></p>
+<p>Here&rsquo;s an overview of the different Mali GPU generations:</p>
+<p><strong>Mali-200 Series:</strong>
+Release Year: 2008
+The Mali-200 series was ARM&rsquo;s first GPU IP to enter the market. It was designed for low-power, small form factor devices such as smartphones and smartwatches. This series supported OpenGL ES 2.0 and was capable of handling basic graphics tasks.</p>
+<p><strong>Mali-300 Series:</strong>
+Release Year: 2010
+The Mali-300 series was a step up from the Mali-200, offering improved performance and efficiency. It also supported OpenGL ES 2.0 and was used in mid-range smartphones and tablets.</p>
+<p><strong>Mali-400 Series:</strong>
+Release Year: 2010
+The Mali-400 series was a significant advancement, providing a substantial boost in performance compared to its predecessors. It supported OpenGL ES 2.0 and 1.1, making it suitable for mid-range to high-end devices.</p>
+<p><strong>Mali-T600 Series (Midgard):</strong>
+Release Year: 2012
+The Mali-T600 series introduced the Midgard architecture, a major overhaul in GPU design. It brought support for OpenGL ES 3.0 and offered significant improvements in performance and efficiency. This series was used in high-end smartphones and tablets.</p>
+<p><strong>Mali-T700 Series (Midgard):</strong>
+Release Year: 2014
+The Mali-T700 series continued the Midgard architecture, further refining performance and efficiency. It added support for advanced graphics features and APIs like OpenGL ES 3.1 and DirectX 11. This series powered flagship devices.</p>
+<p><strong>Mali-T800 Series (Midgard):</strong>
+Release Year: 2014
+Building upon the success of the Mali-T700 series, the Mali-T800 series offered even greater performance and efficiency improvements. It supported advanced features such as Vulkan and improved tessellation. Used in flagship and high-performance devices.</p>
+<p><strong>Mali-G31/G51/G52 Series (Bifrost):</strong>
+Release Year: 2016-2017
+The Mali-G31, G51, and G52 series introduced the Bifrost architecture. These GPUs offered improved performance and efficiency over their predecessors and supported modern APIs like Vulkan and OpenGL ES 3.2. They were used in mid-range to high-end devices.</p>
+<p><strong>Mali-G71/G72/G76/G77 Series (Bifrost/Valhall):</strong>
+Release Year: 2016-2020
+The Mali-G71, G72, G76, and G77 series continued the Bifrost and introduced the Valhall architecture with even greater performance improvements. These GPUs supported advanced features like ray tracing, machine learning, and 4K/8K video encoding and decoding. Used in flagship and high-performance devices.</p>
+<p><strong>Mali-G78/G79 Series (Valhall):</strong>
+Release Year: 2020-Present
+The Mali-G78 and G79 series are the latest in ARM&rsquo;s GPU lineup, continuing the Valhall architecture. These GPUs offer improved performance, efficiency, and support for advanced features like ray tracing and AI processing. Designed for flagship devices.</p>
+<h3 id="cots-boards">COTS Boards</h3>
+<p>COTS stands for Commercial Off-The-Shelf. COTS boards refer to pre-built, ready-to-use computer hardware boards or systems that are commercially available off the shelf. These boards are designed and manufactured by companies for general-purpose use rather than for a specific custom application. COTS boards are designed to be readily available for purchase without the need for custom design or manufacturing. They are pre-built, standardized, and often come with documentation and support. These boards are not tailored for any specific application or industry. They are versatile and can be used in a wide range of applications, from industrial automation to embedded systems, research, and more. COTS boards typically include essential components such as a processor (CPU), memory (RAM), storage (often in the form of an onboard eMMC or SSD), input/output ports (USB, Ethernet, HDMI, etc.), and sometimes expansion slots for additional modules or peripherals. Many COTS boards come with extensive documentation, software libraries, and support from the manufacturer, which can be beneficial for developers and engineers. Some popular examples of COTS boards include Raspberry Pi, Arduino, BeagleBone, etc. These boards are widely used in hobbyist projects, educational settings, prototyping, and even in commercial products.</p>
+<p>&ldquo;HiKey&rdquo; boards, which are popular development boards designed by the Linaro Community Board Group. The HiKey boards are designed to provide a platform for developers to create software and test it on ARM-based architecture. These boards are particularly focused on the ARM Cortex-A series processors. Here are a couple of examples:</p>
+<ul>
+<li>HiKey 960</li>
+<li>HiKey 970</li>
+</ul>
+<p>Here are some popular development boards, their corresponding GPUs, and the operating systems (OS) they support:</p>
+<p><strong>Raspberry Pi 4 Model B:</strong></p>
+<ul>
+<li>Board: Raspberry Pi 4 Model B</li>
+<li>GPU: Broadcom VideoCore VI GPU</li>
+<li>OS Support: Raspberry Pi OS (formerly Raspbian), Ubuntu, Fedora, and various other Linux distributions.</li>
+</ul>
+<p><strong>HiKey 960:</strong></p>
+<ul>
+<li>Board: HiKey 960</li>
+<li>GPU: ARM Mali-G71 GPU</li>
+<li>OS Support: Android, Linux (Debian, Ubuntu, etc.)</li>
+</ul>
+<p><strong>HiKey 970:</strong></p>
+<ul>
+<li>Board: HiKey 970</li>
+<li>GPU: ARM Mali-G72 GPU</li>
+<li>OS Support: Android, Linux (Debian, Ubuntu, etc.)</li>
+</ul>
+<p><strong>Arduino Uno:</strong></p>
+<ul>
+<li>Board: Arduino Uno</li>
+<li>GPU: N/A (Arduino Uno is a microcontroller board, not a GPU-equipped board)</li>
+<li>OS Support: Arduino IDE programming environment; no specific operating system.</li>
+</ul>
+<p><strong>BeagleBone Black:</strong></p>
+<ul>
+<li>Board: BeagleBone Black</li>
+<li>GPU: PowerVR SGX530 (in the AM335x SoC)</li>
+<li>OS Support: Debian-based distributions (such as Debian, Ubuntu, etc.), and other Linux distributions.</li>
+</ul>
+<p><strong>Odroid XU4:</strong></p>
+<ul>
+<li>Board: Odroid XU4</li>
+<li>GPU: ARM Mali-T628 MP6 GPU</li>
+<li>OS Support: Android, Ubuntu, and other Linux distributions.</li>
+</ul>
+<h2 id="arm-mali-gpu-software-stack">ARM Mali GPU Software Stack</h2>
+<p>ARM provides an official software stack for their Mali GPUs, tailored for different operating systems and development environments. Understanding this stack is crucial for developers looking to harness the power of Mali GPUs in their applications. Let&rsquo;s delve into the two main branches of ARM&rsquo;s official stack:</p>
+<h3 id="linuxdebian-stack">Linux/Debian Stack:</h3>
+<p>ARM&rsquo;s Linux/Debian stack is designed for devices running Linux-based operating systems like Debian. This stack includes drivers and support for OpenGL ES, which is specifically designed for embedded systems, smartphones, and other devices with limited hardware resources. Additionally, OpenCL support is included, enabling developers to utilize the compute power of Mali GPUs for tasks such as image processing and machine learning. One notable aspect of this stack is the absence of support for OpenGL. Unlike desktop systems, which commonly use OpenGL for graphics rendering, ARM&rsquo;s Linux/Debian stack focuses on OpenGL ES.</p>
+<h3 id="aosp-android-open-source-project-stack">AOSP (Android Open Source Project) Stack:</h3>
+<p>The AOSP stack is tailored for Android-based devices, including smartphones and tablets. It offers a broader range of graphics API support compared to the Linux/Debian stack. While OpenGL support might still be present for compatibility reasons, newer Android versions are leaning towards Vulkan as the preferred graphics API. Vulkan provides high-performance access to the GPU, maximizing efficiency for graphics-intensive applications. OpenCL support may also be available for compute tasks, depending on the device and Android version.</p>
+<h2 id="mali-gpu-driver-components">Mali GPU Driver Components</h2>
+<p>The Mali GPU driver consists of two distinct parts, each playing a crucial role in enabling the GPU to function efficiently:</p>
+<p><strong>Open Source Kernel Driver:</strong></p>
+<ul>
+<li>Availability: Open source, updated on Arm Developer page.</li>
+<li>Purpose: Manages communication between GPU hardware and OS.</li>
+<li>Features: Handles memory, power management, task scheduling.</li>
+<li>Benefits: Community contributions, regular updates ensure compatibility.</li>
+</ul>
+<p><strong>Proprietary User Space Driver:</strong></p>
+<ul>
+<li>Purpose: Compiles shader language programs (e.g., OpenGL ES).</li>
+<li>Function: Translates code into Mali GPU instructions for efficiency.</li>
+<li>Shading Languages: Supports OpenGL ES for 3D graphics rendering.</li>
+<li>Efficiency: Optimizes shader code for Mali GPU execution.</li>
+</ul>
+<h2 id="kernel-driver-components">Kernel Driver Components</h2>
+<p>Here&rsquo;s a brief explanation of the terms related to the kernel driver for Mali GPUs:</p>
+<p><strong>Kbdev (kbase device):</strong></p>
+<ul>
+<li>Represents a GPU device in the kernel driver.</li>
+<li>Responsible for managing the GPU device at the kernel level.</li>
+</ul>
+<p><strong>Kctx (GPU context):</strong></p>
+<ul>
+<li>Represents a GPU context, which is a state of the GPU at a specific point in time.</li>
+<li>Manages information related to the current state of the GPU, such as shader programs, textures, and other resources.</li>
+</ul>
+<p><strong>GP (Geometry Processor):</strong></p>
+<ul>
+<li>Part of the Mali GPU responsible for handling geometry processing tasks.</li>
+<li>Tasks include vertex processing, transformations, and other geometric calculations.</li>
+</ul>
+<p><strong>PP (Pixel Processor):</strong></p>
+<ul>
+<li>Component of the Mali GPU responsible for pixel processing tasks.</li>
+<li>Tasks include fragment shading, texture mapping, and blending.</li>
+</ul>
+<p><strong>Group (Render Group):</strong></p>
+<ul>
+<li>Refers to all cores sharing the same Mali Memory Management Unit (MMU).</li>
+<li>Helps in organizing and managing parallel processing tasks.</li>
+</ul>
+<p><strong>Kbase (Kernel Driver Instance for Midgard):</strong></p>
+<ul>
+<li>The kernel driver instance specifically designed for the Midgard architecture Mali GPUs.</li>
+<li>Manages interactions between the GPU hardware and the operating system.</li>
+</ul>
+<p><strong>TLstream (Timeline Stream):</strong></p>
+<ul>
+<li>A timeline stream used for trace recording purposes.</li>
+<li>Allows for monitoring and recording of GPU activities over time.</li>
+</ul>
+<p><strong>JS (Job Slot):</strong></p>
+<ul>
+<li>Represents a job slot exposed by the GPUs.</li>
+<li>Jobs are scheduled and executed in these slots.</li>
+</ul>
+<p><strong>JC (Job Chain):</strong></p>
+<ul>
+<li>Refers to a sequence of jobs that are linked together for execution.</li>
+<li>Helps in organizing and optimizing GPU tasks.</li>
+</ul>
+<p><strong>JD (Job Dispatcher):</strong></p>
+<ul>
+<li>Part of the kernel driver responsible for dispatching and managing job execution on the GPU.</li>
+</ul>
+<p><strong>AS (Address Space):</strong></p>
+<ul>
+<li>Refers to the address space allocated for the GPU.</li>
+<li>Manages memory addresses for GPU operations.</li>
+</ul>
+<p><strong>LPU (Logical Processing Unit):</strong></p>
+<ul>
+<li>Used for timeline display purposes.</li>
+<li>Represents a logical unit of processing, possibly related to trace recording and monitoring.</li>
+</ul>
+<h2 id="exploring-arm-mali-gpu-architecture-an-overview">Exploring ARM Mali GPU Architecture: An Overview</h2>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/Mali_GPU/GPU_arch_overview.png?raw=true" alt="Mali GPU Overview"></p>
+<p>When diving into the ARM Mali GPU architecture, one crucial aspect to understand is the concept of job chains. These job chains are essential components that encapsulate GPU executable code along with its metadata, providing a streamlined way for the GPU to process tasks efficiently.</p>
+<h3 id="job-chains">Job Chains</h3>
+<p><strong>Definition:</strong> A job chain can be described as a binary blob of GPU executable and its associated metadata.</p>
+<p><strong>Atom Structure:</strong> These job chains are wrapped in an atom structure, with &ldquo;struct base_jd_atom_v2&rdquo; used in the user/kernel (u/k) interface, as seen in &ldquo;mali_base_kernel.h&rdquo;. Meanwhile, &ldquo;struct kbase_jd_atom&rdquo; is used in the kernel/hardware (k/hw) interface, defined in &ldquo;mali_kbase_defs.h&rdquo;.</p>
+<p><strong>Purpose of kbase_jd_atom:</strong> This internal data structure, kbase_jd_atom, is specific to the kernel&rsquo;s operation and is not shared with the hardware. It serves as an abstraction layer to separate the u/k interface (atom_v2), making it easier to modify and update.</p>
+<p><strong>Pointer to GPU Instructions:</strong> Both base_jd_atom_v2.jc and &lt;job-chain GPU address/&gt; contain a jc in their structure, pointing to the GPU kernel instructions.</p>
+<p><strong>Job Submission:</strong> The process of submitting a job chain begins with the kbase_api_job_submit() function in &ldquo;mali_kbase_core_linux.c&rdquo;. This function is invoked when a job is submitted from user space to the kernel.</p>
+<p><strong>Similarity of jc Structures:</strong> It is noted that both structures, base_jd_atom_v2.jc and &lt;job-chain GPU address/&gt;, likely contain the same GPU instructions. These instructions are baremetal and fundamental to the GPU&rsquo;s execution.</p>
+<p><strong>GPU Model Specification:</strong> When compiling OpenCL (OCL) kernels, it is necessary to specify the GPU model, or else the OpenCL runtime checks the available GPUs in the system for compatibility.</p>
+<p>When utilizing the Mali GPU driver, the first step is to create a kbase_context through a series of ioctl calls. This kbase_context serves as an essential component, defining an execution environment for the user space application to communicate with the GPU effectively. It&rsquo;s worth noting that each device file interacting with the GPU maintains its distinct kbase_context.</p>
+<h2 id="understanding-mali-gpu-memory-mapping-in-linux">Understanding Mali GPU Memory Mapping in Linux</h2>
+<p>Let&rsquo;s delve into a simple yet fundamental aspect: mapping memory to the GPU. In our example, we&rsquo;re focusing on the process of mapping GPU memory using the Mali driver in Pixel 6.</p>
+<h3 id="mapping-pages-to-the-gpu">Mapping Pages to the GPU</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;unistd.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;fcntl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/ioctl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/mman.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;mali.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;mali_base_jm_kernel.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdbool.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define POOL_SIZE 16384
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Function prototypes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setup_mali</span>(<span style="color:#66d9ef">int</span> fd);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">mem_alloc</span>(<span style="color:#66d9ef">int</span> fd, <span style="color:#66d9ef">union</span> kbase_ioctl_mem_alloc<span style="color:#f92672">*</span> alloc);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">map_gpu</span>(<span style="color:#66d9ef">int</span> mali_fd, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> pages, <span style="color:#66d9ef">bool</span> read_only, <span style="color:#66d9ef">int</span> group);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">setup_tracking_page</span>(<span style="color:#66d9ef">int</span> fd);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">drain_mem_pool</span>(<span style="color:#66d9ef">int</span> mali_fd);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">open</span>(<span style="color:#e6db74">&#34;/dev/mali0&#34;</span>, O_RDWR);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (fd <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;Error opening Mali device&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setup_mali</span>(fd); <span style="color:#75715e">// Setup Mali device
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> tracking_page <span style="color:#f92672">=</span> <span style="color:#a6e22e">setup_tracking_page</span>(fd);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Tracking page address: %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, tracking_page);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Allocate enough pages so the page freed later will spill into the device pool
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> drain <span style="color:#f92672">=</span> <span style="color:#a6e22e">drain_mem_pool</span>(fd);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Drain memory pool address: %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, drain);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Allocate GPU memory using map_gpu
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> region <span style="color:#f92672">=</span> <span style="color:#a6e22e">map_gpu</span>(fd, <span style="color:#ae81ff">3</span>, false, <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Print address of the mapped GPU memory region
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Mapped GPU Memory Region Address: %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, region);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">close</span>(fd);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Setup Mali device
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setup_mali</span>(<span style="color:#66d9ef">int</span> fd) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">struct</span> kbase_ioctl_version_check param <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">ioctl</span>(fd, KBASE_IOCTL_VERSION_CHECK, <span style="color:#f92672">&amp;</span>param) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;version check failed</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">struct</span> kbase_ioctl_set_flags set_flags <span style="color:#f92672">=</span> {<span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">3</span>};
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">ioctl</span>(fd, KBASE_IOCTL_SET_FLAGS, <span style="color:#f92672">&amp;</span>set_flags) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;set flags failed</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Allocate memory for GPU
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">mem_alloc</span>(<span style="color:#66d9ef">int</span> fd, <span style="color:#66d9ef">union</span> kbase_ioctl_mem_alloc<span style="color:#f92672">*</span> alloc) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">ioctl</span>(fd, KBASE_IOCTL_MEM_ALLOC, alloc) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;mem_alloc failed&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Map GPU memory
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">map_gpu</span>(<span style="color:#66d9ef">int</span> mali_fd, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> pages, <span style="color:#66d9ef">bool</span> read_only, <span style="color:#66d9ef">int</span> group) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">union</span> kbase_ioctl_mem_alloc alloc <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>    alloc.in.flags <span style="color:#f92672">=</span> BASE_MEM_PROT_CPU_RD <span style="color:#f92672">|</span> BASE_MEM_PROT_GPU_RD <span style="color:#f92672">|</span> BASE_MEM_PROT_CPU_WR <span style="color:#f92672">|</span> (group <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">22</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> prot <span style="color:#f92672">=</span> PROT_READ <span style="color:#f92672">|</span> PROT_WRITE;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>read_only) {
+</span></span><span style="display:flex;"><span>        alloc.in.flags <span style="color:#f92672">|=</span> BASE_MEM_PROT_GPU_WR;
+</span></span><span style="display:flex;"><span>        prot <span style="color:#f92672">|=</span> PROT_WRITE;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    alloc.in.va_pages <span style="color:#f92672">=</span> pages;
+</span></span><span style="display:flex;"><span>    alloc.in.commit_pages <span style="color:#f92672">=</span> pages;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mem_alloc</span>(mali_fd, <span style="color:#f92672">&amp;</span>alloc);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> region <span style="color:#f92672">=</span> <span style="color:#a6e22e">mmap</span>(NULL, <span style="color:#ae81ff">0x1000</span> <span style="color:#f92672">*</span> pages, prot, MAP_SHARED, mali_fd, alloc.out.gpu_va);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (region <span style="color:#f92672">==</span> MAP_FAILED) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;mmap failed&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> region;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Setup tracking page
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">setup_tracking_page</span>(<span style="color:#66d9ef">int</span> fd) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> region <span style="color:#f92672">=</span> <span style="color:#a6e22e">mmap</span>(NULL, <span style="color:#ae81ff">0x1000</span>, <span style="color:#ae81ff">0</span>, MAP_SHARED, fd, BASE_MEM_MAP_TRACKING_HANDLE);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (region <span style="color:#f92672">==</span> MAP_FAILED) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;setup tracking page failed&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> region;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Drain memory pool
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">drain_mem_pool</span>(<span style="color:#66d9ef">int</span> mali_fd) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">map_gpu</span>(mali_fd, POOL_SIZE, false, <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="references">References</h2>
+<ul>
+<li><a href="https://bakhi.github.io/mobileGPU/mali/">https://bakhi.github.io/mobileGPU/mali/</a></li>
+<li><a href="https://github.blog/2022-07-27-corrupting-memory-without-memory-corruption/">https://github.blog/2022-07-27-corrupting-memory-without-memory-corruption/</a></li>
+</ul>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>

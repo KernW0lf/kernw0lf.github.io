@@ -8,8 +8,15 @@
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
-    <lastBuildDate>Sun, 03 Mar 2024 02:09:24 -0500</lastBuildDate>
+    <lastBuildDate>Tue, 05 Mar 2024 00:49:24 -0500</lastBuildDate>
     <atom:link href="http://kernw0lf.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>A Close Look at ARM Mali and its CVE History</title>
+      <link>http://kernw0lf.github.io/posts/mali/</link>
+      <pubDate>Tue, 05 Mar 2024 00:49:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/mali/</guid>
+      <description>In the ever-evolving landscape of technology, where innovation and progress are constant companions, there exists a parallel necessity for robust security measures. ARM Mali, renowned for its high-performance graphics processing units (GPUs) found in a multitude of devices, is no stranger to this reality. However, behind its impressive graphics capabilities lies a history of vulnerabilities, some of which have been brought to light through Common Vulnerabilities and Exposures (CVE) reports.</description>
+    </item>
     <item>
       <title>Kernel Crafting: Building, Running, and Debugging Your Custom Linux Kernel with Busybox and QEMU</title>
       <link>http://kernw0lf.github.io/posts/qemu_debug/</link>
