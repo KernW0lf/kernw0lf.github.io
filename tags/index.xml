@@ -2,33 +2,68 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on kernw0lf blog</title>
-    <link>http://kernw0lf.github.io/tags/</link>
+    <link>http://localhost:1313/tags/</link>
     <description>Recent content in Tags on kernw0lf blog</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo</generator>
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
-    <lastBuildDate>Sun, 03 Mar 2024 02:09:24 -0500</lastBuildDate>
-    <atom:link href="http://kernw0lf.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 11 Oct 2024 05:23:43 -0400</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>debug</title>
-      <link>http://kernw0lf.github.io/tags/debug/</link>
-      <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/tags/debug/</guid>
+      <title>Bootloader</title>
+      <link>http://localhost:1313/tags/bootloader/</link>
+      <pubDate>Fri, 11 Oct 2024 05:23:43 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://localhost:1313/tags/bootloader/</guid>
       <description></description>
     </item>
     <item>
-      <title>kernel</title>
-      <link>http://kernw0lf.github.io/tags/kernel/</link>
-      <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/tags/kernel/</guid>
+      <title>OEM</title>
+      <link>http://localhost:1313/tags/oem/</link>
+      <pubDate>Fri, 11 Oct 2024 05:23:43 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://localhost:1313/tags/oem/</guid>
       <description></description>
     </item>
     <item>
-      <title>gdb</title>
-      <link>http://kernw0lf.github.io/tags/gdb/</link>
+      <title>Pixel</title>
+      <link>http://localhost:1313/tags/pixel/</link>
+      <pubDate>Fri, 11 Oct 2024 05:23:43 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://localhost:1313/tags/pixel/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Fuzzing</title>
+      <link>http://localhost:1313/tags/fuzzing/</link>
+      <pubDate>Sun, 14 Apr 2024 13:20:39 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://localhost:1313/tags/fuzzing/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Harness</title>
+      <link>http://localhost:1313/tags/harness/</link>
+      <pubDate>Sun, 14 Apr 2024 13:20:39 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://localhost:1313/tags/harness/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Debug</title>
+      <link>http://localhost:1313/tags/debug/</link>
+      <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://localhost:1313/tags/debug/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Kernel</title>
+      <link>http://localhost:1313/tags/kernel/</link>
+      <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://localhost:1313/tags/kernel/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Gdb</title>
+      <link>http://localhost:1313/tags/gdb/</link>
       <pubDate>Thu, 29 Feb 2024 03:42:52 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/tags/gdb/</guid>
+      <guid>http://localhost:1313/tags/gdb/</guid>
       <description></description>
     </item>
   </channel>

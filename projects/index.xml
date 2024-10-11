@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Projects on kernw0lf blog</title>
-    <link>http://kernw0lf.github.io/projects/</link>
+    <link>http://localhost:1313/projects/</link>
     <description>Recent content in Projects on kernw0lf blog</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo</generator>
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
     <lastBuildDate>Thu, 29 Feb 2024 03:48:50 -0500</lastBuildDate>
-    <atom:link href="http://kernw0lf.github.io/projects/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/projects/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>BinAnalyze</title>
-      <link>http://kernw0lf.github.io/projects/01/</link>
+      <link>http://localhost:1313/projects/01/</link>
       <pubDate>Thu, 29 Feb 2024 03:48:50 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/projects/01/</guid>
+      <guid>http://localhost:1313/projects/01/</guid>
       <description>BinAnalyze BinAnalyze is a PyQt5-based application for analyzing binary files using various tools like readelf and hexdump. This application provides a graphical interface to examine the structure and content of binary files, displaying information such as headers, program headers, section headers, symbol tables, and hexdumps.&#xA;Download</description>
     </item>
   </channel>

@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Abouts on kernw0lf blog</title>
-    <link>http://kernw0lf.github.io/about/</link>
+    <link>http://localhost:1313/about/</link>
     <description>Recent content in Abouts on kernw0lf blog</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo</generator>
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
     <lastBuildDate>Thu, 29 Feb 2024 03:43:01 -0500</lastBuildDate>
-    <atom:link href="http://kernw0lf.github.io/about/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/about/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>About</title>
-      <link>http://kernw0lf.github.io/about/about/</link>
+      <link>http://localhost:1313/about/about/</link>
       <pubDate>Thu, 29 Feb 2024 03:43:01 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/about/about/</guid>
+      <guid>http://localhost:1313/about/about/</guid>
       <description>👨‍💻 Hey there! I&amp;rsquo;m Harry (kernw0lf), a cybersecurity enthusiast and software developer with a passion for exploring the depths of Android, Linux, and everything in between. Here&amp;rsquo;s a glimpse into my skill set:&#xA;📱 Android App Development 👨‍💻 Android App Pentesting 📚 Android Native Libraries Development, Fuzzing, and Analysis ☠️ Android Userland Fuzzing and Exploitation 🦠 Android Malware Analysis 💻 Languages: C, C++, Rust, Python, Bash, PowerShell ⚙️ Architectures: x86, x64, ARM, AARCH-64, MIPS Assembly 🩻 Reverse Engineering Tools: IDA, Binary Ninja, Ghidra, radare2, cutter, gdb 💡 Kernel Developing and Debugging 💥 Kernel Exploit Development 🌪️ Fuzzing Tools: afl++, honggfuzz, libfuzzer, spike 🐧 Linux System Programming 🛠️ Linux Exploitation: x86, x64, ARM, AARCH64 🕵️‍♀️ Linux Rootkit Development 🛡️ Red Teaming 🌐 IoT Exploitation 🧑🏽‍🔬 Binary Emulation: qiling, qemu 🖥️ Windows Userland Exploitation 🚀 Linux Driver Development 🛠️ Building Embedded Linux Systems 🐞 Debugging Linux Kernel 🌟 Excited to delve deeper into the realms of cybersecurity and software development, constantly learning and exploring new challenges.</description>
     </item>
   </channel>

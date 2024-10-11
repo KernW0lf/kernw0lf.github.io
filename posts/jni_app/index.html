@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <title>
+A Guide to Adding JNI to Your Android App | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.131.0">
+
+
+<link rel="canonical" href="http://localhost:1313/posts/jni_app/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://localhost:1313/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://localhost:1313/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://localhost:1313/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://localhost:1313/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>A Guide to Adding JNI to Your Android App</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-03-10">March 10, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>2 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <h2 id="introduction">Introduction</h2>
+<p>Java Native Interface (JNI) is a framework that allows Java code running in the Java Virtual Machine (JVM) to call and be called by native applications and libraries written in other languages such as C and C++. This can be incredibly useful in Android development when you need to incorporate native code for performance optimization or to utilize existing libraries. In this guide, we&rsquo;ll walk through the steps to add JNI to your Android app.</p>
+<h2 id="what-is-jni">What is JNI?</h2>
+<ul>
+<li>JNI is a framework that enables Java code running in the JVM to interact with native code written in languages like C or C++.</li>
+<li>It provides a way to access native features and libraries that might not be available in Java.</li>
+<li>JNI is often used for tasks requiring low-level hardware interactions, such as accessing sensors or implementing performance-critical algorithms.</li>
+</ul>
+<p>This guide is written with Kali Linux 2024.1 in mind, but the steps outlined here are applicable to other Linux distributions as well.</p>
+<h2 id="steps-to-add-jni-to-your-android-app">Steps to Add JNI to Your Android App</h2>
+<p>I&rsquo;m utilizing the Pixel XL API 24 emulator for this guide.
+I have android-studio installed at <code>/home/kali/android-studio/</code>. To start it use the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ /home/kali/android-studio/bin/studio.sh
+</span></span></code></pre></div><h3 id="step-1-set-up-your-android-project">Step 1: Set Up Your Android Project</h3>
+<ol>
+<li>Open Android Studio and create a new Android project or open an existing one.</li>
+</ol>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/JNI_App/01.png?raw=true" alt="Empty Activity">
+<img src="https://github.com/KernW0lf/Materials/blob/main/JNI_App/02.png?raw=true" alt="JNI_App"></p>
+<ol start="2">
+<li>Make sure you have the necessary SDKs and build tools installed for your project.</li>
+</ol>
+<h3 id="step-2-create-your-jni-folder-structure">Step 2: Create Your JNI Folder Structure</h3>
+<ol>
+<li>Inside your Android project, create a new folder to hold your JNI code. Conventionally, this folder is named jni or src/main/jni.</li>
+</ol>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/JNI_App/03.png?raw=true" alt="Create jni"></p>
+<p>Alternatively, you have the option to manually navigate to your project directory and create the jni directory yourself.</p>
+<p>In my situation, my Android Studio projects are located at /home/kali/AndroidStudioProjects/, and specifically, this JNI_App project is at /home/kali/AndroidStudioProjects/JNI_App/.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ cd /home/kali/AndroidStudioProjects/JNI_App/
+</span></span><span style="display:flex;"><span>$ cd app/src/main/
+</span></span><span style="display:flex;"><span>$ mkdir jni
+</span></span><span style="display:flex;"><span>$ ls
+</span></span><span style="display:flex;"><span>AndroidManifest.xml  java  jni  res
+</span></span></code></pre></div><ol start="2">
+<li>Within the jni folder, create a C source file (e.g., native-lib.c). This file will contain the native C code you want to call from your Java/Kotlin code.</li>
+</ol>
+<p>To do this follow the following steps:</p>
+<ul>
+<li>Next, in the jni directory, right-click and choose <strong>New -&gt; CMakeLists.txt</strong>. Also, select <strong>New -&gt; C/C++ Source File -&gt; {Name -&gt; native-lib &amp; Type -&gt; C}</strong>.</li>
+</ul>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/JNI_App/05.png?raw=true" alt="Add_CMakeLists.txt"></p>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/JNI_App/05_b.png?raw=true" alt="Add_Cpp"></p>
+<h3 id="step-3-write-your-native-c-code">Step 3: Write Your Native C Code</h3>
+<ol>
+<li>Open the native-lib.c file you created.</li>
+<li>Write your native C functions. For example:</li>
+</ol>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>
