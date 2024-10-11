@@ -1,28 +1,21 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Bootloader on kernw0lf blog</title>
-    <link>http://kernw0lf.github.io/tags/bootloader/</link>
-    <description>Recent content in Bootloader on kernw0lf blog</description>
+    <title>Rooting on kernw0lf blog</title>
+    <link>http://kernw0lf.github.io/tags/rooting/</link>
+    <description>Recent content in Rooting on kernw0lf blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
     <lastBuildDate>Fri, 11 Oct 2024 07:49:02 -0400</lastBuildDate>
-    <atom:link href="http://kernw0lf.github.io/tags/bootloader/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://kernw0lf.github.io/tags/rooting/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Rooting Android Devices with Magisk</title>
       <link>http://kernw0lf.github.io/posts/magisk-guide/</link>
       <pubDate>Fri, 11 Oct 2024 07:49:02 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
       <guid>http://kernw0lf.github.io/posts/magisk-guide/</guid>
       <description>Rooting an Android device opens up a world of possibilities, allowing users to customize their devices beyond the limitations set by manufacturers. Magisk has emerged as a popular tool for rooting due to its systemless approach, meaning you can gain root access without modifying the system partition, making it easier to unroot or pass SafetyNet checks. This guide will take you through the process of rooting your android devices using Magisk.</description>
-    </item>
-    <item>
-      <title>Unlocking the Bootloader of Pixel 2 XL (Carrier Locked)</title>
-      <link>http://kernw0lf.github.io/posts/bootloader-unlock/</link>
-      <pubDate>Fri, 11 Oct 2024 05:23:43 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/bootloader-unlock/</guid>
-      <description>Unlocking the bootloader of a smartphone is a crucial step for users who want to take complete control of their devices. Whether you&amp;rsquo;re interested in installing a custom ROM, rooting your phone, or simply exploring more advanced development features, unlocking the bootloader opens up these possibilities. However, on certain devices come with carrier locked. When you go in Settings -&amp;gt; Developer Options -&amp;gt; OEM Unlocking, you can see &amp;ldquo;Connect to the internet or contact your carrier&amp;rdquo;.</description>
     </item>
   </channel>
 </rss>
