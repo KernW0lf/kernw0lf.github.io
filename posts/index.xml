@@ -2,103 +2,103 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on kernw0lf blog</title>
-    <link>http://localhost:1313/posts/</link>
+    <link>http://kernw0lf.github.io/posts/</link>
     <description>Recent content in Posts on kernw0lf blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
     <lastBuildDate>Fri, 11 Oct 2024 05:23:43 -0400</lastBuildDate>
-    <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://kernw0lf.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Unlocking the Bootloader of Pixel 2 XL (Carrier Locked)</title>
-      <link>http://localhost:1313/posts/bootloader-unlock/</link>
+      <link>http://kernw0lf.github.io/posts/bootloader-unlock/</link>
       <pubDate>Fri, 11 Oct 2024 05:23:43 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/bootloader-unlock/</guid>
+      <guid>http://kernw0lf.github.io/posts/bootloader-unlock/</guid>
       <description>Unlocking the bootloader of a smartphone is a crucial step for users who want to take complete control of their devices. Whether you&amp;rsquo;re interested in installing a custom ROM, rooting your phone, or simply exploring more advanced development features, unlocking the bootloader opens up these possibilities. However, on certain devices come with carrier locked. When you go in Settings -&amp;gt; Developer Options -&amp;gt; OEM Unlocking, you can see &amp;ldquo;Connect to the internet or contact your carrier&amp;rdquo;.</description>
     </item>
     <item>
       <title>Honggfuzz Demystified</title>
-      <link>http://localhost:1313/posts/hongfuzz/</link>
+      <link>http://kernw0lf.github.io/posts/hongfuzz/</link>
       <pubDate>Sun, 14 Apr 2024 13:20:39 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/hongfuzz/</guid>
+      <guid>http://kernw0lf.github.io/posts/hongfuzz/</guid>
       <description>In the realm of cybersecurity, staying ahead of potential vulnerabilities is an ongoing battle. Fuzz testing, or fuzzing, has emerged as a formidable technique to unearth these weaknesses proactively. Among the array of fuzzing tools available, Honggfuzz stands out for its efficiency, speed, and versatility. In this comprehensive guide, we&amp;rsquo;ll delve into the world of Honggfuzz fuzzing, exploring its features, advantages, and how it empowers developers and security professionals to fortify their systems against cyber threats.</description>
     </item>
     <item>
       <title>A Guide to Building Android Libraries with NDK from Scratch</title>
-      <link>http://localhost:1313/posts/android_lib/</link>
+      <link>http://kernw0lf.github.io/posts/android_lib/</link>
       <pubDate>Sun, 10 Mar 2024 05:32:49 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/android_lib/</guid>
+      <guid>http://kernw0lf.github.io/posts/android_lib/</guid>
       <description>Introduction Building Android libraries with the NDK (Native Development Kit) can greatly enhance the performance and capabilities of your Android apps, especially when dealing with computationally intensive tasks or utilizing native code. Here&amp;rsquo;s a step-by-step guide to get you started:&#xA;Prerequisites Before diving into building Android libraries with NDK, ensure you have the following:&#xA;Android Studio installed Android NDK installed and configured in your project Step 1: Set Up Your Android Project Open Android Studio and create a new Android project or open an existing one.</description>
     </item>
     <item>
       <title>A Guide to Adding JNI to Your Android App</title>
-      <link>http://localhost:1313/posts/jni_app/</link>
+      <link>http://kernw0lf.github.io/posts/jni_app/</link>
       <pubDate>Sun, 10 Mar 2024 00:08:56 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/jni_app/</guid>
+      <guid>http://kernw0lf.github.io/posts/jni_app/</guid>
       <description>Introduction Java Native Interface (JNI) is a framework that allows Java code running in the Java Virtual Machine (JVM) to call and be called by native applications and libraries written in other languages such as C and C++. This can be incredibly useful in Android development when you need to incorporate native code for performance optimization or to utilize existing libraries. In this guide, we&amp;rsquo;ll walk through the steps to add JNI to your Android app.</description>
     </item>
     <item>
       <title>A Close Look at ARM Mali and its CVE History</title>
-      <link>http://localhost:1313/posts/mali/</link>
+      <link>http://kernw0lf.github.io/posts/mali/</link>
       <pubDate>Tue, 05 Mar 2024 00:49:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/mali/</guid>
+      <guid>http://kernw0lf.github.io/posts/mali/</guid>
       <description>In the ever-evolving landscape of technology, where innovation and progress are constant companions, there exists a parallel necessity for robust security measures. ARM Mali, renowned for its high-performance graphics processing units (GPUs) found in a multitude of devices, is no stranger to this reality. However, behind its impressive graphics capabilities lies a history of vulnerabilities, some of which have been brought to light through Common Vulnerabilities and Exposures (CVE) reports.</description>
     </item>
     <item>
       <title>Kernel Crafting: Building, Running, and Debugging Your Custom Linux Kernel with Busybox and QEMU</title>
-      <link>http://localhost:1313/posts/qemu_debug/</link>
+      <link>http://kernw0lf.github.io/posts/qemu_debug/</link>
       <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/qemu_debug/</guid>
+      <guid>http://kernw0lf.github.io/posts/qemu_debug/</guid>
       <description>In this step-by-step tutorial, we&amp;rsquo;ll walk through the entire process of building a custom Linux kernel, creating a minimal filesystem using Busybox, running it on QEMU, and debugging the kernel. Finally, we&amp;rsquo;ll wrap up by learning how to compile and add custom Linux kernel modules to enhance our kernel. I&amp;rsquo;m using a Linux system for this demonstration, specifically Ubuntu 16.04.7 LTS with kernel version 4.15.0-142-generic. However, the steps should be similar for other Linux distributions.</description>
     </item>
     <item>
       <title>Module 5: Linux Advanced Exploitation</title>
-      <link>http://localhost:1313/posts/linux_exp_dev/05/</link>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/05/</link>
       <pubDate>Thu, 29 Feb 2024 03:51:07 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/linux_exp_dev/05/</guid>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/05/</guid>
       <description></description>
     </item>
     <item>
       <title>Module 4: Linux Shellcoding</title>
-      <link>http://localhost:1313/posts/linux_exp_dev/04/</link>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/04/</link>
       <pubDate>Thu, 29 Feb 2024 03:51:05 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/linux_exp_dev/04/</guid>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/04/</guid>
       <description></description>
     </item>
     <item>
       <title>Module 3: Linux Return Oriented Programming</title>
-      <link>http://localhost:1313/posts/linux_exp_dev/03/</link>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/03/</link>
       <pubDate>Thu, 29 Feb 2024 03:51:04 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/linux_exp_dev/03/</guid>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/03/</guid>
       <description></description>
     </item>
     <item>
       <title>Module 2: Linux Exploit Countermeasures &amp; Bypasses</title>
-      <link>http://localhost:1313/posts/linux_exp_dev/02/</link>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/02/</link>
       <pubDate>Thu, 29 Feb 2024 03:51:03 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/linux_exp_dev/02/</guid>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/02/</guid>
       <description></description>
     </item>
     <item>
       <title>Module 1: Linux Stack Smashing</title>
-      <link>http://localhost:1313/posts/linux_exp_dev/01/</link>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/01/</link>
       <pubDate>Thu, 29 Feb 2024 03:51:01 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/linux_exp_dev/01/</guid>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/01/</guid>
       <description>Decoding the Binary: A Prelude to Linux Stack Smashing and Exploit Development Before diving into the world of Linux stack smashing, it&amp;rsquo;s crucial to begin with binary analysis. Analyzing the binary executable provides us with valuable insights into its structure, functions, and potential vulnerabilities. Through binary analysis, we can identify the layout of the stack, the presence of buffer overflows, and other crucial details that will aid us in crafting our exploit.</description>
     </item>
     <item>
       <title>Unlocking Java&#39;s Power with JNI: A Comprehensive Guide</title>
-      <link>http://localhost:1313/posts/jni/</link>
+      <link>http://kernw0lf.github.io/posts/jni/</link>
       <pubDate>Thu, 29 Feb 2024 03:42:55 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/jni/</guid>
+      <guid>http://kernw0lf.github.io/posts/jni/</guid>
       <description>Introduction: Java Native Interface (JNI) is a powerful tool that allows Java code running in the Java Virtual Machine (JVM) to interact with code and libraries written in other languages, such as C and C++. JNI opens up a world of possibilities for Java developers, enabling them to access native code, leverage platform-specific features, and optimize performance. In this guide, we&amp;rsquo;ll delve into the world of JNI, exploring its benefits, how it works, and how you can start using it in your Java projects.</description>
     </item>
     <item>
       <title>GDB: Zero to Hero</title>
-      <link>http://localhost:1313/posts/gdb/</link>
+      <link>http://kernw0lf.github.io/posts/gdb/</link>
       <pubDate>Thu, 29 Feb 2024 03:42:52 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://localhost:1313/posts/gdb/</guid>
+      <guid>http://kernw0lf.github.io/posts/gdb/</guid>
       <description>After analyzing the binaries using tools like objdump, strace, and nm as explored in our Linux Binary Analysis series, it&amp;rsquo;s time to delve into debugging with GDB.&#xA;What is GDB? GDB is a command-line debugger that allows developers to inspect and manipulate the execution of programs. It provides a range of features for analyzing the state of a program, examining variables, setting breakpoints, and stepping through code. GDB, short for the GNU Debugger, is a versatile and portable debugging tool designed to run on a wide range of Unix-like systems.</description>
     </item>
   </channel>
