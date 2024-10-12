@@ -8,8 +8,22 @@
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
-    <lastBuildDate>Fri, 11 Oct 2024 07:49:02 -0400</lastBuildDate>
+    <lastBuildDate>Sat, 12 Oct 2024 03:12:26 -0400</lastBuildDate>
     <atom:link href="http://kernw0lf.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Cross-Compilation</title>
+      <link>http://kernw0lf.github.io/tags/cross-compilation/</link>
+      <pubDate>Sat, 12 Oct 2024 03:12:26 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/cross-compilation/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>QEMU</title>
+      <link>http://kernw0lf.github.io/tags/qemu/</link>
+      <pubDate>Sat, 12 Oct 2024 03:12:26 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/qemu/</guid>
+      <description></description>
+    </item>
     <item>
       <title>Bootloader</title>
       <link>http://kernw0lf.github.io/tags/bootloader/</link>

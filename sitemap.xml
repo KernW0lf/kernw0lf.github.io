@@ -2,25 +2,34 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>http://kernw0lf.github.io/tags/cross-compilation/</loc>
+    <lastmod>2024-10-12T03:12:26-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/</loc>
+    <lastmod>2024-10-12T03:12:26-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/posts/</loc>
+    <lastmod>2024-10-12T03:12:26-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/tags/qemu/</loc>
+    <lastmod>2024-10-12T03:12:26-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/tags/</loc>
+    <lastmod>2024-10-12T03:12:26-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/posts/cross-compilation/</loc>
+    <lastmod>2024-10-12T03:12:26-04:00</lastmod>
+  </url><url>
     <loc>http://kernw0lf.github.io/tags/bootloader/</loc>
     <lastmod>2024-10-11T07:49:02-04:00</lastmod>
   </url><url>
-    <loc>http://kernw0lf.github.io/</loc>
-    <lastmod>2024-10-11T07:49:02-04:00</lastmod>
-  </url><url>
     <loc>http://kernw0lf.github.io/tags/magisk/</loc>
-    <lastmod>2024-10-11T07:49:02-04:00</lastmod>
-  </url><url>
-    <loc>http://kernw0lf.github.io/posts/</loc>
     <lastmod>2024-10-11T07:49:02-04:00</lastmod>
   </url><url>
     <loc>http://kernw0lf.github.io/tags/rooting/</loc>
     <lastmod>2024-10-11T07:49:02-04:00</lastmod>
   </url><url>
     <loc>http://kernw0lf.github.io/posts/magisk-guide/</loc>
-    <lastmod>2024-10-11T07:49:02-04:00</lastmod>
-  </url><url>
-    <loc>http://kernw0lf.github.io/tags/</loc>
     <lastmod>2024-10-11T07:49:02-04:00</lastmod>
   </url><url>
     <loc>http://kernw0lf.github.io/tags/oem/</loc>
