@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-us">
 
-<head>
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
     <title>
 The Art of Cross-Compilation and Emulation: Building and Testing Across Architectures | KernW0lf
 </title>
@@ -13,7 +13,7 @@ The Art of Cross-Compilation and Emulation: Building and Testing Across Architec
 <meta name="generator" content="Hugo 0.131.0">
 
 
-<link rel="canonical" href="http://kernw0lf.github.io/posts/cross-compilation/" >
+<link rel="canonical" href="http://localhost:1313/posts/cross-compilation/" >
 
 
 
@@ -33,7 +33,7 @@ The Art of Cross-Compilation and Emulation: Building and Testing Across Architec
         <header class="headerWrapper">
     <div class="header">
         <div>
-            <a class="terminal" href="http://kernw0lf.github.io/">
+            <a class="terminal" href="http://localhost:1313/">
                 <span>KernW0lf@github.io ~ $</span>
             </a>
         </div>
@@ -43,17 +43,17 @@ The Art of Cross-Compilation and Emulation: Building and Testing Across Architec
             <ul>
                 
                 <li>
-                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                    <a href="http://localhost:1313/about/about/" title="" >
                         ~/about</a>
                 </li>
                 
                 <li>
-                    <a href="http://kernw0lf.github.io/projects" title="" >
+                    <a href="http://localhost:1313/projects" title="" >
                         ~/projects</a>
                 </li>
                 
                 <li>
-                    <a href="http://kernw0lf.github.io/posts" title="" >
+                    <a href="http://localhost:1313/posts" title="" >
                         ~/posts</a>
                 </li>
                 
@@ -246,9 +246,9 @@ But what about our dynamically linked binary? 😟</p>
 </span></span><span style="display:flex;"><span>Hello World!
 </span></span></code></pre></div><p>YAY! In both cases, we can finally run our dynamically compiled ARM 32-bit binary successfully! 🎉</p>
 <p>You can follow the same process for compiling and running binaries for ARM 64, MIPS 32 (LE), and MIPS 64 architectures. The steps remain consistent: simply compile your code using appropriate toolchains, and use QEMU to run the binaries while ensuring that the required libraries are accessible. This versatility allows you to work seamlessly across different architectures, expanding your development capabilities!</p>
-<p>For ARM 64, you can find the libraries in: <code>/usr/aarch64-linux-gnu/</code>
-For MIPS 32 (Little Endian), the libraries are located in: <code>/usr/mipsel-linux-gnu/</code>
-For MIPS 64, you can find the libraries in: <code>/usr/mips64-linux-gnuabi64/</code></p>
+<p>For ARM 64, you can find the libraries in: <code>/usr/aarch64-linux-gnu/</code></p>
+<p>For MIPS 32 (Little Endian), the libraries are located in: <code>/usr/mipsel-linux-gnu/</code></p>
+<p>For MIPS 64, you can find the libraries in: <code>/usr/mips64-linux-gnuabi64/</code></p>
 <h2 id="conclusion">Conclusion</h2>
 <p>In this guide, we explored the fundamentals of cross-compilation and emulation using QEMU. We covered the differences between static and dynamic compilation, discussing how static binaries include all dependencies within the executable, while dynamic binaries rely on external libraries. We also learned how to set up toolchains, compile binaries for different architectures, and troubleshoot common issues.</p>
 <p>With this knowledge, you can effectively develop and test applications across various platforms.</p>
