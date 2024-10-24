@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Gdb on kernw0lf blog</title>
+    <link>http://kernw0lf.github.io/tags/gdb/</link>
+    <description>Recent content in Gdb on kernw0lf blog</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
+    <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
+    <lastBuildDate>Thu, 29 Feb 2024 03:42:52 -0500</lastBuildDate>
+    <atom:link href="http://kernw0lf.github.io/tags/gdb/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>GDB: Zero to Hero</title>
+      <link>http://kernw0lf.github.io/posts/gdb/</link>
+      <pubDate>Thu, 29 Feb 2024 03:42:52 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/gdb/</guid>
+      <description>After analyzing the binaries using tools like objdump, strace, and nm as explored in our Linux Binary Analysis series, it&amp;rsquo;s time to delve into debugging with GDB.&#xA;What is GDB? GDB is a command-line debugger that allows developers to inspect and manipulate the execution of programs. It provides a range of features for analyzing the state of a program, examining variables, setting breakpoints, and stepping through code. GDB, short for the GNU Debugger, is a versatile and portable debugging tool designed to run on a wide range of Unix-like systems.</description>
+    </item>
+  </channel>
+</rss>

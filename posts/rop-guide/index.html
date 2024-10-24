@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+    <title>
+Mastering Gadget Hunting with Ropper, ROPgadget, and One_Gadget: A Practical Guide | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.131.0">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/rop-guide/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    
+    
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+
+
+
+    <style>
+        body {
+             
+            font-family: 'Fira Code','Source Code Pro','Roboto', sans-serif; 
+        }
+        .highlight {
+            font-size: 20px;  
+        }
+
+        
+    </style>
+    
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>Mastering Gadget Hunting with Ropper, ROPgadget, and One_Gadget: A Practical Guide</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+                
+<dt>tags</dt>
+<dd><span></span>
+    <a href="/tags/ropper/">#Ropper</a><span></span>
+    <a href="/tags/one_gadget/">#One_gadget</a><span></span>
+    <a href="/tags/ropgadget/">#ROPgadget</a><span></span>
+    <a href="/tags/rop/">#ROP</a></dd>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-10-21">October 21, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>15 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <p>In the world of binary exploitation, gadgets are crucial building blocks for bypassing modern security defenses. Whether you&rsquo;re attacking vulnerable software in a CTF or conducting real-world vulnerability research, <strong>Return-Oriented Programming (ROP)</strong> and other gadget-based techniques can turn the simplest bug into a powerful exploit. But what are gadgets, and how do tools like <strong>Ropper</strong>, <strong>ROPgadget</strong>, and <strong>one_gadget</strong> help us find and use them?
+In this blog post, we will take a deep dive into gadgets, from understanding what they are and why they’re essential in modern exploitation, to mastering the use of tools like <strong>Ropper</strong>, <strong>ROPgadget</strong>, and <strong>one_gadget</strong> for advanced gadget hunting. Whether you&rsquo;re just starting out in binary exploitation or looking to sharpen your skills, this guide will walk you through how to harness these tools to build effective ROP chains and exploit binaries.</p>
+<p>If you’re new to binary exploitation or need a refresher, I recommend checking out my <strong>x86 Linux Binary Exploitation</strong> series, which covers fundamental concepts like buffer overflows, control flow hijacking, and introduction to ROP. This post builds on those principles, focusing on the next step: effectively finding and using gadgets for complex exploits.</p>
+<h2 id="what-are-gadgets">What Are Gadgets?</h2>
+<p>At the heart of <strong>Return-Oriented Programming (ROP)</strong> is the concept of a <strong>gadget</strong>. A gadget is a short sequence of instructions, typically ending with a <code>ret</code> (return) instruction, which we can hijack during a control flow attack. These gadgets are typically small, consisting of just a few instructions, but when chained together, they can perform complex operations like calling system functions, manipulating memory, or bypassing defenses like <strong>DEP</strong> (Data Execution Prevention) and <strong>ASLR</strong> (Address Space Layout Randomization).</p>
+<h2 id="why-do-we-use-gadgets">Why Do We Use Gadgets?</h2>
+<p>In modern exploitation, attackers can no longer rely on simply injecting shellcode into a process due to security measures like DEP, which marks memory regions as non-executable. To bypass these defenses, ROP allows us to reuse existing code in the program&rsquo;s binary or linked libraries by crafting ROP chains—sequences of gadgets that are executed one after another.
+By controlling the stack and chaining together gadgets that manipulate registers, call functions, or move data, attackers can achieve the same result as custom shellcode, without ever introducing new code into the program. In essence, ROP lets us &ldquo;borrow&rdquo; the program&rsquo;s own code to execute arbitrary operations.</p>
+<h3 id="a-simple-example-of-gadgets">A Simple Example of Gadgets</h3>
+<p>Consider a small gadget like <code>pop rdi; ret</code>. This sequence pops a value from the stack into the rdi register (which is commonly used for passing arguments to functions in the x86-64 calling convention), then returns control to the next instruction in the ROP chain. If we can find and chain multiple gadgets like this together, we can control the flow of the program and eventually make system calls, open files, or spawn a shell.</p>
+<h2 id="meet-ropper-your-gadget-hunting-sidekick">Meet Ropper: Your Gadget-Hunting Sidekick</h2>
+<p>Imagine you&rsquo;re Indiana Jones, but instead of searching for ancient relics, you&rsquo;re on a quest to find the perfect gadgets hidden deep within a binary. You&rsquo;ve got your whip (okay, more like a keyboard), and you need a trusty sidekick who knows the terrain. Enter Ropper—your gadget-hunting buddy who’s always ready to dive into the depths of binaries to find those elusive ROP treasures.</p>
+<p>Think of Ropper like that friend who remembers exactly where you left your car keys—except instead of keys, it remembers where every <code>pop rdi; ret</code> or <code>syscall</code> gadget is hiding. You just give it a binary, ask nicely (or just use a simple command), and it comes back with a list of gadgets like, &ldquo;Hey, here are all the little pieces you can use to break things… constructively, of course.&rdquo;</p>
+<p>But wait, Ropper doesn’t just stop at pointing out gadgets. It’s like having a treasure map with a giant red &ldquo;X&rdquo; marking all the best spots. Whether you&rsquo;re looking for ROP, JOP, or even Syscall gadgets, Ropper’s got your back. It even works across different architectures—because what’s a good sidekick if they can’t adapt to a little variety, right?</p>
+<p>Ropper was created by the talented Sascha Schirra, who has gifted the world of exploitation with this amazing tool. If you want to learn more about it, I definitely recommend checking out the <a href="https://scoding.de/ropper/">official website.</a></p>
+<h3 id="installation">Installation</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pip install ropper
+</span></span></code></pre></div><p>Check it ropper is correctly installed</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ ropper --version
+</span></span><span style="display:flex;"><span>Version: Ropper 1.13.8
+</span></span><span style="display:flex;"><span>Author: Sascha Schirra
+</span></span><span style="display:flex;"><span>Website: http://scoding.de/ropper
+</span></span></code></pre></div><p>(That’s the version I’m currently using.) If your version is different, don’t worry—it just means you’re up-to-date with the latest Ropper release. Now you&rsquo;re all set and ready to start hunting those gadgets!</p>
+<h3 id="using-ropper-time-to-hunt-for-gadgets">Using Ropper: Time to Hunt for Gadgets!</h3>
+<p><strong>Basic Command Structure</strong>
+The basic command structure for Ropper is straightforward. You just need to specify the binary you want to analyze and what you&rsquo;re looking for. Here’s how it looks:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ropper --file /path/to/binary
+</span></span></code></pre></div><p>This command will scan the specified binary and list all the available gadgets. It’s like sending Ropper out into the field with a treasure map!</p>
+<p>For detailed assistance, simply run <code>ropper --help</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>$ ropper --help
+</span></span><span style="display:flex;"><span>usage: ropper [-h] [--help-examples] [-v] [--console] [-f &lt;file&gt; [&lt;file&gt; ...]]
+</span></span><span style="display:flex;"><span>              [-r] [-a &lt;arch&gt;] [--section &lt;section&gt;] [--string [&lt;string&gt;]]
+</span></span><span style="display:flex;"><span>              [--hex] [--asm [&lt;asm&gt; [H|S|R] ...]] [--disasm &lt;opcode&gt;]
+</span></span><span style="display:flex;"><span>              [--disassemble-address &lt;address:length&gt;] [-i] [-e] [--imagebase]
+</span></span><span style="display:flex;"><span>              [-c] [-s] [-S] [--imports] [--symbols] [--set &lt;option&gt;]
+</span></span><span style="display:flex;"><span>              [--unset &lt;option&gt;] [-I &lt;imagebase&gt;] [-p] [-j &lt;reg&gt;]
+</span></span><span style="display:flex;"><span>              [--stack-pivot] [--inst-count &lt;n bytes&gt;] [--search &lt;regex&gt;]
+</span></span><span style="display:flex;"><span>              [--quality &lt;quality&gt;] [--opcode &lt;opcode&gt;]
+</span></span><span style="display:flex;"><span>              [--instructions &lt;instructions&gt;] [--type &lt;type&gt;] [--detailed]
+</span></span><span style="display:flex;"><span>              [--all] [--cfg-only] [--chain &lt;generator&gt;] [-b &lt;badbytes&gt;]
+</span></span><span style="display:flex;"><span>              [--nocolor] [--clear-cache] [--no-load] [--analyse &lt;quality&gt;]
+</span></span><span style="display:flex;"><span>              [--semantic constraint] [--count-of-findings &lt;count of gadgets&gt;]
+</span></span><span style="display:flex;"><span>              [--single]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>You can use ropper to display information about binary files in different file formats and you can search for gadgets to build rop chains for different architectures
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>supported filetypes:
+</span></span><span style="display:flex;"><span>  ELF
+</span></span><span style="display:flex;"><span>  PE
+</span></span><span style="display:flex;"><span>  Mach-O
+</span></span><span style="display:flex;"><span>  Raw
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>supported architectures:
+</span></span><span style="display:flex;"><span>  x86 [x86]
+</span></span><span style="display:flex;"><span>  x86_64 [x86_64]
+</span></span><span style="display:flex;"><span>  MIPS [MIPS, MIPS64]
+</span></span><span style="display:flex;"><span>  ARM/Thumb [ARM, ARMTHUMB]
+</span></span><span style="display:flex;"><span>  ARM64 [ARM64]
+</span></span><span style="display:flex;"><span>  PowerPC [PPC, PPC64]
+</span></span><span style="display:flex;"><span>  SPARC [SPARC64]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>available rop chain generators:
+</span></span><span style="display:flex;"><span>  execve (execve[=&lt;cmd&gt;], default /bin/sh) [Linux x86, x86_64]
+</span></span><span style="display:flex;"><span>  mprotect  (mprotect address=0xdeadbeef size=0x10000) [Linux x86, x86_64]
+</span></span><span style="display:flex;"><span>  virtualprotect (virtualprotect address=0xdeadbeef) [Windows x86]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>options:
+</span></span><span style="display:flex;"><span>  -h, --help            show this help message and exit
+</span></span><span style="display:flex;"><span>  --help-examples       Print examples
+</span></span><span style="display:flex;"><span>  -v, --version         Print version
+</span></span><span style="display:flex;"><span>  --console             Starts interactive commandline
+</span></span><span style="display:flex;"><span>  -f &lt;file&gt; [&lt;file&gt; ...], --file &lt;file&gt; [&lt;file&gt; ...]
+</span></span><span style="display:flex;"><span>                        The file to load
+</span></span><span style="display:flex;"><span>  -r, --raw             Loads the file as raw file
+</span></span><span style="display:flex;"><span>  -a &lt;arch&gt;, --arch &lt;arch&gt;
+</span></span><span style="display:flex;"><span>                        The architecture of the loaded file
+</span></span><span style="display:flex;"><span>  --section &lt;section&gt;   The data of the this section should be printed
+</span></span><span style="display:flex;"><span>  --string [&lt;string&gt;]   Looks for the string &lt;string&gt; in all data sections
+</span></span><span style="display:flex;"><span>  --hex                 Prints the selected sections in a hex format
+</span></span><span style="display:flex;"><span>  --asm [&lt;asm&gt; [H|S|R] ...]
+</span></span><span style="display:flex;"><span>                        A string to assemble and a format of the output
+</span></span><span style="display:flex;"><span>                        (H=HEX, S=STRING, R=RAW, default: H)
+</span></span><span style="display:flex;"><span>  --disasm &lt;opcode&gt;     Opcode to disassemble (e.g. ffe4, 89c8c3, ...)
+</span></span><span style="display:flex;"><span>  --disassemble-address &lt;address:length&gt;
+</span></span><span style="display:flex;"><span>                        Disassembles instruction at address &lt;address&gt;
+</span></span><span style="display:flex;"><span>                        (0x12345678:L3). The count of instructions to
+</span></span><span style="display:flex;"><span>                        disassemble can be specified (0x....:L...)
+</span></span><span style="display:flex;"><span>  -i, --info            Shows file header [ELF/PE/Mach-O]
+</span></span><span style="display:flex;"><span>  -e                    Shows EntryPoint
+</span></span><span style="display:flex;"><span>  --imagebase           Shows ImageBase [ELF/PE/Mach-O]
+</span></span><span style="display:flex;"><span>  -c, --dllcharacteristics
+</span></span><span style="display:flex;"><span>                        Shows DllCharacteristics [PE]
+</span></span><span style="display:flex;"><span>  -s, --sections        Shows file sections [ELF/PE/Mach-O]
+</span></span><span style="display:flex;"><span>  -S, --segments        Shows file segments [ELF/Mach-O]
+</span></span><span style="display:flex;"><span>  --imports             Shows imports [ELF/PE]
+</span></span><span style="display:flex;"><span>  --symbols             Shows symbols [ELF]
+</span></span><span style="display:flex;"><span>  --set &lt;option&gt;        Sets options. Available options: aslr nx
+</span></span><span style="display:flex;"><span>  --unset &lt;option&gt;      Unsets options. Available options: aslr nx
+</span></span><span style="display:flex;"><span>  -I &lt;imagebase&gt;        Uses this imagebase for gadgets
+</span></span><span style="display:flex;"><span>  -p, --ppr             Searches for &#39;pop reg; pop reg; ret&#39; instructions
+</span></span><span style="display:flex;"><span>                        [only x86/x86_64]
+</span></span><span style="display:flex;"><span>  -j &lt;reg&gt;, --jmp &lt;reg&gt;
+</span></span><span style="display:flex;"><span>                        Searches for &#39;jmp reg&#39; instructions (-j reg[,reg...])
+</span></span><span style="display:flex;"><span>                        [only x86/x86_64]
+</span></span><span style="display:flex;"><span>  --stack-pivot         Prints all stack pivot gadgets
+</span></span><span style="display:flex;"><span>  --inst-count &lt;n bytes&gt;
+</span></span><span style="display:flex;"><span>                        Specifies the max count of instructions in a gadget
+</span></span><span style="display:flex;"><span>                        (default: 6)
+</span></span><span style="display:flex;"><span>  --search &lt;regex&gt;      Searches for gadgets
+</span></span><span style="display:flex;"><span>  --quality &lt;quality&gt;   The quality for gadgets which are found by search (1 =
+</span></span><span style="display:flex;"><span>                        best)
+</span></span><span style="display:flex;"><span>  --opcode &lt;opcode&gt;     Searches for opcodes (e.g. ffe4 or ffe? or ff??)
+</span></span><span style="display:flex;"><span>  --instructions &lt;instructions&gt;
+</span></span><span style="display:flex;"><span>                        Searches for instructions (e.g. &#34;jmp esp&#34;, &#34;pop eax;
+</span></span><span style="display:flex;"><span>                        ret&#34;)
+</span></span><span style="display:flex;"><span>  --type &lt;type&gt;         Sets the type of gadgets [rop, jop, sys, all]
+</span></span><span style="display:flex;"><span>                        (default: all)
+</span></span><span style="display:flex;"><span>  --detailed            Prints gadgets more detailed
+</span></span><span style="display:flex;"><span>  --all                 Does not remove duplicate gadgets
+</span></span><span style="display:flex;"><span>  --cfg-only            Filters out gadgets which fail the Microsoft CFG
+</span></span><span style="display:flex;"><span>                        check. Only for PE files which are compiled with CFG
+</span></span><span style="display:flex;"><span>                        check enabled (check DllCharachteristics) [PE]
+</span></span><span style="display:flex;"><span>  --chain &lt;generator&gt;   Generates a ropchain [generator parameter=value[
+</span></span><span style="display:flex;"><span>                        parameter=value]]
+</span></span><span style="display:flex;"><span>  -b &lt;badbytes&gt;, --badbytes &lt;badbytes&gt;
+</span></span><span style="display:flex;"><span>                        Set bytes which should not contains in gadgets
+</span></span><span style="display:flex;"><span>  --nocolor             Disables colored output
+</span></span><span style="display:flex;"><span>  --clear-cache         Clears the cache
+</span></span><span style="display:flex;"><span>  --no-load             Don&#39;t load the gadgets automatically when start the
+</span></span><span style="display:flex;"><span>                        console (--console)
+</span></span><span style="display:flex;"><span>  --analyse &lt;quality&gt;   just used for the implementation of semantic search
+</span></span><span style="display:flex;"><span>  --semantic constraint
+</span></span><span style="display:flex;"><span>                        semantic search for gadgets
+</span></span><span style="display:flex;"><span>  --count-of-findings &lt;count of gadgets&gt;
+</span></span><span style="display:flex;"><span>                        Max count of gadgets which will be printed with
+</span></span><span style="display:flex;"><span>                        semantic search (0 = undefined, default: 5)
+</span></span><span style="display:flex;"><span>  --single              No multiple processes are used for gadget scanning
+</span></span></code></pre></div><p>For this demonstration, please use the necessary binaries and the corresponding libc they require. Here&rsquo;s the <a href="https://github.com/KernW0lf/Materials/tree/main/rop_tuts">link</a>:</p>
+<p><strong>Searching for Specific Gadgets</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e">#ropper --file /path/to/binary --search &#34;pop rdi&#34;</span>
+</span></span><span style="display:flex;"><span>$ ropper --file shell_x86 --search <span style="color:#e6db74">&#34;ret&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>[INFO] Load gadgets from cache
+</span></span><span style="display:flex;"><span>[LOAD] loading... 100%
+</span></span><span style="display:flex;"><span>[LOAD] removing double gadgets... 100%
+</span></span><span style="display:flex;"><span>[INFO] Searching for gadgets: ret
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[INFO] File: shell
+</span></span><span style="display:flex;"><span>0x000010e6: ret 0x2f0f; 
+</span></span><span style="display:flex;"><span>0x000010a6: ret 0x2f4f; 
+</span></span><span style="display:flex;"><span>0x0000100a: ret;
+</span></span></code></pre></div><p>Bingo! Now you have the address of the gadget you need.</p>
+<p><strong>Working with Multiple Architectures</strong></p>
+<p>Ropper is versatile and works with various architectures. If you’re dealing with a binary for ARM, MIPS, or another architecture, just specify it with the <code>-a/--arch</code> option:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --arch arm</span>
+</span></span><span style="display:flex;"><span>$ <span style="color:#75715e"># Supported architectures are: x86, x86_64, MIPS, MIPS64, ARM, ARMTHUMB, ARM64, PPC, PPC64, SPARC64</span>
+</span></span><span style="display:flex;"><span>$ ropper --file shell_arm --arch ARM
+</span></span></code></pre></div><p>Interestingly, even if you don’t specify <code>--arch</code>, Ropper will still print the gadgets it finds. This means you can get results without worrying about architecture, although specifying it can help narrow down your search.</p>
+<p><strong>Searching for strings</strong></p>
+<p>Ropper isn’t just a gadget-finding wizard; it can also help you locate specific strings within your binary.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --string &#34;your_string_here&#34;</span>
+</span></span><span style="display:flex;"><span>$ ropper --file shell_arm --string <span style="color:#e6db74">&#34;/bin/sh&#34;</span>
+</span></span></code></pre></div><p><strong>Stack Pivoting</strong></p>
+<p>Ropper isn’t just your go-to tool for finding gadgets; it can also assist you in locating pivot gadgets that are essential for stack pivoting techniques. Stack pivoting allows you to change the stack pointer to a controlled area, enabling you to execute your payload even in the face of modern protections.
+To find potential stack pivot gadgets, you can use Ropper to search for specific sequences of instructions that manipulate the stack pointer. For example, you might want to look for gadgets that involve <code>pop rsp</code> or similar instructions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --stack-pivot </span>
+</span></span><span style="display:flex;"><span>$ ropper --file shell_x86 --stack-pivot 
+</span></span></code></pre></div><p><strong>Generating ROP Chains</strong></p>
+<p>One of the coolest features of Ropper is its ability to generate complete ROP chains. You can use the <code>--chain</code> option to create a chain of gadgets that can be directly used for exploitation:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>available rop chain generators:
+</span></span><span style="display:flex;"><span>  execve (execve[=&lt;cmd&gt;], default /bin/sh) [Linux x86, x86_64]
+</span></span><span style="display:flex;"><span>  mprotect  (mprotect address=0xdeadbeef size=0x10000) [Linux x86, x86_64]
+</span></span><span style="display:flex;"><span>  virtualprotect (virtualprotect address=0xdeadbeef) [Windows x86]
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --chain</span>
+</span></span><span style="display:flex;"><span>$ ropper --file libc.so.6 --chain <span style="color:#e6db74">&#34;execve execve=/bin/sh&#34;</span>
+</span></span><span style="display:flex;"><span>$ ropper --file libc.so.6 --chain <span style="color:#e6db74">&#34;mprotect address=0xdeadbeef size=0x10000&#34;</span>
+</span></span></code></pre></div><h3 id="getting-binary-info-using-ropper">Getting Binary Info Using Ropper</h3>
+<p>Ropper is not just a tool for finding gadgets; it can also provide detailed information about the binary you&rsquo;re analyzing. This feature can be invaluable for understanding the structure and properties of the binary, which is essential for effective exploitation.</p>
+<p><strong>Viewing Binary Information</strong></p>
+<p>To retrieve information about a binary file, you can use the <code>--info</code> option. This command will give you an overview of various attributes, such as sections, symbols, and architecture.</p>
+<p>Here’s how to use it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --info</span>
+</span></span><span style="display:flex;"><span>$ ropper --file shell_arm --info
+</span></span></code></pre></div><p>This command will output detailed information about the binary.</p>
+<p>Some more options:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># Assemble the binary</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --asm [asm_code] --arch ARCH</span>
+</span></span><span style="display:flex;"><span>ropper --asm <span style="color:#e6db74">&#34;mov eax,0x4&#34;</span> --arch x86
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Disassemble the opcode</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --disasm [Opcode] --arch ARCH</span>
+</span></span><span style="display:flex;"><span>ropper --disasm <span style="color:#e6db74">&#34;b804000000&#34;</span> --arch x86
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Show sections of the binary</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary -s</span>
+</span></span><span style="display:flex;"><span>ropper --file shell_x86 -s
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Show segments of the binary</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary -S</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># List imported functions and libraries</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary --imports</span>
+</span></span><span style="display:flex;"><span>ropper --file shell_x86 --imports
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># List all symbols, including functions and variables</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary --symbols</span>
+</span></span><span style="display:flex;"><span>ropper --file shell_x86 --symbols
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Identify gadgets &#39;pop reg; pop reg; ret&#39; instructions [only x86/x86_64]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary -p/--ppr</span>
+</span></span><span style="display:flex;"><span>ropper --file libc.so.6 --ppr
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Search for jump instructions</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary -j &lt;reg&gt;</span>
+</span></span><span style="display:flex;"><span>ropper --file shell_x86 -j eax
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Filter total number of instructions</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary --inst-count</span>
+</span></span><span style="display:flex;"><span>ropper --file shell_x86 --inst-count <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Search for instructions in the binary</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary --instructions &lt;instructions&gt;</span>
+</span></span><span style="display:flex;"><span>ropper --file shell_x86 --instructions <span style="color:#e6db74">&#34;pop ebx&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set the type of gadgets</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary --type [rop, jop, sys, all]</span>
+</span></span><span style="display:flex;"><span>ropper --file shell_x86 --type jop
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Provide detailed output of the analysis</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary --detailed</span>
+</span></span><span style="display:flex;"><span>ropper --file shell_x86 --detailed --inst-count <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Define bad bytes to avoid</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ropper --file /path/to/binary --badbytes</span>
+</span></span><span style="display:flex;"><span>ropper --file shell_x86 --inst-count <span style="color:#ae81ff">1</span> --badbytes <span style="color:#e6db74">&#34;100a&#34;</span>
+</span></span></code></pre></div><p><strong>Filtering by Regex</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># Example of Regex Patterns:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># To find gadgets that start with pop:</span>
+</span></span><span style="display:flex;"><span>ropper --file /path/to/binary --search <span style="color:#e6db74">&#34;^pop&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The caret (^) asserts the position at the start of a line, while the dollar sign ($) asserts the position at the end of a line.</span>
+</span></span><span style="display:flex;"><span>ropper --file /path/to/binary --search <span style="color:#e6db74">&#34;</span>$ret<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Using Question Marks for Zero or One Character:</span>
+</span></span><span style="display:flex;"><span>ropper --file /path/to/binary --search <span style="color:#e6db74">&#34;^pop e?x&#34;</span>
+</span></span></code></pre></div><h2 id="ropgadget">ROPgadget</h2>
+<p>ROPgadget was created by Jonathan Salwan, a well-respected figure in the cybersecurity community. You can find more about Jonathan Salwan and his work on his GitHub <a href="https://github.com/JonathanSalwan">page</a>. ROPgadget is a powerful tool that assists security researchers and exploit developers in finding useful ROP (Return-Oriented Programming) gadgets within binary files. ROPgadget scans binaries and extracts gadgets that can be used in ROP chains. Ropper is a tool inspired by ROPgadget, built to enhance gadget discovery and facilitate more advanced exploitation techniques. ROPgadget supports ELF/PE/Mach-O/Raw formats on x86, x64, ARM, ARM64, PowerPC, SPARC, MIPS, RISC-V 64, and RISC-V Compressed architectures.</p>
+<h3 id="installation-1">Installation</h3>
+<p>Refer <a href="https://github.com/JonathanSalwan/ROPgadget">here</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ pip install capstone
+</span></span><span style="display:flex;"><span>$ pip install ROPgadget
+</span></span></code></pre></div><h2 id="usage">Usage</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>$ ROPgadget -h
+</span></span><span style="display:flex;"><span>usage: ROPgadget [-h] [-v] [-c] [--binary &lt;binary&gt;] [--opcode &lt;opcodes&gt;]
+</span></span><span style="display:flex;"><span>                 [--string &lt;string&gt;] [--memstr &lt;string&gt;] [--depth &lt;nbyte&gt;]
+</span></span><span style="display:flex;"><span>                 [--only &lt;key&gt;] [--filter &lt;key&gt;] [--range &lt;start-end&gt;]
+</span></span><span style="display:flex;"><span>                 [--badbytes &lt;byte&gt;] [--rawArch &lt;arch&gt;] [--rawMode &lt;mode&gt;]
+</span></span><span style="display:flex;"><span>                 [--rawEndian &lt;endian&gt;] [--re &lt;re&gt;] [--offset &lt;hexaddr&gt;]
+</span></span><span style="display:flex;"><span>                 [--ropchain] [--thumb] [--console] [--norop] [--nojop]
+</span></span><span style="display:flex;"><span>                 [--callPreceded] [--nosys] [--multibr] [--all] [--noinstr]
+</span></span><span style="display:flex;"><span>                 [--dump] [--silent] [--align ALIGN] [--mipsrop &lt;rtype&gt;]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>description:
+</span></span><span style="display:flex;"><span>  ROPgadget lets you search your gadgets on a binary. It supports several file formats and architectures and uses the Capstone disassembler for the search engine.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>formats supported:
+</span></span><span style="display:flex;"><span>  - ELF
+</span></span><span style="display:flex;"><span>  - PE
+</span></span><span style="display:flex;"><span>  - Mach-O
+</span></span><span style="display:flex;"><span>  - Raw
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>architectures supported:
+</span></span><span style="display:flex;"><span>  - x86
+</span></span><span style="display:flex;"><span>  - x86-64
+</span></span><span style="display:flex;"><span>  - ARM
+</span></span><span style="display:flex;"><span>  - ARM64
+</span></span><span style="display:flex;"><span>  - MIPS
+</span></span><span style="display:flex;"><span>  - PowerPC
+</span></span><span style="display:flex;"><span>  - Sparc
+</span></span><span style="display:flex;"><span>  - RISC-V 64
+</span></span><span style="display:flex;"><span>  - RISC-V Compressed
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>options:
+</span></span><span style="display:flex;"><span>  -h, --help            show this help message and exit
+</span></span><span style="display:flex;"><span>  -v, --version         Display the ROPgadget&#39;s version
+</span></span><span style="display:flex;"><span>  -c, --checkUpdate     Checks if a new version is available
+</span></span><span style="display:flex;"><span>  --binary &lt;binary&gt;     Specify a binary filename to analyze
+</span></span><span style="display:flex;"><span>  --opcode &lt;opcodes&gt;    Search opcode in executable segment
+</span></span><span style="display:flex;"><span>  --string &lt;string&gt;     Search string in readable segment
+</span></span><span style="display:flex;"><span>  --memstr &lt;string&gt;     Search each byte in all readable segment
+</span></span><span style="display:flex;"><span>  --depth &lt;nbyte&gt;       Depth for search engine (default 10)
+</span></span><span style="display:flex;"><span>  --only &lt;key&gt;          Only show specific instructions
+</span></span><span style="display:flex;"><span>  --filter &lt;key&gt;        Suppress specific mnemonics
+</span></span><span style="display:flex;"><span>  --range &lt;start-end&gt;   Search between two addresses (0x...-0x...)
+</span></span><span style="display:flex;"><span>  --badbytes &lt;byte&gt;     Rejects specific bytes in the gadget&#39;s address
+</span></span><span style="display:flex;"><span>  --rawArch &lt;arch&gt;      Specify an arch for a raw file
+</span></span><span style="display:flex;"><span>                        x86|arm|arm64|sparc|mips|ppc|riscv
+</span></span><span style="display:flex;"><span>  --rawMode &lt;mode&gt;      Specify a mode for a raw file 32|64|arm|thumb
+</span></span><span style="display:flex;"><span>  --rawEndian &lt;endian&gt;  Specify an endianness for a raw file little|big
+</span></span><span style="display:flex;"><span>  --re &lt;re&gt;             Regular expression
+</span></span><span style="display:flex;"><span>  --offset &lt;hexaddr&gt;    Specify an offset for gadget addresses
+</span></span><span style="display:flex;"><span>  --ropchain            Enable the ROP chain generation
+</span></span><span style="display:flex;"><span>  --thumb               Use the thumb mode for the search engine (ARM only)
+</span></span><span style="display:flex;"><span>  --console             Use an interactive console for search engine
+</span></span><span style="display:flex;"><span>  --norop               Disable ROP search engine
+</span></span><span style="display:flex;"><span>  --nojop               Disable JOP search engine
+</span></span><span style="display:flex;"><span>  --callPreceded        Only show gadgets which are call-preceded
+</span></span><span style="display:flex;"><span>  --nosys               Disable SYS search engine
+</span></span><span style="display:flex;"><span>  --multibr             Enable multiple branch gadgets
+</span></span><span style="display:flex;"><span>  --all                 Disables the removal of duplicate gadgets
+</span></span><span style="display:flex;"><span>  --noinstr             Disable the gadget instructions console printing
+</span></span><span style="display:flex;"><span>  --dump                Outputs the gadget bytes
+</span></span><span style="display:flex;"><span>  --silent              Disables printing of gadgets during analysis
+</span></span><span style="display:flex;"><span>  --align ALIGN         Align gadgets addresses (in bytes)
+</span></span><span style="display:flex;"><span>  --mipsrop &lt;rtype&gt;     MIPS useful gadgets finder
+</span></span><span style="display:flex;"><span>                        stackfinder|system|tails|lia0|registers
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>examples:
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --ropchain
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --depth 3
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --string &#34;main&#34;
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --string &#34;m..n&#34;
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --opcode c9c3
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --only &#34;mov|ret&#34;
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --only &#34;mov|pop|xor|ret&#34;
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --filter &#34;xchg|add|sub|cmov.*&#34;
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --norop --nosys
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --range 0x08041000-0x08042000
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --string main --range 0x080c9aaa-0x080c9aba
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --memstr &#34;/bin/sh&#34;
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --console
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-x86 --badbytes &#34;00|01-1f|7f|42&#34;
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/Linux_lib64.so --offset 0xdeadbeef00000000
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-ARMv7-ls --depth 5
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-ARM64-bash --depth 5
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/raw-x86.raw --rawArch=x86 --rawMode=32
+</span></span><span style="display:flex;"><span>  ROPgadget.py --binary ./test-suite-binaries/elf-Linux-RISCV_64 --depth 8
+</span></span><span style="display:flex;"><span>  
+</span></span></code></pre></div><p><strong>Basic Gadget Search</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># ROPgadget --binary /path/to/binary</span>
+</span></span><span style="display:flex;"><span>ROPgadget --binary shell_x86
+</span></span></code></pre></div><p><strong>Filtering by Type</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># ROPgadget --binary /path/to/binary --only &#34;pop&#34;</span>
+</span></span><span style="display:flex;"><span>ROPgadget --binary shell_x86 --only <span style="color:#e6db74">&#34;ret&#34;</span>
+</span></span></code></pre></div><p>This command will return only those gadgets that contain the <code>ret</code> instruction.</p>
+<p><strong>Using Chains</strong></p>
+<p>ROPgadget can also help you create a ROP chain. You can use the &ndash;ropchain option:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ROPgadget --binary /path/to/binary --ropchain
+</span></span></code></pre></div><h2 id="getting-started-with-one_gadget">Getting Started with One_Gadget</h2>
+<p><strong>One_Gadget</strong> is a powerful tool used in the field of binary exploitation, specifically designed for quickly finding gadgets that can be used to directly call <code>execve(&quot;/bin/sh&quot;, NULL, NULL)</code> or similar commands. It leverages existing executable code within a binary to create ROP chains that can be used for exploitation, particularly in situations where traditional shellcode is ineffective or undesirable.</p>
+<p>The main advantage of One_Gadget is its ability to reduce the time and effort required to identify usable gadgets, thus streamlining the exploitation process. It automates the discovery of useful gadgets that can facilitate privilege escalation, command execution, or arbitrary code execution.</p>
+<h3 id="installation-2">Installation</h3>
+<p>Installing One_Gadget is a straightforward process. You can easily install it using <code>gem</code>, the Ruby package manager, since One_Gadget is written in Ruby. Below are the steps for installation:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>sudo apt install ruby
+</span></span><span style="display:flex;"><span>ruby -v
+</span></span><span style="display:flex;"><span>gem install one_gadget
+</span></span><span style="display:flex;"><span>one_gadget --version
+</span></span></code></pre></div><h3 id="usage-of-one_gadget">Usage of One_Gadget</h3>
+<p>With One_Gadget installed, you can start using it to find gadgets in your binaries. Here’s a guide on how to use the tool effectively.</p>
+<p><strong>Basic Command Structure</strong></p>
+<p>To use One_Gadget, you typically invoke it with the following command format:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># one_gadget /path/to/libc.so</span>
+</span></span><span style="display:flex;"><span>one_gadget /lib/i386-linux-gnu/libc.so.6
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># To find gadgets near the exit function in libc.so.6, use the following command:</span>
+</span></span><span style="display:flex;"><span>one_gadget /lib/i386-linux-gnu/libc.so.6 --near exit
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Use --raw to get just the offsets without additional information.</span>
+</span></span><span style="display:flex;"><span>one_gadget /lib/i386-linux-gnu/libc.so.6 --near exit --raw
+</span></span></code></pre></div><h2 id="conclusion">Conclusion</h2>
+<p>In this guide, we&rsquo;ve explored the essential tools for gadget hunting: Ropper, ROPgadget, and One_Gadget. Each tool offers unique capabilities that, when combined, provide a comprehensive approach to binary exploitation.</p>
+<p><strong>Happy gadget hunting!</strong></p>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>

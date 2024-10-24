@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ROP on kernw0lf blog</title>
+    <link>http://kernw0lf.github.io/tags/rop/</link>
+    <description>Recent content in ROP on kernw0lf blog</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
+    <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
+    <lastBuildDate>Mon, 21 Oct 2024 13:09:38 -0400</lastBuildDate>
+    <atom:link href="http://kernw0lf.github.io/tags/rop/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Mastering Gadget Hunting with Ropper, ROPgadget, and One_Gadget: A Practical Guide</title>
+      <link>http://kernw0lf.github.io/posts/rop-guide/</link>
+      <pubDate>Mon, 21 Oct 2024 13:09:38 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/rop-guide/</guid>
+      <description>In the world of binary exploitation, gadgets are crucial building blocks for bypassing modern security defenses. Whether you&amp;rsquo;re attacking vulnerable software in a CTF or conducting real-world vulnerability research, Return-Oriented Programming (ROP) and other gadget-based techniques can turn the simplest bug into a powerful exploit. But what are gadgets, and how do tools like Ropper, ROPgadget, and one_gadget help us find and use them? In this blog post, we will take a deep dive into gadgets, from understanding what they are and why they’re essential in modern exploitation, to mastering the use of tools like Ropper, ROPgadget, and one_gadget for advanced gadget hunting.</description>
+    </item>
+  </channel>
+</rss>

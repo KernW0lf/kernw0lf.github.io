@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+    <title>
+Rooting Android Devices with Magisk | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.131.0">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/magisk-guide/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    
+    
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+
+
+
+    <style>
+        body {
+             
+            font-family: 'Fira Code','Source Code Pro','Roboto', sans-serif; 
+        }
+        .highlight {
+            font-size: 20px;  
+        }
+
+        
+    </style>
+    
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>Rooting Android Devices with Magisk</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+                
+<dt>tags</dt>
+<dd><span></span>
+    <a href="/tags/rooting/">#Rooting</a><span></span>
+    <a href="/tags/magisk/">#Magisk</a><span></span>
+    <a href="/tags/bootloader/">#Bootloader</a></dd>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-10-11">October 11, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>5 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <p>Rooting an Android device opens up a world of possibilities, allowing users to customize their devices beyond the limitations set by manufacturers. Magisk has emerged as a popular tool for rooting due to its systemless approach, meaning you can gain root access without modifying the system partition, making it easier to unroot or pass SafetyNet checks. This guide will take you through the process of rooting your android devices using Magisk.</p>
+<p>Before we delve into the process of rooting, let&rsquo;s just familiarize ourself with the defination of &ldquo;root&rdquo;.
+In the context of computing, root refers to the highest level of access or permission granted to a user or process within an operating system. Specifically, in Unix-like systems, including Android, the root user (often referred to as &ldquo;root&rdquo;) has unrestricted access to all commands and files on the system. This allows the root user to perform tasks that are typically restricted to standard users, such as modifying system files, installing or uninstalling applications, and changing system settings.
+Rooting is the process of gaining administrative access to the operating system.</p>
+<p>When it comes to rooting Android devices, there are two primary approaches: using <strong>exploits</strong> or utilizing tools like <strong>Magisk</strong>.</p>
+<p>Some rooting methods, such as <a href="https://root-android.kingoapp.com/">KingoRoot</a>, leverage vulnerabilities in the Android operating system to gain root access. These exploits can automate the rooting process, making it user-friendly for those who may not have technical expertise. One major concern is that users often have little visibility into the actions being performed during the rooting process. This lack of transparency can lead to several potential issues. Since you don’t know what the tool is doing behind the scenes, there&rsquo;s a risk that it may install unwanted or malicious software on your device. Such software can compromise your privacy and security. For these reasons, it&rsquo;s essential to approach exploit-based rooting methods with caution and consider more secure alternatives like Magisk that provide better control and safety.</p>
+<p>In contrast, Magisk offers a more robust and secure method for rooting. It employs a <strong>systemless</strong> root approach, meaning it modifies the system in a way that does not alter the system partition directly.
+<a href="https://github.com/topjohnwu/Magisk">Magisk</a> is an open-source project. Its source code is available on GitHub, allowing developers and users to inspect, modify, and contribute to its development.</p>
+<h3 id="risks-of-rooting">Risks of Rooting</h3>
+<ol>
+<li>Void Warranty: Rooting can void your device’s warranty.</li>
+<li>Bricking Device: Incorrect procedures may lead to a bricked device.</li>
+<li>Security Risks: Root access can expose your device to security vulnerabilities.</li>
+</ol>
+<h2 id="prerequisites-for-rooting-with-magisk">Prerequisites for Rooting with Magisk</h2>
+<h3 id="device-compatibility">Device Compatibility</h3>
+<p>Ensure your device is compatible with Magisk. Check forums like XDA Developers for device-specific guides.</p>
+<h3 id="necessary-tools">Necessary Tools</h3>
+<ol>
+<li>ADB and Fastboot: Install ADB and Fastboot on your computer.</li>
+<li>Magisk Manager APK: <a href="https://github.com/topjohnwu/Magisk/releases">Download</a> the latest version of Magisk Manager.</li>
+<li>Custom Recovery (Optional): Obtain a custom recovery (like TWRP) compatible with your device.</li>
+</ol>
+<h3 id="device-tested">Device Tested</h3>
+<p>To provide a comprehensive overview of the rooting process with Magisk, I tested it on the Pixel 2 XL, the same device I used in my previous <a href="https://kernw0lf.github.io/posts/bootloader-unlock/">blog</a>, where I demonstrated how to unlock the bootloader of a carrier-locked device.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>Pixel 2 XL (Verizon)
+</span></span><span style="display:flex;"><span>OS Version: Android 11 with the 2020-10-05 Security Patch
+</span></span></code></pre></div><p>Before proceeding with the rooting process, it is crucial to back up all important data on your device.</p>
+<p>Now install the Magisk Apk you downloaded into the device. You can use <code>adb</code> to install.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>adb install Magisk-v27.0.apk
+</span></span></code></pre></div><p>Now we need to patch the <code>boot.img</code> and then flash it back to the device. We can obtain the <code>boot.img</code> from the stock firmware ZIP file or the custom ROM package we downloaded. Once extracted, we will use the Magisk Manager app to patch the <code>boot.img</code>, creating a modified version that includes root access. After the patching process is complete, we will flash the modified <code>boot.img</code> back onto the device.</p>
+<p>For Nexus and Pixel devices, we can download the factory images from this <a href="https://developers.google.com/android/images">link</a>.</p>
+<p>Let&rsquo;s grab the build id of the device.</p>
+<pre tabindex="0"><code>adb shell getprop ro.build.fingerprint
+</code></pre><p>In my case, I got the following output:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>google/taimen/taimen:11/RP1A.201005.004.A1/6934943:user/release-keys
+</span></span></code></pre></div><p>So <code>RP1A.201005.004.A1</code> is the build number of my device.</p>
+<p>On searching this build number I got the <a href="https://dl.google.com/dl/android/aosp/taimen-rp1a.201005.004.a1-factory-2f5c4987.zip">link</a> to download the factory image.</p>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/magisk-root/01.png?raw=true" alt="Factory Image"></p>
+<p>Once downloaded, extract the zip.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ unzip taimen-rp1a.201005.004.a1-factory-2f5c4987.zip
+</span></span><span style="display:flex;"><span>$ ls
+</span></span><span style="display:flex;"><span>taimen-rp1a.201005.004.a1  taimen-rp1a.201005.004.a1-factory-2f5c4987.zip
+</span></span><span style="display:flex;"><span>$ cd taimen-rp1a.201005.004.a1
+</span></span><span style="display:flex;"><span>$ ls
+</span></span><span style="display:flex;"><span>bootloader-taimen-tmz30m.img  flash-base.sh
+</span></span><span style="display:flex;"><span>flash-all.bat                 image-taimen-rp1a.201005.004.a1.zip
+</span></span><span style="display:flex;"><span>flash-all.sh                  radio-taimen-g8998-00034-2006052136.img
+</span></span><span style="display:flex;"><span>$ unzip image-taimen-rp1a.201005.004.a1.zip
+</span></span><span style="display:flex;"><span>Archive:  image-taimen-rp1a.201005.004.a1.zip
+</span></span><span style="display:flex;"><span>  inflating: android-info.txt        
+</span></span><span style="display:flex;"><span>  inflating: boot.img                
+</span></span><span style="display:flex;"><span>  inflating: system.img              
+</span></span><span style="display:flex;"><span>  inflating: vendor.img              
+</span></span><span style="display:flex;"><span>  inflating: system_other.img        
+</span></span><span style="display:flex;"><span>  inflating: dtbo.img                
+</span></span><span style="display:flex;"><span>  inflating: vbmeta.img    
+</span></span></code></pre></div><p>The <code>boot.img</code> file is a crucial component of the Android operating system that contains the kernel and the ramdisk. The <code>boot.img</code> file is responsible for booting the Android device. It initializes the kernel and sets up the ramdisk, enabling the device to start and run the Android operating system.</p>
+<p>Now upload the <code>boot.img</code> into the phone.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>adb push boot.img /sdcard/Download
+</span></span></code></pre></div><p>Open Magisk App and Select <code>Install</code> option and Click on &ldquo;Select and Patch a File&rdquo;.
+<img src="https://github.com/KernW0lf/Materials/blob/main/magisk-root/02.png?raw=true" alt="Factory Image"></p>
+<p>Go into the Downloads folder and you can see our <code>boot.img</code>
+<img src="https://github.com/KernW0lf/Materials/blob/main/magisk-root/03.png?raw=true" alt="Factory Image"></p>
+<p>Click on <code>Let's Go -&gt;</code></p>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/magisk-root/04.png?raw=true" alt="Factory Image"></p>
+<p>You can see the patched <code>boot.img</code> in the Download directory.
+Let&rsquo;s pull it.</p>
+<pre tabindex="0"><code>adb pull /sdcard/Download/magisk_patched-27000_XlHup.img .
+</code></pre><p>Now, go in to the bootloader.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ adb reboot bootloader
+</span></span></code></pre></div><p>You will see something like:
+<img src="https://storage.googleapis.com/support-forums-api/attachment/thread-50687342-2661705676478564024.jpeg" alt="bootlader"></p>
+<p>Image Source:
+<a href="https://support.google.com/pixelphone/thread/50687342/google-pixel-2xl-startet-nicht-bleibt-beim-booten-h%C3%A4ngen?hl=de">google</a></p>
+<p>Flash the patched <code>boot.img</code> using the following command.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ fastboot flash boot magisk_patched-27000_XlHup.img
+</span></span></code></pre></div><p>Now, reboot the phone.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ fastboot reboot
+</span></span></code></pre></div><p>We can now use Magisk Manager to manage and grant root permissions on the device.</p>
+<p>In the ADB shell, type <code>su</code>, and in the Magisk app, you can <strong>Grant</strong> root permission to the ADB shell session, which uses the package name <code>com.android.shell</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>taimen:/ $ su
+</span></span></code></pre></div><p>If you don&rsquo;t see a root permission request in the Magisk app, you can manually navigate to the Superuser section and grant permission to the ADB shell.</p>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/magisk-root/05.png?raw=true" alt="Factory Image">
+<img src="https://github.com/KernW0lf/Materials/blob/main/magisk-root/06.png?raw=true" alt="Factory Image"></p>
+<p>To <strong>unroot</strong> the device, simply flash the original <code>boot.img</code> and reboot.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Throughout this guide, I demonstrated how to root your device step-by-step, focusing on the Pixel 2 XL, but the process is applicable to many Android devices. By using Magisk, you can unlock the full potential of your device while maintaining the flexibility to unroot whenever necessary.
+If you found this guide helpful or have any questions, feel free to reach out.
+<strong>Happy Rooting! Unleash the full potential of your Android device.</strong></p>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>

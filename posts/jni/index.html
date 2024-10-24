@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+    <title>
+Unlocking Java&#39;s Power with JNI: A Comprehensive Guide | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.131.0">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/jni/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    
+    
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+
+
+
+    <style>
+        body {
+             
+            font-family: 'Fira Code','Source Code Pro','Roboto', sans-serif; 
+        }
+        .highlight {
+            font-size: 20px;  
+        }
+
+        
+    </style>
+    
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>Unlocking Java&#39;s Power with JNI: A Comprehensive Guide</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-02-29">February 29, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>14 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <h2 id="introduction">Introduction:</h2>
+<p><strong>Java Native Interface (JNI)</strong> is a powerful tool that allows Java code running in the <strong>Java Virtual Machine (JVM)</strong> to interact with code and libraries written in other languages, such as C and C++. JNI opens up a world of possibilities for Java developers, enabling them to access native code, leverage platform-specific features, and optimize performance. In this guide, we&rsquo;ll delve into the world of JNI, exploring its benefits, how it works, and how you can start using it in your Java projects. JNI allows developers to create native methods for scenarios where an application cannot be fully developed using the Java programming language, such as when platform-specific features or program libraries are not supported by the standard Java class library.</p>
+<h2 id="what-is-jni">What is JNI?</h2>
+<ul>
+<li>JNI stands for Java Native Interface. It&rsquo;s a framework that provides a way for Java code running in the JVM to call and be called by native applications and libraries written in other languages.</li>
+<li>JNI acts as a bridge between the platform-independent Java code and platform-specific native code.</li>
+</ul>
+<p>The following diagram shows how the JNI ties the C side of an application to the Java side.
+<img src="https://miro.medium.com/v2/resize:fit:720/format:webp/0*wOxO2Yc_WAUu5N3F.png" alt="JNI"></p>
+<p><em>Figure 1: JNI Diagram sourced from <a href="https://medium.com/@sarafanshul/jni-101-introduction-to-java-native-interface-8a1256ca4d8e">Anshul Saraf&rsquo;s Medium</a></em></p>
+<h2 id="why-use-jni">Why use JNI?</h2>
+<p>We are all familiar with Java&rsquo;s promise of platform-independence <em>write once, run anywhere</em>. Yet, this convenience often comes at the expense of raw performance when compared to native code. Java is known for its portability and ease of development, but there are times when performance becomes a critical issue, especially for computationally intensive tasks or when interacting with native system resources. This is where the Java Native Interface (JNI) comes into play. JNI allows Java developers to tap into the power of C/C++ code, offering a potential solution to performance bottlenecks that pure Java might encounter.</p>
+<h2 id="how-jni-works">How JNI Works:</h2>
+<ul>
+<li>JNI involves creating a bridge between Java and native code through a set of conventions and APIs.</li>
+<li>Key components include the Java Native Method Interface, Native Method Libraries, and the Java Virtual Machine.</li>
+<li>The developer writes native code in C or C++, compiles it into a shared library, and then loads this library from Java code.</li>
+</ul>
+<h2 id="setting-up-the-environment-linux">Setting Up the Environment (Linux):</h2>
+<p>To develop and run JNI applications, you&rsquo;ll need:</p>
+<ul>
+<li>Install Java Development Kit (JDK):</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ sudo apt-get update
+</span></span><span style="display:flex;"><span>$ sudo apt-get install openjdk-17-jdk
+</span></span></code></pre></div><ul>
+<li>Install a C/C++ Compiler:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ sudo apt install build-essential
+</span></span></code></pre></div><ul>
+<li>Set Java Environment Variables:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ export JAVA_HOME<span style="color:#f92672">=</span>/usr/lib/jvm/java-17-openjdk-amd64
+</span></span><span style="display:flex;"><span>$ export PATH<span style="color:#f92672">=</span>$PATH:$JAVA_HOME/bin
+</span></span><span style="display:flex;"><span>$ source ~/.bashrc  <span style="color:#75715e"># or source ~/.bash_profile</span>
+</span></span></code></pre></div><h2 id="steps-to-use-jni">Steps to Use JNI:</h2>
+<h3 id="step-1-write-the-java-code">Step 1: Write the Java Code</h3>
+<p>Let&rsquo;s start by creating a simple Java program that calculates the square root of a number using JNI.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// SquareRoot.java</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SquareRoot</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Static block is executed when the class is loaded.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Here we load a native library named &#34;SquareRoot&#34;.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> {
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">loadLibrary</span>(<span style="color:#e6db74">&#34;SquareRoot&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Native method declaration. The implementation is in native C/C++ code.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// This method takes a double parameter and returns a double.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">native</span> <span style="color:#66d9ef">double</span> <span style="color:#a6e22e">calculateSquareRoot</span>(<span style="color:#66d9ef">double</span> number);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Create an instance of SquareRoot.</span>
+</span></span><span style="display:flex;"><span>        SquareRoot root <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> SquareRoot();
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Define the number for which we want to calculate the square root.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">double</span> number <span style="color:#f92672">=</span> 25;
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Call the native method calculateSquareRoot with the number as argument.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// The native code computes the square root and returns the result.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">double</span> result <span style="color:#f92672">=</span> root.<span style="color:#a6e22e">calculateSquareRoot</span>(number);
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Print the result to the console.</span>
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Square root of &#34;</span> <span style="color:#f92672">+</span> number <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; is: &#34;</span> <span style="color:#f92672">+</span> result);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>When we write <code>SquareRoot root = new SquareRoot();</code>, we are creating a new instance of the SquareRoot class. This instance provides a context in which the calculateSquareRoot method can be called. After creating the root instance, we can then call the calculateSquareRoot method on this instance to perform the square root calculation on a specific number.</p>
+<h3 id="step-2-compile-the-java-code">Step 2: Compile the Java Code</h3>
+<p>Compile the SquareRoot.java file to generate the class file.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ javac SquareRoot.java
+</span></span></code></pre></div><h3 id="step-3-create-the-header-h-file">Step 3: Create the Header (.h) File</h3>
+<p>Use the javah tool to create the header file (SquareRoot.h) containing the native method declaration.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ javah -jni SquareRoot
+</span></span></code></pre></div><p>Since Java 8, the javac command has a built-in option to generate header files for JNI and javah no longer exists in the your /usr/lib/jvm/java-xx-openjdk-amd64/bin folder. You can use the -h option with javac to achieve the same result as javah.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ javac -h . SquareRoot.java
+</span></span></code></pre></div><p>This will generate SquareRoot.h file:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-h" data-lang="h"><span style="display:flex;"><span><span style="color:#75715e">/* DO NOT EDIT THIS FILE - it is machine generated */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;jni.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">/* Header for class SquareRoot */</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#ifndef _Included_SquareRoot
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define _Included_SquareRoot
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#ifdef __cplusplus
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">extern</span> <span style="color:#e6db74">&#34;C&#34;</span> {
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#endif
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">/*
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * Class:     SquareRoot
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * Method:    calculateSquareRoot
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * Signature: (D)D
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span>JNIEXPORT jdouble JNICALL <span style="color:#a6e22e">Java_SquareRoot_calculateSquareRoot</span>
+</span></span><span style="display:flex;"><span>  (JNIEnv <span style="color:#f92672">*</span>, jobject, jdouble);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#ifdef __cplusplus
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#endif
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#endif
+</span></span></span></code></pre></div><h3 id="step-4-write-the-native-method-implementation">Step 4: Write the Native Method Implementation</h3>
+<p>Now, create a C file (SquareRoot.c) to implement the native method.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// SquareRoot.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;jni.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;SquareRoot.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;math.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>JNIEXPORT jdouble JNICALL <span style="color:#a6e22e">Java_SquareRoot_calculateSquareRoot</span>(JNIEnv <span style="color:#f92672">*</span>env, jobject obj, jdouble number) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">sqrt</span>(number);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="step-5-create-a-shared-library">Step 5: Create a Shared Library</h3>
+<p>Compile the SquareRoot.c file to create a shared library. Use gcc to compile the C code into a shared library. Replace ${JAVA_HOME} with the actual path to your Java installation directory.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ export JAVA_HOME<span style="color:#f92672">=</span>/usr/lib/jvm/java-17-openjdk-amd64
+</span></span><span style="display:flex;"><span>$ gcc -shared -fpic -o libSquareRoot.so SquareRoot.c -I<span style="color:#e6db74">&#34;</span>$JAVA_HOME<span style="color:#e6db74">/include&#34;</span> -I<span style="color:#e6db74">&#34;</span>$JAVA_HOME<span style="color:#e6db74">/include/linux&#34;</span>
+</span></span></code></pre></div><p>This will create libSquareRoot.so shared library.</p>
+<h3 id="step-6-run-the-program">Step 6: Run the Program</h3>
+<p>Now, let&rsquo;s run the Java program using the <code>java</code> command. Make sure the shared library is in the library path.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ java -Djava.library.path<span style="color:#f92672">=</span>. SquareRoot
+</span></span></code></pre></div><hr>
+<h2 id="integrating-java-and-native-programs">Integrating Java and Native Programs</h2>
+<p>Integrating Java with native programs involves declaring native methods in Java and implementing them in native code (such as C or C++). This process allows Java applications to leverage the capabilities of native code when needed.</p>
+<h3 id="declaring-native-methods-in-java">Declaring Native Methods in Java</h3>
+<p>When declaring a native method in Java, the <code>native</code> keyword is used with an empty method body. On the native side, you provide the implementation for this native method. It&rsquo;s vital to ensure the native function matches the method signature declared in the Java header file. The <code>javac -h .</code> aids in generating native function prototypes that align with Java-side declarations. This tells the Java compiler that the method implementation will be provided by a native library at runtime. Here&rsquo;s an example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">NativeExample</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Declare a native method to be implemented in native code</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">native</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">nativeMethod</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>In this example, nativeMethod is a native method that does not have an implementation in Java. Instead, it will be implemented in a native library.</p>
+<h4 id="implementing-native-methods-in-c">Implementing Native Methods in C</h4>
+<p>Once you&rsquo;ve declared a native method in Java, you need to implement it in a native language such as C/C++. Here&rsquo;s how you would implement the nativeMethod from the previous example:</p>
+<p>Native C Implementation (NativeExample.c):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#75715e">/* 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">NativeExample.c 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">*/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;jni.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;NativeExample.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>JNIEXPORT <span style="color:#66d9ef">void</span> JNICALL <span style="color:#a6e22e">Java_NativeExample_nativeMethod</span>(JNIEnv <span style="color:#f92672">*</span>env, jobject obj) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;This is a native method implementation</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Let&rsquo;s delve into a simple example to understand JNI&rsquo;s basics. We&rsquo;ll create a Calculator class in Java with a native method to perform basic arithmetic operations.</p>
+<p><strong>The Java Side:</strong></p>
+<p>First, we define our Calculator class with a native method add:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// Calculator.java</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Calculator</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> {
+</span></span><span style="display:flex;"><span>      System.<span style="color:#a6e22e">loadLibrary</span>(<span style="color:#e6db74">&#34;Calculator&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">native</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">add</span>(<span style="color:#66d9ef">int</span> a, <span style="color:#66d9ef">int</span> b);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
+</span></span><span style="display:flex;"><span>        Calculator calculator <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Calculator();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">int</span> result <span style="color:#f92672">=</span> calculator.<span style="color:#a6e22e">add</span>(5, 7);
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Result: &#34;</span> <span style="color:#f92672">+</span> result);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Here, add is declared as <code>private native int add(int a, int b);</code>. The native keyword indicates that the method&rsquo;s implementation is in another language, and the declaration ends with a semicolon as the Java file does not provide the native method&rsquo;s implementation.</p>
+<p><strong>The Native Language Side:</strong></p>
+<ul>
+<li>Compile Calculator.java:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ javac Calculator.java
+</span></span></code></pre></div><ul>
+<li>Generate the JNI-style header file Calculator.h:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ javac -h . Calculator.java
+</span></span></code></pre></div><p>Now, let&rsquo;s examine Calculator.h to see the generated function prototype for add:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>JNIEXPORT jint JNICALL <span style="color:#a6e22e">Java_Calculator_add</span>(JNIEnv <span style="color:#f92672">*</span>, jobject, jint, jint);
+</span></span></code></pre></div><p>The function signature in Calculator.h must match our native implementation in C. Remember to include JNIEXPORT and JNICALL for cross-platform compatibility.</p>
+<p><strong>JNI Method Declaration Syntax:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>JNIEXPORT jint JNICALL <span style="color:#a6e22e">Java_Calculator_add</span>(JNIEnv <span style="color:#f92672">*</span>, jobject, jint, jint);
+</span></span></code></pre></div><p>Let&rsquo;s decode each part of this declaration:</p>
+<ul>
+<li>
+<p>JNIEXPORT: This is a macro that is used to indicate that the following function should be made available to Java code. It is typically defined to an appropriate compiler directive for exporting symbols from a shared library.</p>
+</li>
+<li>
+<p>jint: This is the return type of the JNI method. In this case, it&rsquo;s jint, which corresponds to Java&rsquo;s int type.</p>
+</li>
+<li>
+<p>JNICALL: Similar to JNIEXPORT, this is a macro used to declare the calling convention for the function. It ensures that the function is called correctly according to the platform&rsquo;s requirements.</p>
+</li>
+<li>
+<p>Java_Calculator_add: This is the name of the JNI function. It follows a specific naming convention:</p>
+<ul>
+<li>Java_: This is a prefix that indicates the function is a JNI function.</li>
+<li>Calculator: This is the name of the Java class.</li>
+<li>add: This is the name of the Java method within the Calculator class.</li>
+</ul>
+</li>
+<li>
+<p>(JNIEnv *env, jobject obj, jint, jint): These are the parameters of the JNI method:</p>
+<ul>
+<li>JNIEnv *env: The JNIEnv pointer is a reference to the JNI environment. It provides access to JNI functions.</li>
+<li>jobject obj: This is a reference to the Java object on which the method is being called. In this case, it&rsquo;s the Calculator object.</li>
+<li>jint: This is the first parameter of the add method in Java, of type int.</li>
+<li>jint: This is the second parameter of the add method in Java, also of type int.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Native Method Implementation:</strong></p>
+<p>Here&rsquo;s a simple implementation of add in C:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;jni.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;Calculator.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>JNIEXPORT jint JNICALL <span style="color:#a6e22e">Java_Calculator_add</span>(JNIEnv <span style="color:#f92672">*</span>env, jobject obj, jint a, jint b) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> result <span style="color:#f92672">=</span> a <span style="color:#f92672">+</span> b;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Adding %d + %d = %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, a, b, result);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> result;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Compile the C code into a shared library:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc -shared -o libCalculator.so -fPIC Calculator.c -I<span style="color:#e6db74">&#34;</span>$JAVA_HOME<span style="color:#e6db74">/include&#34;</span> -I<span style="color:#e6db74">&#34;</span>$JAVA_HOME<span style="color:#e6db74">/include/linux&#34;</span>
+</span></span></code></pre></div><p>Set the library path and run Calculator:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ export LD_LIBRARY_PATH<span style="color:#f92672">=</span>.
+</span></span><span style="display:flex;"><span>$ java Calculator
+</span></span></code></pre></div><h4 id="native-method-names">Native Method Names</h4>
+<p>Native method names are concatenated from:</p>
+<ul>
+<li>Prefix Java_</li>
+<li>Fully qualified class name</li>
+<li>Underscore _ separator</li>
+<li>Method name</li>
+</ul>
+<p>Graphically, this looks as follows:</p>
+<p><img src="https://raw.githubusercontent.com/KernW0lf/Materials/main/JNI/JNI_Graph.png" alt="JNI_Graph"></p>
+<p>Thus, the native code implementation for the Calculator.add method becomes Java_Calculator_add</p>
+<p><strong>NOTE</strong></p>
+<p>Overloaded native method names, in addition to the above components, have an extra two underscores &ldquo;__&rdquo; appended to the method name followed by the argument signature.</p>
+<h3 id="mapping-between-java-and-native-types">Mapping Between Java and Native Types</h3>
+<p>JNI offers a mapping of Java types to native language (C/C++) types. This mapping covers both primitive Java types like int and double, and Java objects including strings and arrays. When a Java method with native code is called, its arguments are passed from the Java side to the native method. JNI provides ways to access these arguments in native code.</p>
+<h4 id="java-primitive-types">Java Primitive Types</h4>
+<p>When working with JNI, it&rsquo;s crucial to understand how Java primitive types map to their native equivalents. JNI provides mappings to ensure seamless communication between Java and native code, allowing direct access to Java&rsquo;s primitive types in native methods.</p>
+<p><strong>Mapping Table: Java Primitive Types to Native Types:</strong></p>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/JNI/JNI_native.png?raw=true" alt="JNI_Native"></p>
+<h4 id="java-object-types">Java Object Types</h4>
+<p>In JNI, Java objects are passed by reference, and all references to Java objects have the type jobject. However, to facilitate working with different types of Java objects and avoid programming errors, JNI introduces a set of types that are conceptually all subclassed from (or are &ldquo;subtypes&rdquo; of) jobject. These types provide more specific representations for different kinds of Java objects.</p>
+<p>Common JNI Object Types</p>
+<p>Here are some commonly used JNI object types and their descriptions:</p>
+<ul>
+<li>jobject: Represents a reference to any Java object.</li>
+<li>jclass: Represents a reference to a Java class. This is used when working with Java class objects.</li>
+<li>jstring: Represents a reference to a Java String object.</li>
+<li>jarray: Represents a reference to a Java array object. There are subtypes such as:
+<ul>
+<li>jbooleanArray: Represents a Java array of boolean values.</li>
+<li>jbyteArray: Represents a Java array of byte values.</li>
+<li>jcharArray: Represents a Java array of char values.</li>
+<li>jshortArray: Represents a Java array of short values.</li>
+<li>jintArray: Represents a Java array of int values.</li>
+<li>jlongArray: Represents a Java array of long values.</li>
+<li>jfloatArray: Represents a Java array of float values.</li>
+<li>jdoubleArray: Represents a Java array of double values.</li>
+</ul>
+</li>
+<li>jobjectArray: Represents a reference to an array of Java objects. Each element in this array is of type jobject.</li>
+<li>jthrowable: Represents a reference to a Java exception (Throwable). This is used for exception handling in JNI.</li>
+</ul>
+<p>In our Calculator.java example, the add native method accepts two Java int values as arguments and returns a Java int. The corresponding native implementation specifies jint for both the arguments and the return value.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>JNIEXPORT jint JNICALL <span style="color:#a6e22e">Java_Calculator_add</span>(JNIEnv <span style="color:#f92672">*</span>, jobject, jint, jint);
+</span></span></code></pre></div><p>Graphically, this looks as follows:
+<img src="https://github.com/KernW0lf/Materials/blob/main/JNI/JNI_Native_Mapping.jpg?raw=true" alt="JNI_Native_Mapping"></p>
+<p>As mentioned above, jint corresponds to the Java type Int. Notice that the second argument to Java_Calculator_add, which is the reference to the object itself, has type jobject.</p>
+<hr>
+<h2 id="exporting-strings-from-java-native-interface-jni">Exporting Strings from Java Native Interface (JNI)</h2>
+<p>We will revise the Naming Convention for JNI Functions:</p>
+<p>In the JNI specification, the naming convention for JNI functions includes the fully qualified name of the Java class along with the method name. The format is:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>JNIEXPORT <span style="color:#f92672">&lt;</span>return_type<span style="color:#f92672">&gt;</span> JNICALL Java_<span style="color:#f92672">&lt;</span>fully_qualified_class_name<span style="color:#f92672">&gt;</span>_<span style="color:#f92672">&lt;</span>method_name<span style="color:#f92672">&gt;</span>(JNIEnv <span style="color:#f92672">*</span>env, ...other_parameters...)
+</span></span></code></pre></div><p>Here&rsquo;s how the different parts of the JNI function name are constructed:</p>
+<ul>
+<li>JNIEXPORT: A macro indicating the calling convention and exporting of the function.</li>
+<li>&lt;return_type&gt;: The return type of the Java method.</li>
+<li>JNICALL: Another macro indicating the calling convention.</li>
+<li>Java_: A fixed prefix for JNI functions.</li>
+<li>&lt;fully_qualified_class_name&gt;: The fully qualified name of the Java class with underscores (_) replacing package separators (dots). For example, if your Java class is com.example.Main, it becomes com_example_Main.</li>
+<li>&lt;method_name&gt;: The name of the Java method.</li>
+</ul>
+<p>In JNI, strings are represented by two main types:</p>
+<ul>
+<li>jstring: Represents a reference to a Java string (java.lang.String).</li>
+<li>const char*: Represents a null-terminated C string in native code.</li>
+</ul>
+<p>Create a new file named HelloJNI.java with the following content:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">HelloJNI</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> {
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">loadLibrary</span>(<span style="color:#e6db74">&#34;HelloJNI&#34;</span>); <span style="color:#75715e">// Load the native library</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Declare native method</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">native</span> String <span style="color:#a6e22e">getMessage</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Main method to test</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
+</span></span><span style="display:flex;"><span>        HelloJNI hello <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> HelloJNI();
+</span></span><span style="display:flex;"><span>        String message <span style="color:#f92672">=</span> hello.<span style="color:#a6e22e">getMessage</span>();
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(message);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>To generate the JNI headers for HelloJNI.java, run the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ javac -h . HelloJNI.java
+</span></span></code></pre></div><p>This will generate a header file named HelloJNI.h in the current directory.</p>
+<p>Create a new file named HelloJNI.c with the following content:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;jni.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;HelloJNI.h&#34; // Include the generated header</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>JNIEXPORT jstring JNICALL <span style="color:#a6e22e">Java_HelloJNI_getMessage</span>(JNIEnv <span style="color:#f92672">*</span>env, jobject obj) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (<span style="color:#f92672">*</span>env)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">NewStringUTF</span>(env, <span style="color:#e6db74">&#34;Hello from JNI!&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Compile the HelloJNI.c file into a shared library (libHelloJNI.so on Linux) using gcc. Make sure to include the JNI header files from your JDK installation:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc -shared -o libHelloJNI.so -I<span style="color:#e6db74">&#34;</span>$JAVA_HOME<span style="color:#e6db74">/include&#34;</span> -I<span style="color:#e6db74">&#34;</span>$JAVA_HOME<span style="color:#e6db74">/include/linux&#34;</span>  HelloJNI.c
+</span></span></code></pre></div><p>This completes the process of creating a simple JNI example. The Java class HelloJNI contains a native method getMessage() that is implemented in C to return the string &ldquo;Hello from JNI!&rdquo;. By following these steps, you&rsquo;ve successfully integrated Java with native code using JNI.</p>
+<h2 id="why-use-env-in-jni">Why Use (*env) in JNI?</h2>
+<p>In JNI, native methods must access and manipulate Java objects through the JNIEnv interface pointer env.
+The env pointer is passed as the first parameter to JNI functions, indicating that we are calling those functions in the context of the current JNI environment.
+By using (*env)-&gt;FunctionName(&hellip;), we can access and manipulate Java objects (such as strings) safely and efficiently in native code.
+Proper use of env and JNI functions ensures correct handling of Java objects and prevents memory leaks.</p>
+<p>The JNI Environment (accessed via the argument JNIEnv*) provides functions for the conversion:</p>
+<ul>
+<li>To get a C-string (char*) from JNI string (jstring), invoke method const char* GetStringUTFChars(JNIEnv*, jstring, jboolean*).</li>
+<li>To get a JNI string (jstring) from a C-string (char*), invoke method jstring NewStringUTF(JNIEnv*, char*).</li>
+</ul>
+<hr>
+<h3 id="string-reversal-example--">String Reversal Example -</h3>
+<p>Now, let&rsquo;s create a simple Java class that contains a native method for reversing a string:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// StringReversal.java</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.util.Scannner;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">StringReversal</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> {
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">loadLibrary</span>(<span style="color:#e6db74">&#34;StringReversal&#34;</span>); <span style="color:#75715e">// Load the native library</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Native method declaration to reverse a string</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">native</span> String <span style="color:#a6e22e">reverseString</span>(String input);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Main method to test</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
+</span></span><span style="display:flex;"><span>        StringReversal reversal <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> StringReversal();
+</span></span><span style="display:flex;"><span>        Scanner scanner <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Scanner(System.<span style="color:#a6e22e">in</span>);
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Enter a string to reverse:&#34;</span>);
+</span></span><span style="display:flex;"><span>        String input <span style="color:#f92672">=</span> scanner.<span style="color:#a6e22e">nextLine</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Call the native method to reverse the input string</span>
+</span></span><span style="display:flex;"><span>        String reversed <span style="color:#f92672">=</span> reversal.<span style="color:#a6e22e">reverseString</span>(input);
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Original: &#34;</span> <span style="color:#f92672">+</span> input);
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Reversed: &#34;</span> <span style="color:#f92672">+</span> reversed);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        scanner.<span style="color:#a6e22e">close</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Generate the JNI-style header file StringReversal.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ javac -h . StringReversal.java
+</span></span></code></pre></div><p>This command generates the StringReversal.h file in the current directory.</p>
+<h3 id="jni-implementation-for-string-reversal--">JNI Implementation for String Reversal -</h3>
+<p>Now, let&rsquo;s implement the JNI side in C to reverse the string:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// StringReversal.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;jni.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;StringReversal.h&#34; // Include the generated header</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>JNIEXPORT jstring JNICALL <span style="color:#a6e22e">Java_StringReversal_reverseString</span>(JNIEnv <span style="color:#f92672">*</span>env, jobject obj, jstring input) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Get UTF-8 chars from Java string
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>str <span style="color:#f92672">=</span> (<span style="color:#f92672">*</span>env)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">GetStringUTFChars</span>(env, input, NULL);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (str <span style="color:#f92672">==</span> NULL) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> NULL; <span style="color:#75715e">// OutOfMemoryError already thrown by JNI
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Release the UTF-8 string obtained from GetStringUTFChars
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> length <span style="color:#f92672">=</span> (<span style="color:#f92672">*</span>env)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">GetStringUTFLength</span>(env, input);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> reversed[length <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>]; <span style="color:#75715e">// +1 for the null terminator
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> length; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        reversed[i] <span style="color:#f92672">=</span> str[length <span style="color:#f92672">-</span> i <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    reversed[length] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>; <span style="color:#75715e">// Null-terminate the reversed string
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    (<span style="color:#f92672">*</span>env)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">ReleaseStringUTFChars</span>(env, input, str);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Create a new Java string from the reversed C string
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> (<span style="color:#f92672">*</span>env)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">NewStringUTF</span>(env, reversed);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Native methods must access and manipulate Java objects, such as strings, through the env interface pointer. In C, this requires using the env pointer to reference the JNI function. Notice how the native method uses the env interface pointer to reference the two functions, GetStringUTFChars and ReleaseStringUTFChars, that it calls. Not only does the native method use env as an interface pointer, env is passed as the first parameter to these functions.</p>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/JNI/JNI_env.png?raw=true" alt="JNI_Native_Methods"></p>
+<p>You can refer to the official Oracle documentation for Java JNI functions. Here is the link to the Oracle documentation for JNI functions:</p>
+<p><a href="https://docs.oracle.com/en/java/javase/11/docs/specs/jni/functions.html">Oracle JNI Functions Documentation</a></p>
+<h3 id="references">References:</h3>
+<ul>
+<li><a href="https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html">Oracle JNI Documentation</a></li>
+<li><a href="https://www.iitk.ac.in/esc101/05Aug/tutorial/native1.1/TOC.html">IITK JNI</a></li>
+</ul>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>

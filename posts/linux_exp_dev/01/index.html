@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+    <title>
+Module 1: Linux Stack Smashing | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.131.0">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/linux_exp_dev/01/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    
+    
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+
+
+
+    <style>
+        body {
+             
+            font-family: 'Fira Code','Source Code Pro','Roboto', sans-serif; 
+        }
+        .highlight {
+            font-size: 20px;  
+        }
+
+        
+    </style>
+    
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>Module 1: Linux Stack Smashing</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-02-29">February 29, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>14 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <h2 id="decoding-the-binary-a-prelude-to-linux-stack-smashing-and-exploit-development">Decoding the Binary: A Prelude to Linux Stack Smashing and Exploit Development</h2>
+<p>Before diving into the world of Linux stack smashing, it&rsquo;s crucial to begin with binary analysis. Analyzing the binary executable provides us with valuable insights into its structure, functions, and potential vulnerabilities. Through binary analysis, we can identify the layout of the stack, the presence of buffer overflows, and other crucial details that will aid us in crafting our exploit. This initial step sets the foundation for our exploit development process, allowing us to understand the inner workings of the program and how we can manipulate its behavior. Let&rsquo;s embark on this journey of analysis to unravel the secrets hidden within the binary.</p>
+<p>Following tools can be used to analyze the binary:</p>
+<p><strong>1. file</strong></p>
+<p>One of the fundamental tools in binary analysis is the file command. This versatile tool provides essential information about a binary file&rsquo;s type, architecture, and more. The file command starts by looking at the &ldquo;magic numbers&rdquo; or file signatures present in the file. file uses a database called magic.mgc or magic to map file signatures to file types.</p>
+<p>Here&rsquo;s an example of using the file command and its output:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ file /bin/ls
+</span></span><span style="display:flex;"><span>/bin/ls: ELF 64-bit LSB pie executable, x86-64, version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>SYSV<span style="color:#f92672">)</span>, dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID<span style="color:#f92672">[</span>sha1<span style="color:#f92672">]=</span>5a23a3d88888f69f1ae22e25a8f32d5a36f1662f, <span style="color:#66d9ef">for</span> GNU/Linux 3.2.0, stripped
+</span></span></code></pre></div><p>The output tells us that it&rsquo;s an ELF (Executable and Linkable Format) 64-bit binary for an x86-64 architecture, dynamically linked, and stripped of debugging symbols.</p>
+<p><strong>2. ldd</strong></p>
+<p>The ldd command is a valuable tool for examining the shared library dependencies of an executable or a shared library in a Linux system. When run with the path to an executable, ldd displays a list of the shared libraries that the executable is linked against. This information is crucial for understanding the runtime environment required by the executable and ensuring that all necessary libraries are present on the system.
+It&rsquo;s important to note that ldd works with dynamically linked binaries. If a binary is statically linked (meaning it includes all necessary libraries within itself), ldd will not provide any output related to shared library dependencies.</p>
+<p>Refer file_dyn and file_stat in my github repo.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc file.c -o file_dyn
+</span></span><span style="display:flex;"><span>$ ldd file_dyn
+</span></span><span style="display:flex;"><span>	linux-vdso.so.1 <span style="color:#f92672">(</span>0x00007ffdcd9e8000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	libc.so.6 <span style="color:#f92672">=</span>&gt; /lib/x86_64-linux-gnu/libc.so.6 <span style="color:#f92672">(</span>0x00007f977b625000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/lib64/ld-linux-x86-64.so.2 <span style="color:#f92672">(</span>0x00007f977b837000<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Each line in the output corresponds to a shared library, along with its full path on the system and the memory address at which it is loaded. This information helps in troubleshooting missing library dependencies and resolving issues related to shared libraries.</p>
+<p>For example, running ldd on a statically linked binary like the following binary will not display any shared library dependencies:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc -static file.c -o file_stat
+</span></span><span style="display:flex;"><span>$ ldd file_stat
+</span></span><span style="display:flex;"><span>	  not a dynamic executable
+</span></span></code></pre></div><p>Also, you can verify that the size of statically linked library is more than that of dynamically linked.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ du -h file_stat file_dyn 
+</span></span><span style="display:flex;"><span>720K	file_stat
+</span></span><span style="display:flex;"><span>16K	file_dyn
+</span></span></code></pre></div><p><strong>3. ltrace</strong></p>
+<p>After confirming that the given library is dependent on external libraries, it&rsquo;s time to trace the functions that are called from those libraries. ltrace is a dynamic tracing utility in Linux that enables us to intercept and display library calls made by an executed program. By running ltrace followed by the path to an executable, we can observe the library functions being called, along with the arguments passed to them. This tool is invaluable for understanding how a program interacts with shared libraries at runtime, providing insights into its behavior and aiding in debugging and analysis.
+To illustrate the utility of ltrace in binary analysis, let&rsquo;s consider a scenario where we have a shared library libadd.so that exports an add function, which takes two integers as parameters and returns their sum.</p>
+<p>First, we&rsquo;ll create the libadd.so library with a simple add function:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc -shared -fPIC add.c -o libadd.so
+</span></span></code></pre></div><p>Now, let&rsquo;s create a program that uses this add function from libadd.so.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc -L. -ladd useAdd.c -o useAdd
+</span></span></code></pre></div><p>Now, here comes the exciting part. We can use ltrace to trace the library calls made by main to libadd.so:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ LD_LIBRARY_PATH<span style="color:#f92672">=</span>. ltrace ./useAdd
+</span></span><span style="display:flex;"><span>add<span style="color:#f92672">(</span>5, 3, 0x7fff4180f508, 0x556fab537dc8<span style="color:#f92672">)</span>        <span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>printf<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Result: %d\n&#34;</span>, 8Result: <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">)</span>                        <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>+++ exited <span style="color:#f92672">(</span>status 0<span style="color:#f92672">)</span> +++
+</span></span></code></pre></div><p>The output will show the add function being called with the arguments 5 and 3, and the resulting sum 8.</p>
+<p><strong>4. hexdump</strong></p>
+<p>When it comes to binary analysis, one of the essential tools in a Linux developer&rsquo;s arsenal is hexdump. This command-line utility allows us to examine and manipulate binary files at a byte level, providing a hexadecimal and ASCII representation of the file&rsquo;s contents.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ hexdump <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>file<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>Here are a few common options:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>  -C: Display the output in a canonical hex+ASCII display.
+</span></span><span style="display:flex;"><span>  -n: Limit the number of bytes to dump.
+</span></span><span style="display:flex;"><span>  -s: Skip a number of bytes from the beginning.
+</span></span></code></pre></div><p>We will inspect first 64 bytes of file_dyn:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ hexdump -C -n <span style="color:#ae81ff">64</span> file_dyn 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">00000000</span>  7f <span style="color:#ae81ff">45</span> 4c <span style="color:#ae81ff">46</span> <span style="color:#ae81ff">02</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">00</span>  <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>  |.ELF............|
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">00000010</span>  <span style="color:#ae81ff">03</span> <span style="color:#ae81ff">00</span> 3e <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>  <span style="color:#ae81ff">50</span> <span style="color:#ae81ff">10</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>  |..&gt;.....P.......|
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">00000020</span>  <span style="color:#ae81ff">40</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>  <span style="color:#ae81ff">90</span> <span style="color:#ae81ff">36</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>  |@........6......|
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">00000030</span>  <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">40</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">38</span> <span style="color:#ae81ff">00</span>  0d <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">40</span> <span style="color:#ae81ff">00</span> 1f <span style="color:#ae81ff">00</span> 1e <span style="color:#ae81ff">00</span>  |....@.8...@.....|
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">00000040</span>
+</span></span></code></pre></div><p><strong>5. strings</strong></p>
+<p>Now that we&rsquo;ve examined the binary at byte level, let&rsquo;s move on to another useful tool in binary analysis: the strings command. The strings command in Linux is a simple yet powerful utility that extracts readable strings from binary files.
+The -n option specifies the minimum string length to be included in the output.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ strings -n <span style="color:#ae81ff">6</span> file_dyn
+</span></span><span style="display:flex;"><span>/lib64/ld-linux-x86-64.so.2
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>kernw0lf...
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>file.c
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>This command extracts printable strings from the file_dyn binary, but it only includes strings that are at least 6 characters long.
+Strings extraction is a crucial initial step in binary reverse engineering and forensic analysis. It uncovers valuable clues about a binary&rsquo;s purpose, origin, and potential errors or debug information embedded within.</p>
+<p><strong>6. readelf</strong></p>
+<p>Another essential tool in the binary analysis toolkit is readelf. This command-line utility is used to display information about ELF (Executable and Linkable Format) files, providing detailed insights into the structure of binary executables and shared libraries.</p>
+<p><strong>Commonly used command line arguments</strong></p>
+<ul>
+<li>File Header (-h/--file-header)</li>
+</ul>
+<p>This options displays the ELF file header of a binary file.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf -h file_dyn
+</span></span><span style="display:flex;"><span>ELF Header:
+</span></span><span style="display:flex;"><span>  Magic:   7f <span style="color:#ae81ff">45</span> 4c <span style="color:#ae81ff">46</span> <span style="color:#ae81ff">02</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> 
+</span></span><span style="display:flex;"><span>  Class:                             ELF64
+</span></span><span style="display:flex;"><span>  Data:                              2<span style="color:#960050;background-color:#1e0010">&#39;</span>s complement, little endian
+</span></span><span style="display:flex;"><span>  Version:                           <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>current<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  OS/ABI:                            UNIX - System V
+</span></span><span style="display:flex;"><span>  ABI Version:                       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  Type:                              DYN <span style="color:#f92672">(</span>Position-Independent Executable file<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Machine:                           Advanced Micro Devices X86-64
+</span></span><span style="display:flex;"><span>  Version:                           0x1
+</span></span><span style="display:flex;"><span>  Entry point address:               0x1050
+</span></span><span style="display:flex;"><span>  Start of program headers:          <span style="color:#ae81ff">64</span> <span style="color:#f92672">(</span>bytes into file<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Start of section headers:          <span style="color:#ae81ff">13968</span> <span style="color:#f92672">(</span>bytes into file<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Flags:                             0x0
+</span></span><span style="display:flex;"><span>  Size of this header:               <span style="color:#ae81ff">64</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Size of program headers:           <span style="color:#ae81ff">56</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Number of program headers:         <span style="color:#ae81ff">13</span>
+</span></span><span style="display:flex;"><span>  Size of section headers:           <span style="color:#ae81ff">64</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Number of section headers:         <span style="color:#ae81ff">31</span>
+</span></span><span style="display:flex;"><span>  Section header string table index: <span style="color:#ae81ff">30</span>
+</span></span></code></pre></div><ul>
+<li>Program Headers (-l/--program-headers)</li>
+</ul>
+<p>Program headers describe segments&rsquo; layout in the binary. This information is vital for understanding memory mapping and the executable&rsquo;s load address.</p>
+<ul>
+<li>Section Headers (-S/--section-headers)</li>
+</ul>
+<p>This option displays detailed information about each section in the ELF file. Section headers include names, types, addresses, sizes, and other attributes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf -S file_dyn
+</span></span><span style="display:flex;"><span>There are <span style="color:#ae81ff">31</span> section headers, starting at offset 0x3690:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Section Headers:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>Nr<span style="color:#f92672">]</span> Name              Type             Address           Offset
+</span></span><span style="display:flex;"><span>       Size              EntSize          Flags  Link  Info  Align
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span> 0<span style="color:#f92672">]</span>                   NULL             <span style="color:#ae81ff">0000000000000000</span>  <span style="color:#ae81ff">00000000</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000000</span>  <span style="color:#ae81ff">0000000000000000</span>           <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span> 1<span style="color:#f92672">]</span> .interp           PROGBITS         <span style="color:#ae81ff">0000000000000318</span>  <span style="color:#ae81ff">00000318</span>
+</span></span><span style="display:flex;"><span>       000000000000001c  <span style="color:#ae81ff">0000000000000000</span>   A       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span> 2<span style="color:#f92672">]</span> .note.gnu.pr<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span> NOTE             <span style="color:#ae81ff">0000000000000338</span>  <span style="color:#ae81ff">00000338</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000020</span>  <span style="color:#ae81ff">0000000000000000</span>   A       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span> 3<span style="color:#f92672">]</span> .note.gnu.bu<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span> NOTE             <span style="color:#ae81ff">0000000000000358</span>  <span style="color:#ae81ff">00000358</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000024</span>  <span style="color:#ae81ff">0000000000000000</span>   A       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span> 4<span style="color:#f92672">]</span> .note.ABI-tag     NOTE             000000000000037c  0000037c
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000020</span>  <span style="color:#ae81ff">0000000000000000</span>   A       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span> 5<span style="color:#f92672">]</span> .gnu.hash         GNU_HASH         00000000000003a0  000003a0
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000024</span>  <span style="color:#ae81ff">0000000000000000</span>   A       <span style="color:#ae81ff">6</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span> 6<span style="color:#f92672">]</span> .dynsym           DYNSYM           00000000000003c8  000003c8
+</span></span><span style="display:flex;"><span>       00000000000000a8  <span style="color:#ae81ff">0000000000000018</span>   A       <span style="color:#ae81ff">7</span>     <span style="color:#ae81ff">1</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span> 7<span style="color:#f92672">]</span> .dynstr           STRTAB           <span style="color:#ae81ff">0000000000000470</span>  <span style="color:#ae81ff">00000470</span>
+</span></span><span style="display:flex;"><span>       000000000000008d  <span style="color:#ae81ff">0000000000000000</span>   A       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span> 8<span style="color:#f92672">]</span> .gnu.version      VERSYM           00000000000004fe  000004fe
+</span></span><span style="display:flex;"><span>       000000000000000e  <span style="color:#ae81ff">0000000000000002</span>   A       <span style="color:#ae81ff">6</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span> 9<span style="color:#f92672">]</span> .gnu.version_r    VERNEED          <span style="color:#ae81ff">0000000000000510</span>  <span style="color:#ae81ff">00000510</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000030</span>  <span style="color:#ae81ff">0000000000000000</span>   A       <span style="color:#ae81ff">7</span>     <span style="color:#ae81ff">1</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>10<span style="color:#f92672">]</span> .rela.dyn         RELA             <span style="color:#ae81ff">0000000000000540</span>  <span style="color:#ae81ff">00000540</span>
+</span></span><span style="display:flex;"><span>       00000000000000c0  <span style="color:#ae81ff">0000000000000018</span>   A       <span style="color:#ae81ff">6</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>11<span style="color:#f92672">]</span> .rela.plt         RELA             <span style="color:#ae81ff">0000000000000600</span>  <span style="color:#ae81ff">00000600</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000018</span>  <span style="color:#ae81ff">0000000000000018</span>  AI       <span style="color:#ae81ff">6</span>    <span style="color:#ae81ff">24</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>12<span style="color:#f92672">]</span> .init             PROGBITS         <span style="color:#ae81ff">0000000000001000</span>  <span style="color:#ae81ff">00001000</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000017</span>  <span style="color:#ae81ff">0000000000000000</span>  AX       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>13<span style="color:#f92672">]</span> .plt              PROGBITS         <span style="color:#ae81ff">0000000000001020</span>  <span style="color:#ae81ff">00001020</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000020</span>  <span style="color:#ae81ff">0000000000000010</span>  AX       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">16</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>14<span style="color:#f92672">]</span> .plt.got          PROGBITS         <span style="color:#ae81ff">0000000000001040</span>  <span style="color:#ae81ff">00001040</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000008</span>  <span style="color:#ae81ff">0000000000000008</span>  AX       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>15<span style="color:#f92672">]</span> .text             PROGBITS         <span style="color:#ae81ff">0000000000001050</span>  <span style="color:#ae81ff">00001050</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000103</span>  <span style="color:#ae81ff">0000000000000000</span>  AX       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">16</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>16<span style="color:#f92672">]</span> .fini             PROGBITS         <span style="color:#ae81ff">0000000000001154</span>  <span style="color:#ae81ff">00001154</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000009</span>  <span style="color:#ae81ff">0000000000000000</span>  AX       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>17<span style="color:#f92672">]</span> .rodata           PROGBITS         <span style="color:#ae81ff">0000000000002000</span>  <span style="color:#ae81ff">00002000</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000010</span>  <span style="color:#ae81ff">0000000000000000</span>   A       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>18<span style="color:#f92672">]</span> .eh_frame_hdr     PROGBITS         <span style="color:#ae81ff">0000000000002010</span>  <span style="color:#ae81ff">00002010</span>
+</span></span><span style="display:flex;"><span>       000000000000002c  <span style="color:#ae81ff">0000000000000000</span>   A       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>19<span style="color:#f92672">]</span> .eh_frame         PROGBITS         <span style="color:#ae81ff">0000000000002040</span>  <span style="color:#ae81ff">00002040</span>
+</span></span><span style="display:flex;"><span>       00000000000000ac  <span style="color:#ae81ff">0000000000000000</span>   A       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>20<span style="color:#f92672">]</span> .init_array       INIT_ARRAY       0000000000003dd0  00002dd0
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000008</span>  <span style="color:#ae81ff">0000000000000008</span>  WA       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>21<span style="color:#f92672">]</span> .fini_array       FINI_ARRAY       0000000000003dd8  00002dd8
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000008</span>  <span style="color:#ae81ff">0000000000000008</span>  WA       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>22<span style="color:#f92672">]</span> .dynamic          DYNAMIC          0000000000003de0  00002de0
+</span></span><span style="display:flex;"><span>       00000000000001e0  <span style="color:#ae81ff">0000000000000010</span>  WA       <span style="color:#ae81ff">7</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>23<span style="color:#f92672">]</span> .got              PROGBITS         0000000000003fc0  00002fc0
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000028</span>  <span style="color:#ae81ff">0000000000000008</span>  WA       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>24<span style="color:#f92672">]</span> .got.plt          PROGBITS         0000000000003fe8  00002fe8
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000020</span>  <span style="color:#ae81ff">0000000000000008</span>  WA       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>25<span style="color:#f92672">]</span> .data             PROGBITS         <span style="color:#ae81ff">0000000000004008</span>  <span style="color:#ae81ff">00003008</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000010</span>  <span style="color:#ae81ff">0000000000000000</span>  WA       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>26<span style="color:#f92672">]</span> .bss              NOBITS           <span style="color:#ae81ff">0000000000004018</span>  <span style="color:#ae81ff">00003018</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000008</span>  <span style="color:#ae81ff">0000000000000000</span>  WA       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>27<span style="color:#f92672">]</span> .comment          PROGBITS         <span style="color:#ae81ff">0000000000000000</span>  <span style="color:#ae81ff">00003018</span>
+</span></span><span style="display:flex;"><span>       000000000000001f  <span style="color:#ae81ff">0000000000000001</span>  MS       <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>28<span style="color:#f92672">]</span> .symtab           SYMTAB           <span style="color:#ae81ff">0000000000000000</span>  <span style="color:#ae81ff">00003038</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">0000000000000360</span>  <span style="color:#ae81ff">0000000000000018</span>          <span style="color:#ae81ff">29</span>    <span style="color:#ae81ff">18</span>     <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>29<span style="color:#f92672">]</span> .strtab           STRTAB           <span style="color:#ae81ff">0000000000000000</span>  <span style="color:#ae81ff">00003398</span>
+</span></span><span style="display:flex;"><span>       00000000000001da  <span style="color:#ae81ff">0000000000000000</span>           <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[</span>30<span style="color:#f92672">]</span> .shstrtab         STRTAB           <span style="color:#ae81ff">0000000000000000</span>  <span style="color:#ae81ff">00003572</span>
+</span></span><span style="display:flex;"><span>       000000000000011a  <span style="color:#ae81ff">0000000000000000</span>           <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>Key to Flags:
+</span></span><span style="display:flex;"><span>  W <span style="color:#f92672">(</span>write<span style="color:#f92672">)</span>, A <span style="color:#f92672">(</span>alloc<span style="color:#f92672">)</span>, X <span style="color:#f92672">(</span>execute<span style="color:#f92672">)</span>, M <span style="color:#f92672">(</span>merge<span style="color:#f92672">)</span>, S <span style="color:#f92672">(</span>strings<span style="color:#f92672">)</span>, I <span style="color:#f92672">(</span>info<span style="color:#f92672">)</span>,
+</span></span><span style="display:flex;"><span>  L <span style="color:#f92672">(</span>link order<span style="color:#f92672">)</span>, O <span style="color:#f92672">(</span>extra OS processing required<span style="color:#f92672">)</span>, G <span style="color:#f92672">(</span>group<span style="color:#f92672">)</span>, T <span style="color:#f92672">(</span>TLS<span style="color:#f92672">)</span>,
+</span></span><span style="display:flex;"><span>  C <span style="color:#f92672">(</span>compressed<span style="color:#f92672">)</span>, x <span style="color:#f92672">(</span>unknown<span style="color:#f92672">)</span>, o <span style="color:#f92672">(</span>OS specific<span style="color:#f92672">)</span>, E <span style="color:#f92672">(</span>exclude<span style="color:#f92672">)</span>,
+</span></span><span style="display:flex;"><span>  D <span style="color:#f92672">(</span>mbind<span style="color:#f92672">)</span>, l <span style="color:#f92672">(</span>large<span style="color:#f92672">)</span>, p <span style="color:#f92672">(</span>processor specific<span style="color:#f92672">)</span>
+</span></span></code></pre></div><ul>
+<li>Symbol Table (-s/--syms/--symbols)</li>
+</ul>
+<p>The symbol table contains information about symbols used in the binary, including functions and variables. This is invaluable for understanding program logic.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf -s file_dyn
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Symbol table <span style="color:#e6db74">&#39;.dynsym&#39;</span> contains <span style="color:#ae81ff">7</span> entries:
+</span></span><span style="display:flex;"><span>   Num:    Value          Size Type    Bind   Vis      Ndx Name
+</span></span><span style="display:flex;"><span>     0: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  LOCAL  DEFAULT  UND 
+</span></span><span style="display:flex;"><span>     1: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FUNC    GLOBAL DEFAULT  UND _<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>@GLIBC_2.34 <span style="color:#f92672">(</span>2<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>     2: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT  UND _ITM_deregisterT<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>     3: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FUNC    GLOBAL DEFAULT  UND puts@GLIBC_2.2.5 <span style="color:#f92672">(</span>3<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>     4: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT  UND __gmon_start__
+</span></span><span style="display:flex;"><span>     5: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT  UND _ITM_registerTMC<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>     6: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FUNC    WEAK   DEFAULT  UND <span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>@GLIBC_2.2.5 <span style="color:#f92672">(</span>3<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Symbol table <span style="color:#e6db74">&#39;.symtab&#39;</span> contains <span style="color:#ae81ff">36</span> entries:
+</span></span><span style="display:flex;"><span>   Num:    Value          Size Type    Bind   Vis      Ndx Name
+</span></span><span style="display:flex;"><span>     0: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  LOCAL  DEFAULT  UND 
+</span></span><span style="display:flex;"><span>     1: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FILE    LOCAL  DEFAULT  ABS Scrt1.o
+</span></span><span style="display:flex;"><span>     2: 000000000000037c    <span style="color:#ae81ff">32</span> OBJECT  LOCAL  DEFAULT    <span style="color:#ae81ff">4</span> __abi_tag
+</span></span><span style="display:flex;"><span>     3: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FILE    LOCAL  DEFAULT  ABS crtstuff.c
+</span></span><span style="display:flex;"><span>     4: <span style="color:#ae81ff">0000000000001080</span>     <span style="color:#ae81ff">0</span> FUNC    LOCAL  DEFAULT   <span style="color:#ae81ff">15</span> deregister_tm_clones
+</span></span><span style="display:flex;"><span>     5: 00000000000010b0     <span style="color:#ae81ff">0</span> FUNC    LOCAL  DEFAULT   <span style="color:#ae81ff">15</span> register_tm_clones
+</span></span><span style="display:flex;"><span>     6: 00000000000010f0     <span style="color:#ae81ff">0</span> FUNC    LOCAL  DEFAULT   <span style="color:#ae81ff">15</span> __do_global_dtors_aux
+</span></span><span style="display:flex;"><span>     7: <span style="color:#ae81ff">0000000000004018</span>     <span style="color:#ae81ff">1</span> OBJECT  LOCAL  DEFAULT   <span style="color:#ae81ff">26</span> completed.0
+</span></span><span style="display:flex;"><span>     8: 0000000000003dd8     <span style="color:#ae81ff">0</span> OBJECT  LOCAL  DEFAULT   <span style="color:#ae81ff">21</span> __do_global_dtor<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>     9: <span style="color:#ae81ff">0000000000001130</span>     <span style="color:#ae81ff">0</span> FUNC    LOCAL  DEFAULT   <span style="color:#ae81ff">15</span> frame_dummy
+</span></span><span style="display:flex;"><span>    10: 0000000000003dd0     <span style="color:#ae81ff">0</span> OBJECT  LOCAL  DEFAULT   <span style="color:#ae81ff">20</span> __frame_dummy_in<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>    11: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FILE    LOCAL  DEFAULT  ABS file.c
+</span></span><span style="display:flex;"><span>    12: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FILE    LOCAL  DEFAULT  ABS crtstuff.c
+</span></span><span style="display:flex;"><span>    13: 00000000000020e8     <span style="color:#ae81ff">0</span> OBJECT  LOCAL  DEFAULT   <span style="color:#ae81ff">19</span> __FRAME_END__
+</span></span><span style="display:flex;"><span>    14: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FILE    LOCAL  DEFAULT  ABS 
+</span></span><span style="display:flex;"><span>    15: 0000000000003de0     <span style="color:#ae81ff">0</span> OBJECT  LOCAL  DEFAULT   <span style="color:#ae81ff">22</span> _DYNAMIC
+</span></span><span style="display:flex;"><span>    16: <span style="color:#ae81ff">0000000000002010</span>     <span style="color:#ae81ff">0</span> NOTYPE  LOCAL  DEFAULT   <span style="color:#ae81ff">18</span> __GNU_EH_FRAME_HDR
+</span></span><span style="display:flex;"><span>    17: 0000000000003fe8     <span style="color:#ae81ff">0</span> OBJECT  LOCAL  DEFAULT   <span style="color:#ae81ff">24</span> _GLOBAL_OFFSET_TABLE_
+</span></span><span style="display:flex;"><span>    18: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FUNC    GLOBAL DEFAULT  UND __libc_start_mai<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>    19: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT  UND _ITM_deregisterT<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>    20: <span style="color:#ae81ff">0000000000004008</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT   <span style="color:#ae81ff">25</span> data_start
+</span></span><span style="display:flex;"><span>    21: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FUNC    GLOBAL DEFAULT  UND puts@GLIBC_2.2.5
+</span></span><span style="display:flex;"><span>    22: <span style="color:#ae81ff">0000000000004018</span>     <span style="color:#ae81ff">0</span> NOTYPE  GLOBAL DEFAULT   <span style="color:#ae81ff">25</span> _edata
+</span></span><span style="display:flex;"><span>    23: <span style="color:#ae81ff">0000000000001154</span>     <span style="color:#ae81ff">0</span> FUNC    GLOBAL HIDDEN    <span style="color:#ae81ff">16</span> _fini
+</span></span><span style="display:flex;"><span>    24: <span style="color:#ae81ff">0000000000004008</span>     <span style="color:#ae81ff">0</span> NOTYPE  GLOBAL DEFAULT   <span style="color:#ae81ff">25</span> __data_start
+</span></span><span style="display:flex;"><span>    25: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT  UND __gmon_start__
+</span></span><span style="display:flex;"><span>    26: <span style="color:#ae81ff">0000000000004010</span>     <span style="color:#ae81ff">0</span> OBJECT  GLOBAL HIDDEN    <span style="color:#ae81ff">25</span> __dso_handle
+</span></span><span style="display:flex;"><span>    27: <span style="color:#ae81ff">0000000000002000</span>     <span style="color:#ae81ff">4</span> OBJECT  GLOBAL DEFAULT   <span style="color:#ae81ff">17</span> _IO_stdin_used
+</span></span><span style="display:flex;"><span>    28: <span style="color:#ae81ff">0000000000004020</span>     <span style="color:#ae81ff">0</span> NOTYPE  GLOBAL DEFAULT   <span style="color:#ae81ff">26</span> _end
+</span></span><span style="display:flex;"><span>    29: <span style="color:#ae81ff">0000000000001050</span>    <span style="color:#ae81ff">34</span> FUNC    GLOBAL DEFAULT   <span style="color:#ae81ff">15</span> _start
+</span></span><span style="display:flex;"><span>    30: <span style="color:#ae81ff">0000000000004018</span>     <span style="color:#ae81ff">0</span> NOTYPE  GLOBAL DEFAULT   <span style="color:#ae81ff">26</span> __bss_start
+</span></span><span style="display:flex;"><span>    31: <span style="color:#ae81ff">0000000000001139</span>    <span style="color:#ae81ff">26</span> FUNC    GLOBAL DEFAULT   <span style="color:#ae81ff">15</span> main
+</span></span><span style="display:flex;"><span>    32: <span style="color:#ae81ff">0000000000004018</span>     <span style="color:#ae81ff">0</span> OBJECT  GLOBAL HIDDEN    <span style="color:#ae81ff">25</span> __TMC_END__
+</span></span><span style="display:flex;"><span>    33: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT  UND _ITM_registerTMC<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>    34: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FUNC    WEAK   DEFAULT  UND __cxa_finalize@G<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>    35: <span style="color:#ae81ff">0000000000001000</span>     <span style="color:#ae81ff">0</span> FUNC    GLOBAL HIDDEN    <span style="color:#ae81ff">12</span> _init
+</span></span></code></pre></div><ul>
+<li>Dynamic Section (-d/--dynamic)</li>
+</ul>
+<p>This option reveals the dynamic linking information, including shared library dependencies and versioning details.
+No dynamic linking information will be displayed for statically linked binaries, as they do not rely on shared libraries at runtime.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf -d file_dyn 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Dynamic section at offset 0x2de0 contains <span style="color:#ae81ff">26</span> entries:
+</span></span><span style="display:flex;"><span>  Tag        Type                         Name/Value
+</span></span><span style="display:flex;"><span> 0x0000000000000001 <span style="color:#f92672">(</span>NEEDED<span style="color:#f92672">)</span>             Shared library: <span style="color:#f92672">[</span>libc.so.6<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span> 0x000000000000000c <span style="color:#f92672">(</span>INIT<span style="color:#f92672">)</span>               0x1000
+</span></span><span style="display:flex;"><span> 0x000000000000000d <span style="color:#f92672">(</span>FINI<span style="color:#f92672">)</span>               0x1154
+</span></span><span style="display:flex;"><span> 0x0000000000000019 <span style="color:#f92672">(</span>INIT_ARRAY<span style="color:#f92672">)</span>         0x3dd0
+</span></span><span style="display:flex;"><span> 0x000000000000001b <span style="color:#f92672">(</span>INIT_ARRAYSZ<span style="color:#f92672">)</span>       <span style="color:#ae81ff">8</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> 0x000000000000001a <span style="color:#f92672">(</span>FINI_ARRAY<span style="color:#f92672">)</span>         0x3dd8
+</span></span><span style="display:flex;"><span> 0x000000000000001c <span style="color:#f92672">(</span>FINI_ARRAYSZ<span style="color:#f92672">)</span>       <span style="color:#ae81ff">8</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> 0x000000006ffffef5 <span style="color:#f92672">(</span>GNU_HASH<span style="color:#f92672">)</span>           0x3a0
+</span></span><span style="display:flex;"><span> 0x0000000000000005 <span style="color:#f92672">(</span>STRTAB<span style="color:#f92672">)</span>             0x470
+</span></span><span style="display:flex;"><span> 0x0000000000000006 <span style="color:#f92672">(</span>SYMTAB<span style="color:#f92672">)</span>             0x3c8
+</span></span><span style="display:flex;"><span> 0x000000000000000a <span style="color:#f92672">(</span>STRSZ<span style="color:#f92672">)</span>              <span style="color:#ae81ff">141</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> 0x000000000000000b <span style="color:#f92672">(</span>SYMENT<span style="color:#f92672">)</span>             <span style="color:#ae81ff">24</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> 0x0000000000000015 <span style="color:#f92672">(</span>DEBUG<span style="color:#f92672">)</span>              0x0
+</span></span><span style="display:flex;"><span> 0x0000000000000003 <span style="color:#f92672">(</span>PLTGOT<span style="color:#f92672">)</span>             0x3fe8
+</span></span><span style="display:flex;"><span> 0x0000000000000002 <span style="color:#f92672">(</span>PLTRELSZ<span style="color:#f92672">)</span>           <span style="color:#ae81ff">24</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> 0x0000000000000014 <span style="color:#f92672">(</span>PLTREL<span style="color:#f92672">)</span>             RELA
+</span></span><span style="display:flex;"><span> 0x0000000000000017 <span style="color:#f92672">(</span>JMPREL<span style="color:#f92672">)</span>             0x600
+</span></span><span style="display:flex;"><span> 0x0000000000000007 <span style="color:#f92672">(</span>RELA<span style="color:#f92672">)</span>               0x540
+</span></span><span style="display:flex;"><span> 0x0000000000000008 <span style="color:#f92672">(</span>RELASZ<span style="color:#f92672">)</span>             <span style="color:#ae81ff">192</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> 0x0000000000000009 <span style="color:#f92672">(</span>RELAENT<span style="color:#f92672">)</span>            <span style="color:#ae81ff">24</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> 0x000000006ffffffb <span style="color:#f92672">(</span>FLAGS_1<span style="color:#f92672">)</span>            Flags: PIE
+</span></span><span style="display:flex;"><span> 0x000000006ffffffe <span style="color:#f92672">(</span>VERNEED<span style="color:#f92672">)</span>            0x510
+</span></span><span style="display:flex;"><span> 0x000000006fffffff <span style="color:#f92672">(</span>VERNEEDNUM<span style="color:#f92672">)</span>         <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span> 0x000000006ffffff0 <span style="color:#f92672">(</span>VERSYM<span style="color:#f92672">)</span>             0x4fe
+</span></span><span style="display:flex;"><span> 0x000000006ffffff9 <span style="color:#f92672">(</span>RELACOUNT<span style="color:#f92672">)</span>          <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span> 0x0000000000000000 <span style="color:#f92672">(</span>NULL<span style="color:#f92672">)</span>               0x0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ readelf -d file_stat 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>There is no dynamic section in this file.
+</span></span></code></pre></div><ul>
+<li>Section Headers and Their Contents (-x/--hex-dump=)</li>
+</ul>
+<p>This option displays the hexadecimal and ASCII representation of the content of a specific section. For instance, to examine the .text section</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf -x .text file_dyn
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hex dump of section <span style="color:#e6db74">&#39;.text&#39;</span>:
+</span></span><span style="display:flex;"><span>  0x00001050 31ed4989 d15e4889 e24883e4 f0505445 1.I..^H..H...PTE
+</span></span><span style="display:flex;"><span>  0x00001060 31c031c9 488d3dce 000000ff 154f2f00 1.1.H.<span style="color:#f92672">=</span>......O/.
+</span></span><span style="display:flex;"><span>  0x00001070 00f4662e 0f1f8400 <span style="color:#ae81ff">00000000</span> 0f1f4000 ..f...........@.
+</span></span><span style="display:flex;"><span>  0x00001080 488d3d91 2f000048 8d058a2f <span style="color:#ae81ff">00004839</span> H.<span style="color:#f92672">=</span>./..H.../..H9
+</span></span><span style="display:flex;"><span>  0x00001090 f8741548 8b052e2f <span style="color:#ae81ff">00004885</span> c07409ff .t.H.../..H..t..
+</span></span><span style="display:flex;"><span>  0x000010a0 e00f1f80 <span style="color:#ae81ff">00000000</span> c30f1f80 <span style="color:#ae81ff">00000000</span> ................
+</span></span><span style="display:flex;"><span>  0x000010b0 488d3d61 2f000048 8d355a2f <span style="color:#ae81ff">00004829</span> H.<span style="color:#f92672">=</span>a/..H.5Z/..H<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  0x000010c0 fe4889f0 48c1ee3f 48c1f803 4801c648 .H..H..?H...H..H
+</span></span><span style="display:flex;"><span>  0x000010d0 d1fe7414 488b05fd 2e000048 85c07408 ..t.H......H..t.
+</span></span><span style="display:flex;"><span>  0x000010e0 ffe0660f 1f440000 c30f1f80 <span style="color:#ae81ff">00000000</span> ..f..D..........
+</span></span><span style="display:flex;"><span>  0x000010f0 f30f1efa 803d1d2f <span style="color:#ae81ff">00000075</span> 2b554883 .....<span style="color:#f92672">=</span>./...u+UH.
+</span></span><span style="display:flex;"><span>  0x00001100 3dda2e00 <span style="color:#ae81ff">00004889</span> e5740c48 8b3dfe2e <span style="color:#f92672">=</span>.....H..t.H.<span style="color:#f92672">=</span>..
+</span></span><span style="display:flex;"><span>  0x00001110 0000e829 ffffffe8 64ffffff c605f52e ...<span style="color:#f92672">)</span>....d.......
+</span></span><span style="display:flex;"><span>  0x00001120 0000015d c30f1f00 c30f1f80 <span style="color:#ae81ff">00000000</span> ...<span style="color:#f92672">]</span>............
+</span></span><span style="display:flex;"><span>  0x00001130 f30f1efa e977ffff ff554889 e5488d05 .....w...UH..H..
+</span></span><span style="display:flex;"><span>  0x00001140 c00e0000 4889c7e8 e4feffff b8000000 ....H...........
+</span></span><span style="display:flex;"><span>  0x00001150 005dc3                              .<span style="color:#f92672">]</span>.
+</span></span></code></pre></div><ul>
+<li>Display Dynamic String Table (--dyn-syms)</li>
+</ul>
+<p>This option prints dynamic symbols, which are essential for dynamic linking analysis.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf --dyn-syms file_dyn
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Symbol table <span style="color:#e6db74">&#39;.dynsym&#39;</span> contains <span style="color:#ae81ff">7</span> entries:
+</span></span><span style="display:flex;"><span>   Num:    Value          Size Type    Bind   Vis      Ndx Name
+</span></span><span style="display:flex;"><span>     0: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  LOCAL  DEFAULT  UND 
+</span></span><span style="display:flex;"><span>     1: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FUNC    GLOBAL DEFAULT  UND _<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>@GLIBC_2.34 <span style="color:#f92672">(</span>2<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>     2: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT  UND _ITM_deregisterT<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>     3: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FUNC    GLOBAL DEFAULT  UND puts@GLIBC_2.2.5 <span style="color:#f92672">(</span>3<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>     4: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT  UND __gmon_start__
+</span></span><span style="display:flex;"><span>     5: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT  UND _ITM_registerTMC<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>     6: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FUNC    WEAK   DEFAULT  UND <span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>@GLIBC_2.2.5 <span style="color:#f92672">(</span>3<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p><strong>7. objdump</strong></p>
+<p>Objdump, a part of the GNU Binutils suite, is a versatile command-line tool that serves as a Swiss Army knife for binary analysis. It offers a wide range of options to examine object files, executables, shared libraries, and core dump files. Binaries are generated when source code is compiled, producing machine language instructions specific to the CPU architecture. Objdump reads these binaries and displays their architecture-specific assembly language instructions, providing insights into program operations at the CPU level.</p>
+<p><em>Example Usages:</em></p>
+<ul>
+<li>Disassemble an Executable</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ objdump -d file_dyn
+</span></span></code></pre></div><ul>
+<li>Display File Header Information (-f/--file-headers)</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ objdump -f file_dyn
+</span></span></code></pre></div><ul>
+<li>Display Section Headers (-h/--section-headers)</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ objdump -h file_dyn
+</span></span></code></pre></div><p><strong>8. strace</strong></p>
+<p>strace is a powerful diagnostic tool used in Linux and Unix-like operating systems to monitor system calls and signals. This command-line utility is invaluable for troubleshooting and understanding how programs interact with the operating system kernel. By tracing the system calls made by a program, developers and system administrators can gain insights into its behavior, identify issues such as file access problems or incorrect permissions, and optimize performance.
+If you have used ltrace, mentioned earlier, think of strace being similar. The only difference is that, instead of calling a library, the strace utility traces system calls. System calls are how you interface with the kernel to get work done.</p>
+<p><img src="https://scaler.com/topics/images/intro_system_call.webp" alt="System Call">
+<em>Source: <a href="https://www.scaler.com/topics/operating-system/system-calls-in-operating-system/">scaler</a></em></p>
+<p>By default, strace does not trace child processes. To trace them as well, use the -f option:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ strace -f file_dyn
+</span></span></code></pre></div><p>To view the system calls along with their arguments:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ strace -f -v file_dyn
+</span></span></code></pre></div><p><strong>9. nm</strong></p>
+<p>The nm command is a powerful utility used to display symbols from object files, executables, and libraries. It stands for &ldquo;name list&rdquo; and provides valuable information about the symbols defined in these files, including functions, variables, and other entities.</p>
+<ul>
+<li>List Symbols in an Object File</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ nm file_dyn
+</span></span></code></pre></div><ul>
+<li>Display Dynamic Symbols
+To display dynamic symbols (usually found in shared libraries):</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ nm -D libadd.so
+</span></span></code></pre></div><ul>
+<li>List Symbols Sorted by Name
+Apply numeric sort on the addresses:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ nm -n file_dyn
+</span></span></code></pre></div><p><strong>10. gdb</strong></p>
+<p>GDB (GNU Debugger) is a powerful command-line debugger for Unix-like systems. It allows developers to inspect and debug programs, providing a wide range of features for analyzing and manipulating the execution of code. From setting breakpoints to examining memory to stepping through code line-by-line, GDB is an essential tool for understanding and fixing software issues.</p>
+<ul>
+<li>Start GDB with Program</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gdb file_dyn
+</span></span></code></pre></div><ul>
+<li>Set Breakpoints</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break &lt;line_number&gt;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break <span style="color:#ae81ff">10</span>
+</span></span></code></pre></div><ul>
+<li>To run the program:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
+</span></span></code></pre></div><ul>
+<li>Continue Execution</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> <span style="color:#66d9ef">continue</span>
+</span></span></code></pre></div><ul>
+<li>Print Variable Value</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print &lt;variable&gt;
+</span></span></code></pre></div><p>If you&rsquo;re ready to delve deeper into the world of debugging and unlock its full potential, I invite you to check out my blog post titled &ldquo;GDB: Zero to Hero.&rdquo; In this advanced guide, you&rsquo;ll discover a comprehensive tutorial on mastering the GNU Debugger (GDB) from scratch. Learn advanced debugging techniques, explore powerful features, and elevate your debugging skills to the next level.</p>
+<p>Read <a href="../../gdb">&ldquo;GDB: Zero to Hero&rdquo;.</a></p>
+<h2 id="elf-fundamentals">ELF Fundamentals</h2>
+<hr>
+<h2 id="references">References</h2>
+<h3 id="books">Books</h3>
+<ul>
+<li><a href="https://www.packtpub.com/product/learning-linux-binary-analysis/9781782167105">Learning Linux Binary Analysis</a></li>
+</ul>
+<h3 id="articles">Articles</h3>
+<ul>
+<li><a href="https://opensource.com/article/20/4/linux-binary-analysis">https://opensource.com/article/20/4/linux-binary-analysis</a></li>
+</ul>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on kernw0lf blog</title>
+    <link>http://kernw0lf.github.io/tags/</link>
+    <description>Recent content in Tags on kernw0lf blog</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
+    <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
+    <lastBuildDate>Thu, 24 Oct 2024 11:59:53 -0400</lastBuildDate>
+    <atom:link href="http://kernw0lf.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Boofuzz</title>
+      <link>http://kernw0lf.github.io/tags/boofuzz/</link>
+      <pubDate>Thu, 24 Oct 2024 11:59:53 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/boofuzz/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Fuzzing</title>
+      <link>http://kernw0lf.github.io/tags/fuzzing/</link>
+      <pubDate>Thu, 24 Oct 2024 11:59:53 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/fuzzing/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>One_gadget</title>
+      <link>http://kernw0lf.github.io/tags/one_gadget/</link>
+      <pubDate>Mon, 21 Oct 2024 13:09:38 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/one_gadget/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>ROP</title>
+      <link>http://kernw0lf.github.io/tags/rop/</link>
+      <pubDate>Mon, 21 Oct 2024 13:09:38 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/rop/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>ROPgadget</title>
+      <link>http://kernw0lf.github.io/tags/ropgadget/</link>
+      <pubDate>Mon, 21 Oct 2024 13:09:38 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/ropgadget/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Ropper</title>
+      <link>http://kernw0lf.github.io/tags/ropper/</link>
+      <pubDate>Mon, 21 Oct 2024 13:09:38 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/ropper/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Cross-Compilation</title>
+      <link>http://kernw0lf.github.io/tags/cross-compilation/</link>
+      <pubDate>Sat, 12 Oct 2024 03:12:26 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/cross-compilation/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>QEMU</title>
+      <link>http://kernw0lf.github.io/tags/qemu/</link>
+      <pubDate>Sat, 12 Oct 2024 03:12:26 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/qemu/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Bootloader</title>
+      <link>http://kernw0lf.github.io/tags/bootloader/</link>
+      <pubDate>Fri, 11 Oct 2024 07:49:02 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/bootloader/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Magisk</title>
+      <link>http://kernw0lf.github.io/tags/magisk/</link>
+      <pubDate>Fri, 11 Oct 2024 07:49:02 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/magisk/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Rooting</title>
+      <link>http://kernw0lf.github.io/tags/rooting/</link>
+      <pubDate>Fri, 11 Oct 2024 07:49:02 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/rooting/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>OEM</title>
+      <link>http://kernw0lf.github.io/tags/oem/</link>
+      <pubDate>Fri, 11 Oct 2024 05:23:43 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/oem/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Pixel</title>
+      <link>http://kernw0lf.github.io/tags/pixel/</link>
+      <pubDate>Fri, 11 Oct 2024 05:23:43 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/pixel/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Harness</title>
+      <link>http://kernw0lf.github.io/tags/harness/</link>
+      <pubDate>Sun, 14 Apr 2024 13:20:39 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/harness/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Debug</title>
+      <link>http://kernw0lf.github.io/tags/debug/</link>
+      <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/debug/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Kernel</title>
+      <link>http://kernw0lf.github.io/tags/kernel/</link>
+      <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/kernel/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Gdb</title>
+      <link>http://kernw0lf.github.io/tags/gdb/</link>
+      <pubDate>Thu, 29 Feb 2024 03:42:52 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/tags/gdb/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+    <title>
+Mastering Boofuzz: From Basics to Advanced | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.131.0">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/boofuzz-tutorial/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    
+    
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+
+
+
+    <style>
+        body {
+             
+            font-family: 'Fira Code','Source Code Pro','Roboto', sans-serif; 
+        }
+        .highlight {
+            font-size: 20px;  
+        }
+
+        
+    </style>
+    
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>Mastering Boofuzz: From Basics to Advanced</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+                
+<dt>tags</dt>
+<dd><span></span>
+    <a href="/tags/fuzzing/">#Fuzzing</a><span></span>
+    <a href="/tags/boofuzz/">#Boofuzz</a></dd>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-10-24">October 24, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>7 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <p>In the world of software security, <strong>fuzzing</strong> is a critical technique used to identify vulnerabilities in software by bombarding it with unexpected or malformed inputs. One of the most popular and versatile fuzzing tools is <strong>Boofuzz</strong>, an open-source fuzzing framework widely used by security researchers and developers alike. Based on the legacy <strong>Sulley</strong> Fuzzing Framework, Boofuzz continues its mission of being a robust, modular, and extensible fuzzer for both beginners and seasoned professionals.🚀</p>
+<p>In this comprehensive guide, we will explore Boofuzz from scratch to advanced usage, walking through everything from installation and basic usage to developing sophisticated fuzzers for real-world applications. Whether you&rsquo;re a beginner just getting started or looking to master fuzzing with Boofuzz, this guide has you covered.</p>
+<h2 id="what-is-boofuzz">What is Boofuzz?</h2>
+<p><strong>Boofuzz</strong> is a Python-based fuzzing framework that allows security professionals to test the robustness of their applications by generating and sending malformed inputs to target software, hardware, or network protocols. It&rsquo;s flexible and supports network protocols, file formats, and even embedded systems fuzzing.</p>
+<p><strong>Key Features of Boofuzz:</strong></p>
+<ul>
+<li>Modular design for flexibility.</li>
+<li>Support for both stateful and stateless fuzzing.</li>
+<li>Built-in monitoring for target crash detection.</li>
+<li>Extensibility through Python scripting.</li>
+<li>Rich logging and reporting options.</li>
+</ul>
+<h2 id="installing-boofuzz">Installing Boofuzz</h2>
+<p>Boofuzz is available via pip, making installation straightforward.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pip install boofuzz
+</span></span></code></pre></div><p>You can also clone the source code from GitHub for more control or contribute to development:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>git clone https://github.com/jtpereyda/boofuzz.git
+</span></span><span style="display:flex;"><span>cd boofuzz
+</span></span><span style="display:flex;"><span>python setup.py install
+</span></span></code></pre></div><h2 id="getting-started-basic-fuzzing-with-boofuzz">Getting Started: Basic Fuzzing with Boofuzz</h2>
+<p>To begin fuzzing with Boofuzz, you need to define a target, create fuzzing input (fuzz template), and monitor the target for crashes or anomalies. Let’s fuzz a simple network server as an example.
+We will be using <code>netcat</code> as simple network server.</p>
+<h3 id="basic-tcp-fuzzing-script-using-boofuzz">Basic TCP Fuzzing Script using Boofuzz:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">from</span> boofuzz <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Define the target to fuzz (localhost and port 9999)</span>
+</span></span><span style="display:flex;"><span>    target_ip <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;127.0.0.1&#34;</span>
+</span></span><span style="display:flex;"><span>    target_port <span style="color:#f92672">=</span> <span style="color:#ae81ff">9999</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Initialize the session</span>
+</span></span><span style="display:flex;"><span>    session <span style="color:#f92672">=</span> Session(
+</span></span><span style="display:flex;"><span>        target<span style="color:#f92672">=</span>Target(connection<span style="color:#f92672">=</span>SocketConnection(target_ip, target_port, proto<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;tcp&#39;</span>))
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Define the fuzzing request</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># This will fuzz a simple string sent over TCP</span>
+</span></span><span style="display:flex;"><span>    s_initialize(<span style="color:#e6db74">&#34;Fuzzing&#34;</span>)
+</span></span><span style="display:flex;"><span>    s_string(<span style="color:#e6db74">&#34;FUZZ_ME&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Add this fuzz request to the session</span>
+</span></span><span style="display:flex;"><span>    session<span style="color:#f92672">.</span>connect(s_get(<span style="color:#e6db74">&#34;Fuzzing&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Start fuzzing</span>
+</span></span><span style="display:flex;"><span>    session<span style="color:#f92672">.</span>fuzz()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    main()
+</span></span></code></pre></div><p>Before executing the fuzzing script, ensure that <code>netcat</code> is set up to listen continuously on port <code>9999</code>. The <code>-k</code> flag ensures that <code>netcat</code> remains in listening mode after handling each connection. You can do this with the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ nc -nlvp <span style="color:#ae81ff">9999</span> -k
+</span></span></code></pre></div><p>Once <code>netcat</code> is up and running, you can proceed to execute the fuzzing script by running:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ python simple_tcpfuzz.py
+</span></span></code></pre></div><p>This will initiate the fuzzing process, sending various mutated payloads to the target service listening on port <code>9999</code> and monitoring for any crashes or abnormal behavior.</p>
+<p><strong>Key Steps in the Example:</strong></p>
+<ul>
+<li>Session: Handles the fuzzing logic.</li>
+<li>Target: Defines the target system (IP, port, and protocol).</li>
+<li>s_initialize(): Initializes a fuzz case.</li>
+<li>s_string(): Defines fuzzable inputs.</li>
+</ul>
+<h2 id="creating-advanced-fuzzers">Creating Advanced Fuzzers</h2>
+<p>For complex applications, simple fuzzing isn’t enough. You’ll need to work with complex state machines, perform multi-stage fuzzing, or handle authentication mechanisms.</p>
+<h3 id="stateful-fuzzing">Stateful Fuzzing:</h3>
+<p>Boofuzz allows for stateful fuzzing, which means you can define different states in a protocol (e.g., handshake → authentication → data exchange) and fuzz each state independently.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span>s_initialize(<span style="color:#e6db74">&#34;handshake&#34;</span>)
+</span></span><span style="display:flex;"><span>s_string(<span style="color:#e6db74">&#34;INIT&#34;</span>, fuzzable<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>s_initialize(<span style="color:#e6db74">&#34;auth&#34;</span>)
+</span></span><span style="display:flex;"><span>s_string(<span style="color:#e6db74">&#34;USER&#34;</span>, fuzzable<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>s_string(<span style="color:#e6db74">&#34;PASS&#34;</span>, fuzzable<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>session<span style="color:#f92672">.</span>connect(s_get(<span style="color:#e6db74">&#34;handshake&#34;</span>))
+</span></span><span style="display:flex;"><span>session<span style="color:#f92672">.</span>connect(s_get(<span style="color:#e6db74">&#34;auth&#34;</span>))
+</span></span><span style="display:flex;"><span>session<span style="color:#f92672">.</span>fuzz()
+</span></span></code></pre></div><p>This fuzzer simulates a protocol handshake before moving to the authentication stage.</p>
+<h2 id="developing-custom-protocol-fuzzers">Developing Custom Protocol Fuzzers</h2>
+<p>Boofuzz is ideal for network protocol fuzzing, but what if you&rsquo;re dealing with a custom protocol? The framework allows you to define custom packet structures, message flows, and encoding formats.</p>
+<p><strong>Custom Protocol Fuzzing Example:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">from</span> boofuzz <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Define a packet structure with custom checksum</span>
+</span></span><span style="display:flex;"><span>s_initialize(<span style="color:#e6db74">&#34;custom_packet&#34;</span>)
+</span></span><span style="display:flex;"><span>s_static(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x01\x02\x03\x04</span><span style="color:#e6db74">&#34;</span>)  <span style="color:#75715e"># Packet header </span>
+</span></span><span style="display:flex;"><span>s_string(<span style="color:#e6db74">&#34;payload&#34;</span>, size<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span>, fuzzable<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)  <span style="color:#75715e"># size : Static size of this field, leave None for dynamic</span>
+</span></span><span style="display:flex;"><span>s_checksum(<span style="color:#e6db74">&#34;custom_packet&#34;</span>, algorithm<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;md5&#34;</span>, length<span style="color:#f92672">=</span><span style="color:#ae81ff">16</span>) <span style="color:#75715e"># Custom checksum calculation for data integrity</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>session<span style="color:#f92672">.</span>connect(s_get(<span style="color:#e6db74">&#34;custom_packet&#34;</span>))
+</span></span><span style="display:flex;"><span>session<span style="color:#f92672">.</span>fuzz()
+</span></span></code></pre></div><p>This example demonstrates adding a checksum to the fuzzed packet, ensuring the fuzzed input conforms to the protocol&rsquo;s structure.</p>
+<p>We can utilize the following checksum algorithms: CRC32, CRC32C, Adler32, MD5, SHA-1, IPv4, and UDP.</p>
+<p>Now, we’ll explore how to set up a fuzzing session for a custom protocol using the Boofuzz library. Our target protocol requires an initial 4-byte header, a specific payload length of 10 bytes, and a 2-byte checksum using the CRC32 algorithm.</p>
+<p>Let&rsquo;s fuzz for a protocol which needs initial 4 bytes to be <code>\xaa\xbb\xcc\xdd</code> and packet length should be 10 and checksum (ipv4) should be of 2 bytes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">from</span> boofuzz <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Target IP address and port</span>
+</span></span><span style="display:flex;"><span>ip_addr <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;127.0.0.1&#34;</span>
+</span></span><span style="display:flex;"><span>ip_port <span style="color:#f92672">=</span> <span style="color:#ae81ff">9999</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Initialize the fuzzing session with the target TCP socket</span>
+</span></span><span style="display:flex;"><span>    session <span style="color:#f92672">=</span> Session(target<span style="color:#f92672">=</span>Target(TCPSocketConnection(ip_addr, ip_port)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Define the packet structure and initialize a new block request</span>
+</span></span><span style="display:flex;"><span>    s_initialize(<span style="color:#e6db74">&#34;Fuzz_Me&#34;</span>)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Set the initial header</span>
+</span></span><span style="display:flex;"><span>    s_static(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xaa\xbb\xcc\xdd</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Define the payload size: 10 bytes total minus 4 for the header and 4 for the checksum</span>
+</span></span><span style="display:flex;"><span>    s_string(<span style="color:#e6db74">&#34;Fuzz&#34;</span>, size<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>)  <span style="color:#75715e"># This leaves us with 2 bytes for fuzzing</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Add a CRC32 checksum to ensure data integrity</span>
+</span></span><span style="display:flex;"><span>    s_checksum(<span style="color:#e6db74">&#34;Fuzz_Me&#34;</span>, algorithm<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;crc32&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Connect the defined packet structure to the session</span>
+</span></span><span style="display:flex;"><span>    session<span style="color:#f92672">.</span>connect(s_get(<span style="color:#e6db74">&#34;Fuzz_Me&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Start the fuzzing process</span>
+</span></span><span style="display:flex;"><span>    session<span style="color:#f92672">.</span>fuzz()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    main()
+</span></span></code></pre></div><p>Let&rsquo;s verify the results using <code>netcat</code> and <code>xxd</code>:
+<img src="https://github.com/KernW0lf/Materials/blob/main/Misc/structure_boofuzz.png?raw=true" alt="Structure"></p>
+<h2 id="targeted-fuzzing-for-known-vulnerabilities">Targeted Fuzzing for Known Vulnerabilities</h2>
+<p>If you&rsquo;re fuzzing a specific application or protocol with known vulnerabilities, targeted fuzzing can help focus on potentially dangerous areas of the code, such as user inputs or particular functions.</p>
+<p><strong>Example: Fuzzing an HTTP POST Request</strong></p>
+<p>Below is a practical example of how to use the boofuzz library to fuzz an HTTP request:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">from</span> boofuzz <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ip_addr <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;127.0.0.1&#34;</span>
+</span></span><span style="display:flex;"><span>ip_port <span style="color:#f92672">=</span> <span style="color:#ae81ff">8000</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Initialize the fuzzing session</span>
+</span></span><span style="display:flex;"><span>    session <span style="color:#f92672">=</span> Session(target<span style="color:#f92672">=</span>Target(TCPSocketConnection(ip_addr, ip_port)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Define the fuzzing template for an HTTP request</span>
+</span></span><span style="display:flex;"><span>    s_initialize(<span style="color:#e6db74">&#34;http_get&#34;</span>)
+</span></span><span style="display:flex;"><span>    s_static(<span style="color:#e6db74">&#34;GET /&#34;</span>)
+</span></span><span style="display:flex;"><span>    s_string(<span style="color:#e6db74">&#34;Fuzz_Me&#34;</span>) <span style="color:#75715e"># We will Fuzz Here</span>
+</span></span><span style="display:flex;"><span>    s_static(<span style="color:#e6db74">&#34;HTTP/1.1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    s_static(<span style="color:#e6db74">&#34;Host: 127.0.0.1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    s_static(<span style="color:#e6db74">&#34;User-Agent: boofuzz/0.4.2</span><span style="color:#ae81ff">\r\n\r\n</span><span style="color:#e6db74">&#34;</span>)  <span style="color:#75715e"># I used boofuzz/0.4.2 as User Agent but you can use whatever you need</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Connect the fuzzing template to the session</span>
+</span></span><span style="display:flex;"><span>    session<span style="color:#f92672">.</span>connect(s_get(<span style="color:#e6db74">&#34;http_get&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Start fuzzing</span>
+</span></span><span style="display:flex;"><span>    session<span style="color:#f92672">.</span>fuzz()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    main()
+</span></span></code></pre></div><p>In this example, we target an HTTP GET request while fuzzing only the endpoint. The other components of the request—such as the headers—remain intact.</p>
+<p>We can set up a listener on port 8000 using <code>netcat</code>, and then run the script to check if it’s functioning correctly.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ nc -nlp <span style="color:#ae81ff">8000</span> -k
+</span></span><span style="display:flex;"><span>GET /!@#$%%^#$%#$@<span style="color:#75715e">#$%$$@#$%^^**(()HTTP/1.1</span>
+</span></span><span style="display:flex;"><span>Host: 127.0.0.1
+</span></span><span style="display:flex;"><span>User-Agent: boofuzz/0.4.2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>GET /HTTP/1.1
+</span></span><span style="display:flex;"><span>Host: 127.0.0.1
+</span></span><span style="display:flex;"><span>User-Agent: boofuzz/0.4.2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>GET /<span style="color:#66d9ef">$(</span>reboot<span style="color:#66d9ef">)</span>HTTP/1.1
+</span></span><span style="display:flex;"><span>Host: 127.0.0.1
+</span></span><span style="display:flex;"><span>User-Agent: boofuzz/0.4.2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>GET /$;rebootHTTP/1.1
+</span></span><span style="display:flex;"><span>Host: 127.0.0.1
+</span></span><span style="display:flex;"><span>User-Agent: boofuzz/0.4.2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>GET /%00HTTP/1.1
+</span></span><span style="display:flex;"><span>Host: 127.0.0.1
+</span></span><span style="display:flex;"><span>User-Agent: boofuzz/0.4.2
+</span></span></code></pre></div><p><strong>Monitoring Fuzzing Progress via the Boofuzz Web Interface</strong></p>
+<p>Boofuzz provides a built-in web interface that allows you to monitor your fuzzing progress in real time. By default, this web server runs on port <code>26000</code>, this allows you to view the current status of your fuzzing session, including the number of test cases executed, crashes, and other metrics, all from a browser-friendly interface.</p>
+<p>To change the web interface port, simply specify a <code>web_port</code> when creating your fuzzing session:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">from</span> boofuzz <span style="color:#f92672">import</span> Session
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize the session and enable web interface on port 26000</span>
+</span></span><span style="display:flex;"><span>session <span style="color:#f92672">=</span> Session(web_port<span style="color:#f92672">=</span><span style="color:#ae81ff">26000</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Add your target and fuzzing logic...</span>
+</span></span><span style="display:flex;"><span>session<span style="color:#f92672">.</span>fuzz()
+</span></span></code></pre></div><p>Once the fuzzing session starts, open your browser and navigate to http://localhost:26000. You’ll be able to see real-time updates on the fuzzing process, making it easier to track progress or investigate crashes.</p>
+<p>This web interface provides a user-friendly way to manage and visualize your fuzzing efforts, especially during long or complex fuzzing sessions.</p>
+<h2 id="fuzzing-ftp-server">Fuzzing FTP Server</h2>
+<p>To fuzz an FTP server that requires authentication (username and password), you can use Boofuzz to simulate an FTP connection, provide the credentials, and fuzz different parts of the FTP protocol. Since your FTP server runs on port <code>2221</code> and the credentials are <code>admin:password</code>, we’ll need to build an authenticated fuzzing session.</p>
+<p>Here&rsquo;s an example of how you can fuzz your FTP server with Boofuzz:</p>
+<p><strong>Boofuzz Script for Fuzzing FTP</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">from</span> boofuzz <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> len(sys<span style="color:#f92672">.</span>argv) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">3</span>:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Usage: </span><span style="color:#e6db74">{</span>sys<span style="color:#f92672">.</span>argv[<span style="color:#ae81ff">0</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74"> &lt;target_ip&gt; &lt;target_port&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>        sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    target_ip <span style="color:#f92672">=</span> sys<span style="color:#f92672">.</span>argv[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>    target_port <span style="color:#f92672">=</span> int(sys<span style="color:#f92672">.</span>argv[<span style="color:#ae81ff">2</span>])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Define session and target</span>
+</span></span><span style="display:flex;"><span>    session <span style="color:#f92672">=</span> Session(
+</span></span><span style="display:flex;"><span>        target<span style="color:#f92672">=</span>Target(
+</span></span><span style="display:flex;"><span>            connection<span style="color:#f92672">=</span>TCPSocketConnection(target_ip, target_port)
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># FUZZ_MKD block</span>
+</span></span><span style="display:flex;"><span>    s_initialize(<span style="color:#e6db74">&#34;FUZZ_MKD&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">with</span> s_block(<span style="color:#e6db74">&#34;ftp_FUZZ_MKD&#34;</span>):
+</span></span><span style="display:flex;"><span>        s_static(<span style="color:#e6db74">&#34;USER admin</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>)  <span style="color:#75715e"># Static username</span>
+</span></span><span style="display:flex;"><span>        s_static(<span style="color:#e6db74">&#34;PASS password</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>)  <span style="color:#75715e"># Static password</span>
+</span></span><span style="display:flex;"><span>        s_static(<span style="color:#e6db74">&#34;MKD &#34;</span>)              <span style="color:#75715e"># MKD command</span>
+</span></span><span style="display:flex;"><span>        s_string(<span style="color:#e6db74">&#34;FUZZ_DIR&#34;</span>, fuzzable<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)  <span style="color:#75715e"># Fuzz directory name</span>
+</span></span><span style="display:flex;"><span>        s_static(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Connect and fuzz</span>
+</span></span><span style="display:flex;"><span>    session<span style="color:#f92672">.</span>connect(s_get(<span style="color:#e6db74">&#34;FUZZ_MKD&#34;</span>))
+</span></span><span style="display:flex;"><span>    session<span style="color:#f92672">.</span>fuzz()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    main()
+</span></span></code></pre></div><h3 id="further-reading-official-boofuzz-documentation">Further Reading: Official Boofuzz Documentation</h3>
+<p>While this guide covers the essentials of Boofuzz, the official documentation is an excellent resource for diving deeper into the framework&rsquo;s full capabilities. It contains detailed descriptions of all classes, methods, and parameters, as well as advanced usage examples, troubleshooting tips, and community-contributed content.</p>
+<p>You can explore the full Boofuzz documentation here: <a href="https://boofuzz.readthedocs.io/en/stable/">Boofuzz Documentation</a></p>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this blog, we walked through setting up and using Boofuzz for fuzzing, covering everything from basic installation to advanced scenarios. Now you’re equipped to dive into fuzzing with Boofuzz and enhance the security of your software.</p>
+<p>In the next blog, we’ll explore <a href="https://www.kali.org/tools/spike/">spike</a>, another powerful fuzzing tool for identifying vulnerabilities in network protocols and applications.</p>
+<p>Happy Fuzzing! 🎉</p>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>

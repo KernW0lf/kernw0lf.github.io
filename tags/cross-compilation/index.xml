@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Cross-Compilation on kernw0lf blog</title>
+    <link>http://kernw0lf.github.io/tags/cross-compilation/</link>
+    <description>Recent content in Cross-Compilation on kernw0lf blog</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
+    <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
+    <lastBuildDate>Sat, 12 Oct 2024 03:12:26 -0400</lastBuildDate>
+    <atom:link href="http://kernw0lf.github.io/tags/cross-compilation/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>The Art of Cross-Compilation and Emulation: Building and Testing Across Architectures</title>
+      <link>http://kernw0lf.github.io/posts/cross-compilation/</link>
+      <pubDate>Sat, 12 Oct 2024 03:12:26 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/cross-compilation/</guid>
+      <description>Welcome to The Art of Cross-Compilation and Emulation: Building and Testing Across Architectures, where we delve deep into the world of compiling code for systems and architectures beyond the familiar environment of your development machine. Whether you&amp;rsquo;re a seasoned developer or just starting your journey into embedded systems, cross-compilation is an essential skill that you must have.&#xA;In today’s increasingly interconnected world of devices, the ability to develop software for platforms different from your own is a valuable asset.</description>
+    </item>
+  </channel>
+</rss>

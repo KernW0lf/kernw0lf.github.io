@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+    <title>
+Unlocking the Bootloader of Pixel 2 XL (Carrier Locked) | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.131.0">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/bootloader-unlock/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    
+    
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+
+
+
+    <style>
+        body {
+             
+            font-family: 'Fira Code','Source Code Pro','Roboto', sans-serif; 
+        }
+        .highlight {
+            font-size: 20px;  
+        }
+
+        
+    </style>
+    
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>Unlocking the Bootloader of Pixel 2 XL (Carrier Locked)</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+                
+<dt>tags</dt>
+<dd><span></span>
+    <a href="/tags/pixel/">#Pixel</a><span></span>
+    <a href="/tags/bootloader/">#Bootloader</a><span></span>
+    <a href="/tags/oem/">#OEM</a></dd>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-10-11">October 11, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>4 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <p>Unlocking the bootloader of a smartphone is a crucial step for users who want to take complete control of their devices. Whether you&rsquo;re interested in installing a custom ROM, rooting your phone, or simply exploring more advanced development features, unlocking the bootloader opens up these possibilities. However, on certain devices come with carrier locked. When you go in <code>Settings -&gt; Developer Options -&gt; OEM Unlocking</code>, you can see &ldquo;<strong>Connect to the internet or contact your carrier</strong>&rdquo;.</p>
+<p>Verizon, like many carriers, locks the bootloader on their devices to prevent users from modifying the software. This is primarily for security reasons, but it also limits customization.</p>
+<p>In this guide, I will walk you through the process of unlocking the bootloader on a Verizon Pixel 2 XL. This will involve some preparation, and while the process isn&rsquo;t officially supported, many users have successfully done it with the right tools and knowledge. Please note that unlocking the bootloader will void your warranty and could expose your device to additional risks, so proceed with caution.</p>
+<h3 id="disclaimer">Disclaimer:</h3>
+<p>Unlocking the bootloader voids the warranty and may affect the device’s security.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ol>
+<li>Pixel 2 XL (Verizon model)</li>
+<li>ADB and Fastboot Installed</li>
+<li>Enable Developer Options
+To unlock the bootloader, you first need to enable Developer Options on your Pixel 2 XL:</li>
+</ol>
+<ul>
+<li>Go to Settings &gt; About phone.</li>
+<li>Scroll down to Build number and tap it 7 times until you see a message saying “You are now a developer.”</li>
+</ul>
+<ol start="4">
+<li>USB debugging enabled.
+Once Developer Options are enabled, go to Settings &gt; Developer options and enable USB debugging. This allows your computer to send commands to your phone.</li>
+<li>Backup Your Data
+Unlocking the bootloader will wipe all data from your device, so it&rsquo;s important to back up all personal data.</li>
+</ol>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/bootloader/01.png?raw=true" alt="OEM Locked"></p>
+<p>To check if your carrier is Verizon, you can use websites like IMEI.info or IMEI.org allow you to enter your device&rsquo;s IMEI number to check its carrier status.</p>
+<h3 id="device-information">Device Information</h3>
+<p>I am using a Pixel 2 XL with the codename <strong>Taimen</strong>, running <strong>Android 11</strong> with the <strong>2020-10-05</strong> Security Patch.</p>
+<h2 id="steps-to-unlock-the-bootloader-on-the-pixel-2-xl-verizon-carrier">Steps to Unlock the Bootloader on the Pixel 2 XL (Verizon Carrier)</h2>
+<p>Please ensure that there is no SIM card inserted in the target device.
+Go to the Settings app on your device.</p>
+<p><strong>Factory Reset via Settings</strong></p>
+<ul>
+<li>Go to the Settings on your device.</li>
+<li>Scroll down and tap on System.</li>
+<li>Select Reset options.</li>
+<li>Tap on Erase all data (factory reset).</li>
+</ul>
+<p><img src="https://github.com/KernW0lf/Materials/blob/main/bootloader/02.png?raw=true" alt="Reset Options 1">
+<img src="https://github.com/KernW0lf/Materials/blob/main/bootloader/03.png?raw=true" alt="Reset Options 2">
+<img src="https://github.com/KernW0lf/Materials/blob/main/bootloader/04.png?raw=true" alt="Reset Options 3"></p>
+<p>Once the phone boots, disable &ldquo;Use location&rdquo;, &ldquo;Send usage and diagnostic data&rdquo; in Google Services. Again enable Developer Options and USB Debugging after the phone starts and use the following command</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>adb shell pm uninstall --user <span style="color:#ae81ff">0</span> com.android.phone
+</span></span></code></pre></div><p>The <code>pm</code> command is the Package Manager on Android. The uninstall <code>--user 0</code> flag is used to uninstall or disable the app for the primary user (user 0). It doesn’t remove the app completely from the system but disables it for that specific user.</p>
+<p>On certain carrier-locked devices (especially Verizon models), the Phone app may have control over certain carrier-specific settings, including restricting access to the OEM Unlocking option. By disabling or uninstalling the Phone app using this command, the device is no longer able to communicate with the carrier to enforce these restrictions.</p>
+<p>Disabling the Phone app might not work in every case, as some devices have deeper carrier-level restrictions that can’t be bypassed simply by uninstalling the app.</p>
+<p>Now if you go in the developer option you can see &ldquo;Connect to the internet or contact your carrier&rdquo; doesn&rsquo;t exist any more.
+<img src="https://github.com/KernW0lf/Materials/blob/main/bootloader/05.png?raw=true" alt="OEM unlock display"></p>
+<p>Enable the OEM unlocking Option. Once that is done you can unlock the bootloader.
+Reboot the phone. You can use the following command to reboot to bootloader.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>adb reboot bootloader
+</span></span></code></pre></div><p>You can see something like this:
+<img src="https://storage.googleapis.com/support-forums-api/attachment/thread-50687342-2661705676478564024.jpeg" alt="Fastboot Mode"></p>
+<p>Image Source:
+<a href="https://support.google.com/pixelphone/thread/50687342/google-pixel-2xl-startet-nicht-bleibt-beim-booten-h%C3%A4ngen?hl=de">google</a></p>
+<p>Use the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>fastboot flashing unlock
+</span></span></code></pre></div><p><img src="https://fdn.gsmarena.com/imgroot/news/17/12/verizon-pixel2-bootloader-unlocking/inline/gsmarena_002.jpg" alt="Bootloader Unlock Yes No"></p>
+<p>Image Source:
+<a href="https://www.gsmarena.com/verizon_google_pixel_2_bootloaders_can_be_easily_unlocked-news-28920.php">https://www.gsmarena.com/verizon_google_pixel_2_bootloaders_can_be_easily_unlocked-news-28920.php</a></p>
+<p>Once you enter the above command, your phone should ask if you&rsquo;re sure you&rsquo;d like to unlock the bootloader. Use the volume keys to highlight the &ldquo;UNLOCK THE BOOTLOADER&rdquo; option, then press the power button to select it.</p>
+<p>After this reboot the phone</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>fastboot reboot
+</span></span></code></pre></div><p>Now you can see warning that bootloader is unlocked.
+<img src="https://www.androidauthority.com/wp-content/uploads/2018/10/Pixel-3-bootloader-unlocked-840w-472h.jpg.webp" alt="Bootloader Unlocked"></p>
+<p>Image Source:
+<a href="https://www.androidauthority.com/unlock-pixel-3-bootloader-915961/">https://www.androidauthority.com/unlock-pixel-3-bootloader-915961/</a></p>
+<p>After setting up the device, you can navigate in the Developer Options and in that you can see:
+<img src="https://github.com/KernW0lf/Materials/blob/main/bootloader/06.png?raw=true" alt="OEM unlocked"></p>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this guide, we’ve walked through the steps to unlock the bootloader of your Carrier Locked (Verizon) Pixel 2 XL. If you&rsquo;ve successfully unlocked your bootloader, feel free to share your experience.
+Thank you for reading, and good luck with your unlocked Pixel 2 XL!</p>
+<h2 id="references">References</h2>
+<p><a href="https://www.xda-developers.com/how-to-unlock-bootloader-verizon-google-pixel-xl-running-android-10/">https://www.xda-developers.com/how-to-unlock-bootloader-verizon-google-pixel-xl-running-android-10/</a></p>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>

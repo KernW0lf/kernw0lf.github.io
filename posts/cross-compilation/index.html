@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+    <title>
+The Art of Cross-Compilation and Emulation: Building and Testing Across Architectures | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.131.0">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/cross-compilation/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    
+    
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+
+
+
+    <style>
+        body {
+             
+            font-family: 'Fira Code','Source Code Pro','Roboto', sans-serif; 
+        }
+        .highlight {
+            font-size: 20px;  
+        }
+
+        
+    </style>
+    
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>The Art of Cross-Compilation and Emulation: Building and Testing Across Architectures</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+                
+<dt>tags</dt>
+<dd><span></span>
+    <a href="/tags/qemu/">#QEMU</a><span></span>
+    <a href="/tags/cross-compilation/">#Cross-Compilation</a></dd>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-10-12">October 12, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>11 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <p>Welcome to <strong>The Art of Cross-Compilation and Emulation: Building and Testing Across Architectures</strong>, where we delve deep into the world of compiling code for systems and architectures beyond the familiar environment of your development machine. Whether you&rsquo;re a seasoned developer or just starting your journey into embedded systems, cross-compilation is an essential skill that you must have.</p>
+<p>In today’s increasingly interconnected world of devices, the ability to develop software for platforms different from your own is a valuable asset. From embedded systems in IoT devices to powerful smartphones running different architectures, cross-compilation allows you to compile software on one machine and run it on another with ease.</p>
+<p>But what exactly is cross-compilation, and why is it necessary? This blog explores the art of building software for systems with different processors and architectures—be it ARM, MIPS, or RISC-V—and testing your creations through emulation.
+In this post, we will cover the key concepts behind cross-compilation, how to set up the right toolchains, and even emulate target systems to test your code before deploying it. Whether you’re building firmware, kernels, or applications, cross-compilation allows you to be versatile and efficient in creating software that spans multiple platforms.</p>
+<p><strong>Host Machine vs. Target Machine</strong></p>
+<p>In the context of cross-compilation, it’s important to differentiate between the host machine and the target machine:</p>
+<ul>
+<li>Host Machine: This is the environment where you compile your code. It runs the cross-compiler toolchain and is typically the architecture of your development setup, such as x86_64.</li>
+<li>Target Machine: This is the architecture for which you are compiling your code. It can be a different platform, such as ARM, MIPS, or any other architecture. The compiled binaries are intended to run on this machine.</li>
+</ul>
+<h2 id="setting-up-enviornment">Setting Up Enviornment</h2>
+<p>To successfully perform cross-compilation and emulate target environments, you’ll need to set up a few essential tools and toolchains on your development machine. This section will guide you through the installation of the necessary cross-compilers and emulation software to prepare your environment for building and testing code across different architectures.
+Cross-compilation requires specialized compilers that can generate binaries for architectures different from your host system. Below, I’ll demonstrate how to install cross-compiler toolchains for ARM and MIPS architectures. The steps are similar for other architectures—simply install the corresponding toolchains for your target platform.</p>
+<h3 id="1-installing-cross-compiler-toolchains">1. Installing Cross-Compiler Toolchains</h3>
+<p><strong>For ARM (32-bit and 64-bit)</strong>
+To compile for ARM-based targets, such as embedded systems or mobile devices, you need to install ARM-specific GCC toolchains.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>sudo apt update
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Install cross-compiler for ARM 32-bit</span>
+</span></span><span style="display:flex;"><span>sudo apt install gcc-arm-linux-gnueabihf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Install cross-compiler for ARM 64-bit</span>
+</span></span><span style="display:flex;"><span>sudo apt install gcc-aarch64-linux-gnu
+</span></span></code></pre></div><p>These compilers allow you to build applications that will run on ARM processors, both 32-bit and 64-bit.</p>
+<p><strong>For MIPS (32-bit and 64-bit)</strong>
+MIPS architecture is commonly used in routers and other networking devices. To cross-compile for MIPS, install the following toolchains:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># Install cross-compiler for MIPS 32-bit (little-endian)</span>
+</span></span><span style="display:flex;"><span>sudo apt install gcc-mipsel-linux-gnu
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Install cross-compiler for MIPS 64-bit</span>
+</span></span><span style="display:flex;"><span>sudo apt install gcc-mips64-linux-gnuabi64
+</span></span></code></pre></div><p>With the toolchains installed, you’re now ready to build programs that will run on MIPS-based systems.</p>
+<p>But wait—what if you don’t have access to the actual hardware? No worries! That’s where emulation comes in. Emulation allows you to run and test your cross-compiled binaries as if they were running on the target architecture, all from the comfort of your current system.</p>
+<h3 id="2-installing-qemu-for-emulation">2. Installing QEMU for Emulation</h3>
+<p>To test the cross-compiled binaries without needing access to the physical target devices, we can use QEMU, an open-source emulator capable of simulating different architectures.</p>
+<p>Let&rsquo;s first understand what QEMU is. QEMU stands for Quick Emulator and is a powerful open-source emulator that facilitates running software on different hardware architectures.</p>
+<p>QEMU supports two main types of emulation:</p>
+<ol>
+<li>User-Mode Emulation: In this mode, QEMU allows you to run individual applications compiled for a different architecture on your host system. This means that if you have a binary compiled for ARM, for example, you can execute it on your x86 machine without needing to boot into a complete ARM environment. This is particularly useful for developers who need to test applications quickly without setting up an entire operating system.</li>
+<li>Full System Emulation: This mode emulates an entire system, including the CPU, memory, and peripheral devices. It allows you to run complete operating systems, such as Linux distributions, as if they were running on the actual hardware.</li>
+</ol>
+<p>In this case, we will only need User-Mode Emulation, as our focus is on compiling and testing small binaries. This allows us to quickly run and validate our applications without the overhead of setting up a full system environment.</p>
+<p>Install QEMU with support for ARM and MIPS as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># Install QEMU for User-Mode Emulation</span>
+</span></span><span style="display:flex;"><span>sudo apt install qemu-user qemu-user-static
+</span></span></code></pre></div><h3 id="3-installing-build-tools">3. Installing Build Tools</h3>
+<p>In addition to cross-compilers and emulators, you&rsquo;ll need some common build tools like Make and optionally CMake for projects using modern build systems.</p>
+<p><strong>Install Make</strong>
+Ensure that the make tool is installed, as it’s widely used in build automation for most C/C++ projects:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>sudo apt install make
+</span></span></code></pre></div><p><strong>Install CMake (Optional)</strong>
+If your project uses CMake for generating build configurations, you can install it as well:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>sudo apt install cmake
+</span></span></code></pre></div><h3 id="4-verifying-your-environment">4. Verifying Your Environment</h3>
+<p>Once all tools and software are installed, it’s a good idea to verify that everything is working as expected. You can check the installation of the cross-compilers by running:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># Check ARM 32-bit cross-compiler</span>
+</span></span><span style="display:flex;"><span>arm-linux-gnueabihf-gcc --version
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Check ARM 64-bit cross-compiler</span>
+</span></span><span style="display:flex;"><span>aarch64-linux-gnu-gcc --version
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Check MIPS 32-bit (little-endian) cross-compiler</span>
+</span></span><span style="display:flex;"><span>mipsel-linux-gnu-gcc --version
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Check MIPS 64-bit cross-compiler</span>
+</span></span><span style="display:flex;"><span>mips64-linux-gnuabi64-gcc --version
+</span></span></code></pre></div><p>Now that we have everything installed, it&rsquo;s time to get our hands dirty and dive into some practical applications! Let’s put our cross-compilation and emulation skills to the test by compiling and running some binaries.</p>
+<h2 id="compiling-and-running-binaries">Compiling and Running Binaries</h2>
+<p>With our environment set up and ready, let’s walk through the process of compiling a simple C program and running it using QEMU&rsquo;s User-Mode Emulation.</p>
+<h3 id="1-writing-the-c-program">1. Writing the C Program</h3>
+<p>First, create a simple C program that we will compile. For demonstration purposes, we&rsquo;ll write a program that prints &ldquo;Hello World!&rdquo;.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Hello World!</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="2-cross-compiling-the-program">2. Cross-Compiling the Program</h3>
+<p>Next, we’ll compile this program for the ARM architecture. Use the following command to cross-compile it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># For ARM 32-bit</span>
+</span></span><span style="display:flex;"><span>arm-linux-gnueabihf-gcc hello.c -o hello_arm
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># For ARM 64-bit</span>
+</span></span><span style="display:flex;"><span>aarch64-linux-gnu-gcc hello.c -o hello_arm64
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># For MIPS 32-bit (little-endian)</span>
+</span></span><span style="display:flex;"><span>mipsel-linux-gnu-gcc hello.c -o hello_mipsel
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># For MIPS 64-bit</span>
+</span></span><span style="display:flex;"><span>mips64-linux-gnuabi64-gcc hello.c -o hello_mips64
+</span></span></code></pre></div><h3 id="3-running-the-compiled-binary-with-qemu">3. Running the Compiled Binary with QEMU</h3>
+<p>Once the binaries are compiled, you can run them using QEMU&rsquo;s User-Mode Emulation.</p>
+<p><strong>Running the ARM 32-bit Binary:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ qemu-arm ./hello_arm
+</span></span><span style="display:flex;"><span>qemu-arm: Could not open <span style="color:#e6db74">&#39;/lib/ld-linux-armhf.so.3&#39;</span>: No such file or directory
+</span></span></code></pre></div><p>Well, that’s a surprise! It seems like QEMU is throwing a curveball at us. Who would have thought we’d encounter a missing library issue? But don’t worry—let’s unravel this puzzle and get our program running smoothly!</p>
+<p>To understand the problem, it’s essential to grasp the difference between static and dynamic compilation. I know it might feel like a bit of theory, but stick with me; it’ll help clarify our situation.</p>
+<p><strong>Static Compilation</strong>
+In static compilation, all the necessary libraries and dependencies are included directly within the executable at compile time. This means that when you run the compiled program, it doesn’t rely on any external libraries. The advantage of static compilation is that it results in a self-contained binary that can run independently on any compatible system without worrying about whether the required libraries are installed. However, this can lead to larger executable sizes and can make updates more cumbersome, as you’ll need to recompile the entire program when updating a library.</p>
+<p><strong>Dynamic Compilation</strong>
+On the other hand, dynamic compilation creates an executable that links to shared libraries at runtime. This means that the program depends on external libraries being present on the system where it runs. While dynamic compilation results in smaller executable sizes and allows for easier updates (as you can replace just the library without recompiling the entire program), it also introduces potential issues like the one we&rsquo;re experiencing with QEMU: if the required dynamic libraries are missing on the system, the program won&rsquo;t run.</p>
+<p>In our case, QEMU is looking for the dynamic linker library <code>ld-linux-armhf.so.3</code>, which it can&rsquo;t find, leading to the error.</p>
+<p>To determine whether your binary is statically or dynamically compiled, and to identify its dependencies, you can use a couple of command-line tools.</p>
+<p>Using the <strong>file</strong> Command: This command provides information about the binary file type</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ file ./hello_arm
+</span></span><span style="display:flex;"><span>./hello_arm: ELF 32-bit LSB pie executable, ARM, EABI5 version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>SYSV<span style="color:#f92672">)</span>, dynamically linked, interpreter /lib/ld-linux-armhf.so.3, BuildID<span style="color:#f92672">[</span>sha1<span style="color:#f92672">]=</span>881b47dada7aab1309bed2e7d792f032e58376f7, <span style="color:#66d9ef">for</span> GNU/Linux 3.2.0, not stripped
+</span></span></code></pre></div><p>We can see in the output above that it is marked as <code>dynamically linked</code>, which means our binary is dynamically compiled.</p>
+<p>For static compilation, we need to provide the <code>-static</code> flag to gcc during the compilation process.
+Use the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>arm-linux-gnueabihf-gcc -static hello.c -o hello_arm_static
+</span></span></code></pre></div><p>Now, if we check the binary using the <code>file</code> command, we can see the output indicating its compilation type:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ file hello_arm_static
+</span></span><span style="display:flex;"><span>hello_arm_static: ELF 32-bit LSB executable, ARM, EABI5 version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>GNU/Linux<span style="color:#f92672">)</span>, statically linked, BuildID<span style="color:#f92672">[</span>sha1<span style="color:#f92672">]=</span>59512fea76527295359f453c545a480dcc128983, <span style="color:#66d9ef">for</span> GNU/Linux 3.2.0, not stripped
+</span></span></code></pre></div><p>In this output, the phrase &ldquo;statically linked&rdquo; confirms that our binary has been compiled statically. This means all the necessary libraries are included within the executable, allowing it to run independently of external library dependencies.</p>
+<p>We can compare size of both statically and dynamically compiled binaries.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ ls -lh hello_arm hello_arm_static
+</span></span><span style="display:flex;"><span>-rwxrwxr-x <span style="color:#ae81ff">1</span> kali kali 7.8K Oct <span style="color:#ae81ff">12</span> 02:35 hello_arm
+</span></span><span style="display:flex;"><span>-rwxrwxr-x <span style="color:#ae81ff">1</span> kali kali 414K Oct <span style="color:#ae81ff">12</span> 02:44 hello_arm_static
+</span></span></code></pre></div><p>As we can see, our <code>hello_arm</code> binary is just 7.8KB, while the <code>hello_arm_static</code> binary is a whopping 414KB! 😲 Oh, that’s a significant size increase for such a small piece of code! This illustrates one of the trade-offs of static compilation—while it provides independence from external libraries, it can lead to larger executable sizes.</p>
+<p>Let’s run our statically compiled binary now:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ qemu-arm ./hello_arm_static 
+</span></span><span style="display:flex;"><span>Hello World!
+</span></span></code></pre></div><p>Hurray! We successfully ran the statically compiled binary! 🎉
+But what about our dynamically linked binary? 😟</p>
+<p>Remember the toolchain we installed? It not only includes gcc but also other essential components, such as the linker and libraries needed for building and running dynamically linked binaries.</p>
+<p>We can find the necessary libraries and linkers for ARM 32-bit binaries in the <code>/usr/arm-linux-gnueabihf/</code> directory. Let’s navigate to that location:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ cd /usr/arm-linux-gnueabihf/
+</span></span><span style="display:flex;"><span>$ ls 
+</span></span><span style="display:flex;"><span>bin  include  lib
+</span></span></code></pre></div><p>Within this directory, you’ll see several subdirectories: bin, include, and lib.</p>
+<ul>
+<li>bin: This directory typically contains the binary executables for various tools, including the cross-compiler.</li>
+<li>include: This directory holds header files that define the interfaces for the libraries used during compilation.</li>
+<li>lib: This is where the shared libraries and dynamic linkers reside, which are crucial for executing dynamically linked binaries.</li>
+</ul>
+<p>Now, let’s take a look at the contents of the lib directory:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ ls lib/
+</span></span><span style="display:flex;"><span>ld-linux-armhf.so.3
+</span></span><span style="display:flex;"><span>libc.so.6 
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>In the lib directory, you can find important files such as:</p>
+<ul>
+<li>ld-linux-armhf.so.3: This is the dynamic linker/loader for ARM 32-bit binaries. It is responsible for loading the required shared libraries into memory when a dynamically linked executable is run.</li>
+<li>libc.so.6: This is the GNU C Library (glibc), which provides essential functionalities for C programs, such as input/output operations, memory management, and string manipulation.</li>
+</ul>
+<p>In QEMU, we can specify the path to the ELF interpreter using the -L flag or by setting the <code>QEMU_LD_PREFIX</code> environment variable. This allows QEMU to locate the required dynamic libraries needed to run our dynamically linked binaries.</p>
+<p><strong>Using the <code>-L</code> flag</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ qemu-arm -L /usr/arm-linux-gnueabihf ./hello_arm
+</span></span><span style="display:flex;"><span>Hello World!
+</span></span></code></pre></div><p><strong>Using the <code>QEMU_LD_PREFIX</code> Environment Variable</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ export QEMU_LD_PREFIX<span style="color:#f92672">=</span>/usr/arm-linux-gnueabihf
+</span></span><span style="display:flex;"><span>$ qemu-arm ./hello_arm
+</span></span><span style="display:flex;"><span>Hello World!
+</span></span></code></pre></div><p>YAY! In both cases, we can finally run our dynamically compiled ARM 32-bit binary successfully! 🎉</p>
+<p>You can follow the same process for compiling and running binaries for ARM 64, MIPS 32 (LE), and MIPS 64 architectures. The steps remain consistent: simply compile your code using appropriate toolchains, and use QEMU to run the binaries while ensuring that the required libraries are accessible. This versatility allows you to work seamlessly across different architectures, expanding your development capabilities!</p>
+<p>For ARM 64, you can find the libraries in: <code>/usr/aarch64-linux-gnu/</code></p>
+<p>For MIPS 32 (Little Endian), the libraries are located in: <code>/usr/mipsel-linux-gnu/</code></p>
+<p>For MIPS 64, you can find the libraries in: <code>/usr/mips64-linux-gnuabi64/</code></p>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this guide, we explored the fundamentals of cross-compilation and emulation using QEMU. We covered the differences between static and dynamic compilation, discussing how static binaries include all dependencies within the executable, while dynamic binaries rely on external libraries. We also learned how to set up toolchains, compile binaries for different architectures, and troubleshoot common issues.</p>
+<p>With this knowledge, you can effectively develop and test applications across various platforms.</p>
+<p>Well, I’ll leave the rest as an exercise for you! I hope you enjoyed this guide on the art of cross-compilation and emulation. If you found it helpful, be sure to follow for more insights and tutorials!</p>
+<p>Should you encounter any issues or have questions, please don’t hesitate to reach out. I’m here to help!</p>
+<p>Happy Compiling! 🚀</p>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>
