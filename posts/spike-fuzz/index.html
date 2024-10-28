@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+    <title>
+Comprehensive Guide to Fuzzing with Spike | KernW0lf
+</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+
+<meta name="generator" content="Hugo 0.131.0">
+
+
+<link rel="canonical" href="http://kernw0lf.github.io/posts/spike-fuzz/" >
+
+
+
+
+<link href="/css/style.min.d23c1980faa61c0d6b331a0cd9dbc34fb7dade9e294067f1108fb8f26bd7796c.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    
+    
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+
+
+
+    <style>
+        body {
+             
+            font-family: 'Fira Code','Source Code Pro','Roboto', sans-serif; 
+        }
+        .highlight {
+            font-size: 20px;  
+        }
+
+        
+    </style>
+    
+
+</head>
+
+<body>
+
+    <div class="flexWrapper">
+        <header class="headerWrapper">
+    <div class="header">
+        <div>
+            <a class="terminal" href="http://kernw0lf.github.io/">
+                <span>KernW0lf@github.io ~ $</span>
+            </a>
+        </div>
+        <input class="side-menu" type="checkbox" id="side-menu">
+        <label class="hamb" for="side-menu"><span class="hamb-line"></span></label>
+        <nav class="headerLinks">
+            <ul>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
+                        ~/about</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/projects" title="" >
+                        ~/projects</a>
+                </li>
+                
+                <li>
+                    <a href="http://kernw0lf.github.io/posts" title="" >
+                        ~/posts</a>
+                </li>
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="content">
+            <main class="main">
+                
+<div class="postWrapper">
+    <h1>Comprehensive Guide to Fuzzing with Spike</h1>
+    
+    
+    <section class="postMetadata">
+        <dl>
+            
+                
+<dt>tags</dt>
+<dd><span></span>
+    <a href="/tags/fuzzing/">#Fuzzing</a><span></span>
+    <a href="/tags/spike/">#Spike</a></dd>
+            
+            
+            
+            
+                <dt>published</dt>
+                
+                <dd><time datetime="2024-10-28">October 28, 2024</time></dd>
+            
+            
+                <dt>reading time</dt>
+                <dd>8 minutes</dd>
+            
+        </dl>
+    </section>
+    
+    <div>
+        <p>In my previous <a href="https://kernw0lf.github.io/posts/boofuzz-tutorial/">post</a> on Boofuzz, we explored how powerful fuzzing can be in uncovering vulnerabilities in network protocols by automating the injection of malformed data. While Boofuzz provides an intuitive and Pythonic approach to fuzzing, there&rsquo;s another tool that&rsquo;s a classic in the fuzzing toolkit: Spike. Known for its raw power and simplicity, Spike is widely used in penetration testing for fuzzing network protocols, especially in situations where you need a fast, direct fuzzing solution.</p>
+<p>This blog will dive into Spike, from the basics of setup and scripting to advanced techniques that allow for protocol-specific fuzzing. We’ll cover everything from how to construct Spike scripts, handle protocol-specific edge cases, and analyze outputs, making this a complete guide for those looking to expand their fuzzing arsenal.</p>
+<h2 id="installation">Installation</h2>
+<p>Installing Spike on Kali Linux is straightforward, as it’s included in the Kali package repository. To begin, ensure your system is up-to-date:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>sudo apt update <span style="color:#f92672">&amp;&amp;</span> sudo apt upgrade
+</span></span></code></pre></div><p>Then, install Spike using the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>sudo apt install spike
+</span></span></code></pre></div><p>This will install the main spike package, along with its additional binaries and dependencies. The complete installation size is around 3.77 MB, making it lightweight yet versatile.</p>
+<p>After installing the Spike package, you should see a suite of specialized binaries designed for different fuzzing tasks. These binaries include:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plaintext" data-lang="plaintext"><span style="display:flex;"><span>citrix                   - Fuzzing Citrix services for vulnerabilities
+</span></span><span style="display:flex;"><span>closed_source_web_server_fuzz - Fuzzes closed-source web servers by targeting HTTP methods and file extensions
+</span></span><span style="display:flex;"><span>dceoversmb               - Fuzzes DCE/RPC over SMB for buffer overflow and similar flaws
+</span></span><span style="display:flex;"><span>dltest                   - Tests the loading of `.spk` Spike script files for debugging
+</span></span><span style="display:flex;"><span>do_post                  - Sends HTTP POST requests for fuzzing web services
+</span></span><span style="display:flex;"><span>generic_chunked          - Fuzzes web servers with chunked HTTP encoding
+</span></span><span style="display:flex;"><span>generic_listen_tcp       - Sets up a TCP listener to handle incoming fuzzed traffic
+</span></span><span style="display:flex;"><span>generic_send_tcp         - Sends fuzzed data over TCP to a target server
+</span></span><span style="display:flex;"><span>generic_send_udp         - Sends fuzzed data over UDP to a target server
+</span></span><span style="display:flex;"><span>generic_web_server_fuzz  - Fuzzes generic web servers by sending malformed HTTP requests
+</span></span><span style="display:flex;"><span>generic_web_server_fuzz2 - Advanced version of `generic_web_server_fuzz` with extended capabilities
+</span></span><span style="display:flex;"><span>gopherd                  - Fuzzing target for Gopher protocol testing
+</span></span><span style="display:flex;"><span>halflife                 - Fuzzes servers supporting the Half-Life game protocol
+</span></span><span style="display:flex;"><span>line_send_tcp            - Sends line-based TCP fuzzing input to test line-based protocols
+</span></span><span style="display:flex;"><span>msrpcfuzz                - Fuzzes Microsoft RPC services over TCP to identify potential vulnerabilities
+</span></span><span style="display:flex;"><span>msrpcfuzz_udp            - Fuzzes Microsoft RPC services over UDP
+</span></span><span style="display:flex;"><span>ntlm2                    - Brute-forces NTLM authentication over a specified service
+</span></span><span style="display:flex;"><span>ntlm_brute               - Fuzzes NTLM login processes with various username/password combinations
+</span></span><span style="display:flex;"><span>pmspike                  - General-purpose fuzzing utility for protocol testing
+</span></span><span style="display:flex;"><span>post_fuzz                - Sends POST requests to fuzz web applications and services
+</span></span><span style="display:flex;"><span>post_spike               - A specific tool for fuzzing HTTP POST requests
+</span></span><span style="display:flex;"><span>quake                    - Fuzzing tool for the Quake game server protocol
+</span></span><span style="display:flex;"><span>quakeserver              - Listens for and handles Quake protocol requests
+</span></span><span style="display:flex;"><span>sendmsrpc                - Sends fuzzed data over Microsoft RPC
+</span></span><span style="display:flex;"><span>ss_spike                 - General-purpose spike script tester
+</span></span><span style="display:flex;"><span>statd_spike              - Fuzzes the NFS `statd` daemon, often used in UNIX systems
+</span></span><span style="display:flex;"><span>sunrpcfuzz               - Fuzzes SunRPC services with a variety of arguments
+</span></span><span style="display:flex;"><span>webfuzz                  - Fuzzes web services with custom requests and payloads
+</span></span><span style="display:flex;"><span>x11_spike                - Tests X11 protocol for fuzzing vulnerabilities
+</span></span></code></pre></div><p>Creating Spike scripts allows for precise fuzzing of network protocols and services. A Spike script (typically saved with the <code>.spk</code> extension) defines the structure of requests and payloads sent to a target, making it a powerful way to test custom protocols or non-standardized services.</p>
+<h2 id="basic-structure-of-a-spike-script">Basic Structure of a Spike Script</h2>
+<p>Spike scripts use predefined functions to send data and manage how Spike generates and mutates input fields. Here’s a breakdown of the fundamental components and how they’re used in a Spike script:</p>
+<p><strong>1. Spike Script Functions Overview:</strong></p>
+<ul>
+<li><code>s_string(&quot;text&quot;)</code>: Sends a static string as part of the fuzzing request.</li>
+<li><code>s_string_variable(&quot;variable_name&quot;)</code>: Fuzzes by injecting various strings in place of the specified variable name.</li>
+<li><code>s_binary(&quot;abcdef&quot;)</code>: Sends raw binary data, specified in hexadecimal.</li>
+<li><code>s_readline()</code>: Read response from server</li>
+</ul>
+<p><strong>2. Example: Basic Spike Script for Fuzzing HTTP GET Requests</strong></p>
+<p>In this example, we create a simple Spike script to fuzz a web server by sending various malformed GET requests:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;GET /&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string_variable</span>(<span style="color:#e6db74">&#34;filename&#34;</span>);	<span style="color:#75715e">// Fuzz Filename
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34; HTTP/1.1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;Host: &#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;example.com</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span></code></pre></div><p>This script:</p>
+<ul>
+<li>Sends the <code>GET</code> command with a variable <code>filename</code> that will be fuzzed.</li>
+<li>Specifies the <code>Host</code> header with a static value, <code>example.com</code>.</li>
+<li>Closes the request with two carriage return/line feed (<code>\r\n</code>) sequences.</li>
+</ul>
+<p><strong>3. Adding Custom Fields</strong></p>
+<p>For this example, we’ll be using Damn Vulnerable Web Application (DVWA) to demonstrate SPIKE-based fuzzing on a captured POST request to <code>/login.php</code>.</p>
+<p>Upon logging in, we capture the following request:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-http" data-lang="http"><span style="display:flex;"><span><span style="color:#a6e22e">POST</span> /login.php <span style="color:#66d9ef">HTTP</span><span style="color:#f92672">/</span><span style="color:#ae81ff">1.1</span>
+</span></span><span style="display:flex;"><span>Host<span style="color:#f92672">:</span> <span style="color:#ae81ff">localhost:42001</span>
+</span></span><span style="display:flex;"><span>Content-Length<span style="color:#f92672">:</span> <span style="color:#ae81ff">86</span>
+</span></span><span style="display:flex;"><span>Cache-Control<span style="color:#f92672">:</span> <span style="color:#ae81ff">max-age=0</span>
+</span></span><span style="display:flex;"><span>sec-ch-ua<span style="color:#f92672">:</span> <span style="color:#ae81ff">&#34;Chromium&#34;;v=&#34;129&#34;, &#34;Not=A?Brand&#34;;v=&#34;8&#34;</span>
+</span></span><span style="display:flex;"><span>sec-ch-ua-mobile<span style="color:#f92672">:</span> <span style="color:#ae81ff">?0</span>
+</span></span><span style="display:flex;"><span>sec-ch-ua-platform<span style="color:#f92672">:</span> <span style="color:#ae81ff">&#34;Linux&#34;</span>
+</span></span><span style="display:flex;"><span>Accept-Language<span style="color:#f92672">:</span> <span style="color:#ae81ff">en-US,en;q=0.9</span>
+</span></span><span style="display:flex;"><span>Origin<span style="color:#f92672">:</span> <span style="color:#ae81ff">http://localhost:42001</span>
+</span></span><span style="display:flex;"><span>Content-Type<span style="color:#f92672">:</span> <span style="color:#ae81ff">application/x-www-form-urlencoded</span>
+</span></span><span style="display:flex;"><span>Upgrade-Insecure-Requests<span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>User-Agent<span style="color:#f92672">:</span> <span style="color:#ae81ff">Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.6668.71 Safari/537.36</span>
+</span></span><span style="display:flex;"><span>Accept<span style="color:#f92672">:</span> <span style="color:#ae81ff">text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7</span>
+</span></span><span style="display:flex;"><span>Sec-Fetch-Site<span style="color:#f92672">:</span> <span style="color:#ae81ff">same-origin</span>
+</span></span><span style="display:flex;"><span>Sec-Fetch-Mode<span style="color:#f92672">:</span> <span style="color:#ae81ff">navigate</span>
+</span></span><span style="display:flex;"><span>Sec-Fetch-User<span style="color:#f92672">:</span> <span style="color:#ae81ff">?1</span>
+</span></span><span style="display:flex;"><span>Sec-Fetch-Dest<span style="color:#f92672">:</span> <span style="color:#ae81ff">document</span>
+</span></span><span style="display:flex;"><span>Referer<span style="color:#f92672">:</span> <span style="color:#ae81ff">http://localhost:42001/login.php</span>
+</span></span><span style="display:flex;"><span>Accept-Encoding<span style="color:#f92672">:</span> <span style="color:#ae81ff">gzip, deflate, br</span>
+</span></span><span style="display:flex;"><span>Cookie<span style="color:#f92672">:</span> <span style="color:#ae81ff">security=impossible; PHPSESSID=7p7l3t0ob14k2vqmshkqej4os1</span>
+</span></span><span style="display:flex;"><span>Connection<span style="color:#f92672">:</span> <span style="color:#ae81ff">keep-alive</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>username=joker&amp;password=batman&amp;Login=Login&amp;user_token=e5cabdb39c207c18648e03ba6bacfece
+</span></span></code></pre></div><p>To simplify and focus on fuzzing critical parts, we’ll streamline this request by removing non-essential headers and specifically target the <code>username</code> and <code>password</code> fields for fuzzing. Below is a SPIKE script that we will use for fuzzing:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;POST /login.php HTTP/1.1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;Host: localhost:42001</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;Content-Length: 86</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;Content-Type: application/x-www-form-urlencoded</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;Connection: keep-alive</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;Cookie: security=impossible; PHPSESSID=7p7l3t0ob14k2vqmshkqej4os1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;username=&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string_variable</span>(<span style="color:#e6db74">&#34;username&#34;</span>);  <span style="color:#75715e">// Fuzzing `username` field
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;&amp;password=&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string_variable</span>(<span style="color:#e6db74">&#34;password&#34;</span>);  <span style="color:#75715e">// Fuzzing `password` field
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;&amp;Login=Login&amp;user_token=e5cabdb39c207c18648e03ba6bacfece</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span></code></pre></div><p>Save the script above as <code>dvwa_fuzz.spk</code>.</p>
+<p><strong>Running the Fuzzing Script with <code>line_send_tcp</code></strong></p>
+<p>Using SPIKE’s <code>line_send_tcp</code> utility, we can direct our fuzzing attempts to the local server at the specified port. Here’s how to execute it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># Usage: ./line_send_tcp host port spike_script SKIPVAR SKIPSTR</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ./line_send_tcp 192.168.1.100 701 something.spk 0 0</span>
+</span></span><span style="display:flex;"><span>line_send_tcp 127.0.0.1 <span style="color:#ae81ff">42001</span> dvwa_fuzz.spk <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><p>In this command:
+SKIPVAR and SKIPSTR are parameters used to control the fuzzing process:</p>
+<ul>
+<li>SKIPVAR: This parameter specifies how many variables should be skipped in the input data when sending the fuzzing payload.</li>
+<li>SKIPSTR: This parameter indicates how many characters or strings should be skipped from the start of the input data.</li>
+</ul>
+<p>By using 0 for both SKIPVAR and SKIPSTR, we ensure that all variables and strings in our script are subjected to fuzzing. This comprehensive approach allows the <code>line_send_tcp</code> command to send a series of crafted requests, iterating through various combinations of inputs for the username and password fields. As a result, we can effectively identify potential vulnerabilities, such as buffer overflows or improper input handling, in the DVWA application.</p>
+<p>To observe the equests sent to DVWA, you can check the logs located at <code>/var/log/dvwa/access.log</code>. Alternatively, you can set up a listener using <code>netcat</code> on port 4444 to capture incoming raw rrequests.</p>
+<p><strong>Setting Up Netcat Listener</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>nc -nlvp <span style="color:#ae81ff">4444</span> -k
+</span></span></code></pre></div><p>With the listener running, you can send your fuzzing requests to port 4444:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>line_send_tcp 127.0.0.1 <span style="color:#ae81ff">4444</span> dvwa_fuzz.spk <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><p>Once the command is executed, you should see the captured request in the netcat terminal:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ nc -nlvp <span style="color:#ae81ff">4444</span> -k
+</span></span><span style="display:flex;"><span>Listening on 0.0.0.0 <span style="color:#ae81ff">4444</span>
+</span></span><span style="display:flex;"><span>Connection received on 127.0.0.1 <span style="color:#ae81ff">36448</span>
+</span></span><span style="display:flex;"><span>POST /login.php HTTP/1.1
+</span></span><span style="display:flex;"><span>Host: localhost:42001
+</span></span><span style="display:flex;"><span>Content-Length: <span style="color:#ae81ff">86</span>
+</span></span><span style="display:flex;"><span>Content-Type: application/x-www-form-urlencoded
+</span></span><span style="display:flex;"><span>Connection: keep-alive
+</span></span><span style="display:flex;"><span>Cookie: security<span style="color:#f92672">=</span>impossible; PHPSESSID<span style="color:#f92672">=</span>7p7l3t0ob14k2vqmshkqej4os1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>username<span style="color:#f92672">=</span>../../../../../../../../../../../../etc/hosts%00&amp;password<span style="color:#f92672">=</span>password&amp;Login<span style="color:#f92672">=</span>Login&amp;user_token<span style="color:#f92672">=</span>e5cabdb39c207c18648e03ba6bacfece
+</span></span></code></pre></div><p><strong>Fuzzing Only the Password Field</strong>
+To specifically fuzz the <code>password</code> field (the second field in the request), you need to skip the first field (<code>username</code>). You can achieve this by using the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>line_send_tcp 127.0.0.1 <span style="color:#ae81ff">4444</span> dvwa_fuzz.spk <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><p>In this command, the <code>1</code> as the <code>SKIPVAR</code> argument tells SPIKE to skip the first variable (username), allowing you to focus on fuzzing the password field.</p>
+<p><strong>4. Example: Spike Script for Fuzzing Protocols with Fixed Raw Bytes</strong>
+When working with certain protocols, you may need to prefix your requests with specific fixed raw bytes. For example, if a protocol expects the bytes <code>\xde\xad\xbe\xef</code> at the beginning of the request, you can seamlessly incorporate this requirement in your Spike script using the <code>s_binary()</code> function. The following script demonstrates how to structure such a request:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">s_binary</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xde\xad\xbe\xef</span><span style="color:#e6db74">&#34;</span>); 	<span style="color:#75715e">// Fixed raw bytes at the start
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;test&#34;</span>);		<span style="color:#75715e">// Test string
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);		<span style="color:#75715e">// End of line
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s_string_variable</span>(<span style="color:#e6db74">&#34;FuzzMe&#34;</span>);	<span style="color:#75715e">// Variable to be fuzzed
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);		<span style="color:#75715e">// End of line
+</span></span></span></code></pre></div><p>When listening on port 4444 and examining the output with a hex dump, you can observe the structure of the data being sent. By using the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ nc -nlvp <span style="color:#ae81ff">4444</span> | xxd
+</span></span></code></pre></div><p>You’ll see output similar to this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Listening on 0.0.0.0 <span style="color:#ae81ff">4444</span>
+</span></span><span style="display:flex;"><span>Connection received on 127.0.0.1 <span style="color:#ae81ff">52158</span>
+</span></span><span style="display:flex;"><span>00000000: dead beef <span style="color:#ae81ff">7465</span> <span style="color:#ae81ff">7374</span> 0d0a <span style="color:#ae81ff">4675</span> 7a7a 4d65  ....test..FuzzMe
+</span></span><span style="display:flex;"><span>00000010: 0d0a 
+</span></span></code></pre></div><p>In this output, the first part, dead beef, represents the fixed raw bytes we prefixed to the request.</p>
+<p><strong>Exploring Prebuilt Fuzzing Scripts in Spike</strong></p>
+<p>Spike offers a collection of prebuilt fuzzing scripts located in the <code>/usr/share/spike/audits/</code> directory. These scripts cover a variety of protocols and applications, making it easier to start fuzzing with minimal setup. Below is a list of some available audits:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ls /usr/share/spike/audits/
+</span></span><span style="display:flex;"><span>BIZTALK2000  exchange2K  IMAP                       MSSQL   PPTP        SSL
+</span></span><span style="display:flex;"><span>CIFS         FTPD        lotus                      ORACLE  RealServer  UPNP
+</span></span><span style="display:flex;"><span>COMPAQ       H323        MSContentManagementServer  POP3    SMTP
+</span></span></code></pre></div><p><strong>Fuzzing an FTP Server</strong></p>
+<p>Let’s concentrate on fuzzing an FTP server by reviewing the script found in <code>/usr/share/spike/audits/FTPD/ftpd1.spk</code>. This script illustrates how to format commands for communicating with the FTP server. Here’s a breakdown of the script:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ cat /usr/share/spike/audits/FTPD/ftpd1.spk
+</span></span><span style="display:flex;"><span>s_string<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;HOST &#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>s_string_variable<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;192.168.1.108&#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>s_string<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;\r\n&#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>s_string_variable<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;USER&#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>s_string<span style="color:#f92672">(</span><span style="color:#e6db74">&#34; &#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>s_string_variable<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;bob&#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>s_string<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;\r\n&#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>s_string<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;PASS &#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>s_string_variable<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;bob&#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>s_string<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;\r\n&#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>s_string<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;SITE &#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>s_string_variable<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;SEDV&#34;</span><span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>s_string<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;\r\n&#34;</span><span style="color:#f92672">)</span>;
+</span></span></code></pre></div><p><strong>Creating a Directory with MKD Command</strong>
+To create a directory on the FTP server, we can use the MKD command. Here’s how to structure that command in Spike:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;USER &#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;admin&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;PASS &#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;password&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;MKD &#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string_variable</span>(<span style="color:#e6db74">&#34;FUZZ&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s_string</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ line_send_tcp 192.168.245.34 <span style="color:#ae81ff">2221</span> fuzz.spk <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><p>By utilizing the prebuilt scripts and adjusting the variables, you can effectively fuzz your FTP server for vulnerabilities and test its security robustness.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this guide, we&rsquo;ve covered the essentials of using Spike for fuzzing, including crafting custom scripts and utilizing binaries like <code>line_send_tcp</code>.
+However, the world of fuzzing extends far beyond the examples we&rsquo;ve explored. I encourage you to delve into other available binaries within Spike to expand your fuzzing toolkit. Each binary offers unique functionalities that can be tailored to different protocols and applications, allowing you to enhance your testing strategies.
+Happy Fuzzing! 🎉</p>
+
+    </div>
+</div>
+
+            </main>
+        </div>
+
+
+        <footer class="footer">
+    
+        <span>
+            © 2024 KernW0lf, Built with
+            <a href="https://gohugo.io" class="footerLink">Hugo</a> and
+            <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme
+        </span>
+    
+</footer>
+    </div>
+
+</body>
+
+</html>

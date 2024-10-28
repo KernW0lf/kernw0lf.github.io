@@ -155,7 +155,7 @@ Rooting is the process of gaining administrative access to the operating system.
 <p>On searching this build number I got the <a href="https://dl.google.com/dl/android/aosp/taimen-rp1a.201005.004.a1-factory-2f5c4987.zip">link</a> to download the factory image.</p>
 <p><img src="https://github.com/KernW0lf/Materials/blob/main/magisk-root/01.png?raw=true" alt="Factory Image"></p>
 <p>Once downloaded, extract the zip.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ unzip taimen-rp1a.201005.004.a1-factory-2f5c4987.zip
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ unzip taimen-rp1a.201005.004.a1-factory-2f5c4987.zip
 </span></span><span style="display:flex;"><span>$ ls
 </span></span><span style="display:flex;"><span>taimen-rp1a.201005.004.a1  taimen-rp1a.201005.004.a1-factory-2f5c4987.zip
 </span></span><span style="display:flex;"><span>$ cd taimen-rp1a.201005.004.a1
@@ -185,18 +185,18 @@ Rooting is the process of gaining administrative access to the operating system.
 Let&rsquo;s pull it.</p>
 <pre tabindex="0"><code>adb pull /sdcard/Download/magisk_patched-27000_XlHup.img .
 </code></pre><p>Now, go in to the bootloader.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ adb reboot bootloader
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ adb reboot bootloader
 </span></span></code></pre></div><p>You will see something like:
 <img src="https://storage.googleapis.com/support-forums-api/attachment/thread-50687342-2661705676478564024.jpeg" alt="bootlader"></p>
 <p>Image Source:
 <a href="https://support.google.com/pixelphone/thread/50687342/google-pixel-2xl-startet-nicht-bleibt-beim-booten-h%C3%A4ngen?hl=de">google</a></p>
 <p>Flash the patched <code>boot.img</code> using the following command.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ fastboot flash boot magisk_patched-27000_XlHup.img
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ fastboot flash boot magisk_patched-27000_XlHup.img
 </span></span></code></pre></div><p>Now, reboot the phone.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ fastboot reboot
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ fastboot reboot
 </span></span></code></pre></div><p>We can now use Magisk Manager to manage and grant root permissions on the device.</p>
 <p>In the ADB shell, type <code>su</code>, and in the Magisk app, you can <strong>Grant</strong> root permission to the ADB shell session, which uses the package name <code>com.android.shell</code>.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>taimen:/ $ su
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>taimen:/ $ su
 </span></span></code></pre></div><p>If you don&rsquo;t see a root permission request in the Magisk app, you can manually navigate to the Superuser section and grant permission to the ADB shell.</p>
 <p><img src="https://github.com/KernW0lf/Materials/blob/main/magisk-root/05.png?raw=true" alt="Factory Image">
 <img src="https://github.com/KernW0lf/Materials/blob/main/magisk-root/06.png?raw=true" alt="Factory Image"></p>

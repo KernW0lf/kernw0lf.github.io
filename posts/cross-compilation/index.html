@@ -204,7 +204,7 @@ If your project uses CMake for generating build configurations, you can install 
 </span></span></code></pre></div><h3 id="3-running-the-compiled-binary-with-qemu">3. Running the Compiled Binary with QEMU</h3>
 <p>Once the binaries are compiled, you can run them using QEMU&rsquo;s User-Mode Emulation.</p>
 <p><strong>Running the ARM 32-bit Binary:</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ qemu-arm ./hello_arm
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ qemu-arm ./hello_arm
 </span></span><span style="display:flex;"><span>qemu-arm: Could not open <span style="color:#e6db74">&#39;/lib/ld-linux-armhf.so.3&#39;</span>: No such file or directory
 </span></span></code></pre></div><p>Well, that’s a surprise! It seems like QEMU is throwing a curveball at us. Who would have thought we’d encounter a missing library issue? But don’t worry—let’s unravel this puzzle and get our program running smoothly!</p>
 <p>To understand the problem, it’s essential to grasp the difference between static and dynamic compilation. I know it might feel like a bit of theory, but stick with me; it’ll help clarify our situation.</p>
@@ -215,29 +215,29 @@ On the other hand, dynamic compilation creates an executable that links to share
 <p>In our case, QEMU is looking for the dynamic linker library <code>ld-linux-armhf.so.3</code>, which it can&rsquo;t find, leading to the error.</p>
 <p>To determine whether your binary is statically or dynamically compiled, and to identify its dependencies, you can use a couple of command-line tools.</p>
 <p>Using the <strong>file</strong> Command: This command provides information about the binary file type</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ file ./hello_arm
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ file ./hello_arm
 </span></span><span style="display:flex;"><span>./hello_arm: ELF 32-bit LSB pie executable, ARM, EABI5 version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>SYSV<span style="color:#f92672">)</span>, dynamically linked, interpreter /lib/ld-linux-armhf.so.3, BuildID<span style="color:#f92672">[</span>sha1<span style="color:#f92672">]=</span>881b47dada7aab1309bed2e7d792f032e58376f7, <span style="color:#66d9ef">for</span> GNU/Linux 3.2.0, not stripped
 </span></span></code></pre></div><p>We can see in the output above that it is marked as <code>dynamically linked</code>, which means our binary is dynamically compiled.</p>
 <p>For static compilation, we need to provide the <code>-static</code> flag to gcc during the compilation process.
 Use the following command:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>arm-linux-gnueabihf-gcc -static hello.c -o hello_arm_static
 </span></span></code></pre></div><p>Now, if we check the binary using the <code>file</code> command, we can see the output indicating its compilation type:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ file hello_arm_static
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ file hello_arm_static
 </span></span><span style="display:flex;"><span>hello_arm_static: ELF 32-bit LSB executable, ARM, EABI5 version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>GNU/Linux<span style="color:#f92672">)</span>, statically linked, BuildID<span style="color:#f92672">[</span>sha1<span style="color:#f92672">]=</span>59512fea76527295359f453c545a480dcc128983, <span style="color:#66d9ef">for</span> GNU/Linux 3.2.0, not stripped
 </span></span></code></pre></div><p>In this output, the phrase &ldquo;statically linked&rdquo; confirms that our binary has been compiled statically. This means all the necessary libraries are included within the executable, allowing it to run independently of external library dependencies.</p>
 <p>We can compare size of both statically and dynamically compiled binaries.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ ls -lh hello_arm hello_arm_static
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ls -lh hello_arm hello_arm_static
 </span></span><span style="display:flex;"><span>-rwxrwxr-x <span style="color:#ae81ff">1</span> kali kali 7.8K Oct <span style="color:#ae81ff">12</span> 02:35 hello_arm
 </span></span><span style="display:flex;"><span>-rwxrwxr-x <span style="color:#ae81ff">1</span> kali kali 414K Oct <span style="color:#ae81ff">12</span> 02:44 hello_arm_static
 </span></span></code></pre></div><p>As we can see, our <code>hello_arm</code> binary is just 7.8KB, while the <code>hello_arm_static</code> binary is a whopping 414KB! 😲 Oh, that’s a significant size increase for such a small piece of code! This illustrates one of the trade-offs of static compilation—while it provides independence from external libraries, it can lead to larger executable sizes.</p>
 <p>Let’s run our statically compiled binary now:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ qemu-arm ./hello_arm_static 
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ qemu-arm ./hello_arm_static 
 </span></span><span style="display:flex;"><span>Hello World!
 </span></span></code></pre></div><p>Hurray! We successfully ran the statically compiled binary! 🎉
 But what about our dynamically linked binary? 😟</p>
 <p>Remember the toolchain we installed? It not only includes gcc but also other essential components, such as the linker and libraries needed for building and running dynamically linked binaries.</p>
 <p>We can find the necessary libraries and linkers for ARM 32-bit binaries in the <code>/usr/arm-linux-gnueabihf/</code> directory. Let’s navigate to that location:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ cd /usr/arm-linux-gnueabihf/
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ cd /usr/arm-linux-gnueabihf/
 </span></span><span style="display:flex;"><span>$ ls 
 </span></span><span style="display:flex;"><span>bin  include  lib
 </span></span></code></pre></div><p>Within this directory, you’ll see several subdirectories: bin, include, and lib.</p>
@@ -247,7 +247,7 @@ But what about our dynamically linked binary? 😟</p>
 <li>lib: This is where the shared libraries and dynamic linkers reside, which are crucial for executing dynamically linked binaries.</li>
 </ul>
 <p>Now, let’s take a look at the contents of the lib directory:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ ls lib/
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ls lib/
 </span></span><span style="display:flex;"><span>ld-linux-armhf.so.3
 </span></span><span style="display:flex;"><span>libc.so.6 
 </span></span><span style="display:flex;"><span>...
@@ -258,10 +258,10 @@ But what about our dynamically linked binary? 😟</p>
 </ul>
 <p>In QEMU, we can specify the path to the ELF interpreter using the -L flag or by setting the <code>QEMU_LD_PREFIX</code> environment variable. This allows QEMU to locate the required dynamic libraries needed to run our dynamically linked binaries.</p>
 <p><strong>Using the <code>-L</code> flag</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ qemu-arm -L /usr/arm-linux-gnueabihf ./hello_arm
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ qemu-arm -L /usr/arm-linux-gnueabihf ./hello_arm
 </span></span><span style="display:flex;"><span>Hello World!
 </span></span></code></pre></div><p><strong>Using the <code>QEMU_LD_PREFIX</code> Environment Variable</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ export QEMU_LD_PREFIX<span style="color:#f92672">=</span>/usr/arm-linux-gnueabihf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ export QEMU_LD_PREFIX<span style="color:#f92672">=</span>/usr/arm-linux-gnueabihf
 </span></span><span style="display:flex;"><span>$ qemu-arm ./hello_arm
 </span></span><span style="display:flex;"><span>Hello World!
 </span></span></code></pre></div><p>YAY! In both cases, we can finally run our dynamically compiled ARM 32-bit binary successfully! 🎉</p>

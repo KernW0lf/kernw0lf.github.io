@@ -8,8 +8,15 @@
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
-    <lastBuildDate>Thu, 24 Oct 2024 11:59:53 -0400</lastBuildDate>
+    <lastBuildDate>Mon, 28 Oct 2024 13:55:28 -0400</lastBuildDate>
     <atom:link href="http://kernw0lf.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Comprehensive Guide to Fuzzing with Spike</title>
+      <link>http://kernw0lf.github.io/posts/spike-fuzz/</link>
+      <pubDate>Mon, 28 Oct 2024 13:55:28 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/spike-fuzz/</guid>
+      <description>In my previous post on Boofuzz, we explored how powerful fuzzing can be in uncovering vulnerabilities in network protocols by automating the injection of malformed data. While Boofuzz provides an intuitive and Pythonic approach to fuzzing, there&amp;rsquo;s another tool that&amp;rsquo;s a classic in the fuzzing toolkit: Spike. Known for its raw power and simplicity, Spike is widely used in penetration testing for fuzzing network protocols, especially in situations where you need a fast, direct fuzzing solution.</description>
+    </item>
     <item>
       <title>Mastering Boofuzz: From Basics to Advanced</title>
       <link>http://kernw0lf.github.io/posts/boofuzz-tutorial/</link>
@@ -127,7 +134,7 @@
       <link>http://kernw0lf.github.io/about/about/</link>
       <pubDate>Thu, 29 Feb 2024 03:43:01 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
       <guid>http://kernw0lf.github.io/about/about/</guid>
-      <description>👨‍💻 Hey there! I&amp;rsquo;m Harry (kernw0lf), a cybersecurity enthusiast and software developer with a passion for exploring the depths of Android, Linux, and everything in between. Here&amp;rsquo;s a glimpse into my skill set:&#xA;📱 Android App Development 👨‍💻 Android App Pentesting 📚 Android Native Libraries Development, Fuzzing, and Analysis ☠️ Android Userland Fuzzing and Exploitation 🦠 Android Malware Analysis 💻 Languages: C, C++, Rust, Python, Bash, PowerShell ⚙️ Architectures: x86, x64, ARM, AARCH-64, MIPS Assembly 🩻 Reverse Engineering Tools: IDA, Binary Ninja, Ghidra, radare2, cutter, gdb 💡 Kernel Developing and Debugging 💥 Kernel Exploit Development 🌪️ Fuzzing Tools: afl++, honggfuzz, libfuzzer, spike 🐧 Linux System Programming 🛠️ Linux Exploitation: x86, x64, ARM, AARCH64 🕵️‍♀️ Linux Rootkit Development 🛡️ Red Teaming 🌐 IoT Exploitation 🧑🏽‍🔬 Binary Emulation: qiling, qemu 🖥️ Windows Userland Exploitation 🚀 Linux Driver Development 🛠️ Building Embedded Linux Systems 🐞 Debugging Linux Kernel 🌟 Excited to delve deeper into the realms of cybersecurity and software development, constantly learning and exploring new challenges.</description>
+      <description>👨‍💻 Hey there! I&amp;rsquo;m Harry (kernw0lf), a cybersecurity enthusiast and software developer with a passion for exploring the depths of Android, Linux, and everything in between. Here&amp;rsquo;s a glimpse into my skill set:&#xA;📱 Android App Development 👨‍💻 Android App Pentesting 📚 Android Native Libraries Development, Fuzzing, and Analysis ☠️ Android Userland Fuzzing and Exploitation 🦠 Android Malware Analysis 💻 Languages: C, C++, Rust, Python, Bash, PowerShell ⚙️ Architectures: x86, x64, ARM, AARCH-64, MIPS Assembly 🩻 Reverse Engineering Tools: IDA, Binary Ninja, Ghidra, Radare2, Cutter, GDB 💡 Linux Kernel Development 💥 Kernel Exploit Development 🌪️ Fuzzing Tools: afl-fuzz, honggfuzz, libfuzzer, boofuzz, spike 🐧 Linux System Programming 🛠️ Linux Exploitation: x86, x64, ARM, AARCH64 🕵️‍♀️ Linux Rootkit Development 🛡️ Red Teaming 🧪 Linux Binary Analysis 🌐 IoT Exploitation 🧑🏽‍🔬 Binary Emulation: unicorn, qiling, qemu 🖥️ Windows Userland Exploitation 🚀 Linux Driver Development 🛠️ Building Embedded Linux Systems 🐞 Debugging Linux Kernel 🌟 Excited to delve deeper into the realms of cybersecurity and software development, constantly learning and exploring new challenges.</description>
     </item>
     <item>
       <title>Unlocking Java&#39;s Power with JNI: A Comprehensive Guide</title>

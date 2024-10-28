@@ -116,7 +116,7 @@ Mastering Boofuzz: From Basics to Advanced | KernW0lf
     <div>
         <p>In the world of software security, <strong>fuzzing</strong> is a critical technique used to identify vulnerabilities in software by bombarding it with unexpected or malformed inputs. One of the most popular and versatile fuzzing tools is <strong>Boofuzz</strong>, an open-source fuzzing framework widely used by security researchers and developers alike. Based on the legacy <strong>Sulley</strong> Fuzzing Framework, Boofuzz continues its mission of being a robust, modular, and extensible fuzzer for both beginners and seasoned professionals.🚀</p>
 <p>In this comprehensive guide, we will explore Boofuzz from scratch to advanced usage, walking through everything from installation and basic usage to developing sophisticated fuzzers for real-world applications. Whether you&rsquo;re a beginner just getting started or looking to master fuzzing with Boofuzz, this guide has you covered.</p>
-<h2 id="what-is-boofuzz">What is Boofuzz?</h2>
+<h3 id="what-is-boofuzz">What is Boofuzz?</h3>
 <p><strong>Boofuzz</strong> is a Python-based fuzzing framework that allows security professionals to test the robustness of their applications by generating and sending malformed inputs to target software, hardware, or network protocols. It&rsquo;s flexible and supports network protocols, file formats, and even embedded systems fuzzing.</p>
 <p><strong>Key Features of Boofuzz:</strong></p>
 <ul>
@@ -126,7 +126,7 @@ Mastering Boofuzz: From Basics to Advanced | KernW0lf
 <li>Extensibility through Python scripting.</li>
 <li>Rich logging and reporting options.</li>
 </ul>
-<h2 id="installing-boofuzz">Installing Boofuzz</h2>
+<h3 id="installing-boofuzz">Installing Boofuzz</h3>
 <p>Boofuzz is available via pip, making installation straightforward.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pip install boofuzz
 </span></span></code></pre></div><p>You can also clone the source code from GitHub for more control or contribute to development:</p>
@@ -163,9 +163,9 @@ We will be using <code>netcat</code> as simple network server.</p>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
 </span></span><span style="display:flex;"><span>    main()
 </span></span></code></pre></div><p>Before executing the fuzzing script, ensure that <code>netcat</code> is set up to listen continuously on port <code>9999</code>. The <code>-k</code> flag ensures that <code>netcat</code> remains in listening mode after handling each connection. You can do this with the following command:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ nc -nlvp <span style="color:#ae81ff">9999</span> -k
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ nc -nlvp <span style="color:#ae81ff">9999</span> -k
 </span></span></code></pre></div><p>Once <code>netcat</code> is up and running, you can proceed to execute the fuzzing script by running:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ python simple_tcpfuzz.py
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ python simple_tcpfuzz.py
 </span></span></code></pre></div><p>This will initiate the fuzzing process, sending various mutated payloads to the target service listening on port <code>9999</code> and monitoring for any crashes or abnormal behavior.</p>
 <p><strong>Key Steps in the Example:</strong></p>
 <ul>
@@ -189,7 +189,7 @@ We will be using <code>netcat</code> as simple network server.</p>
 </span></span><span style="display:flex;"><span>session<span style="color:#f92672">.</span>connect(s_get(<span style="color:#e6db74">&#34;auth&#34;</span>))
 </span></span><span style="display:flex;"><span>session<span style="color:#f92672">.</span>fuzz()
 </span></span></code></pre></div><p>This fuzzer simulates a protocol handshake before moving to the authentication stage.</p>
-<h2 id="developing-custom-protocol-fuzzers">Developing Custom Protocol Fuzzers</h2>
+<h3 id="developing-custom-protocol-fuzzers">Developing Custom Protocol Fuzzers</h3>
 <p>Boofuzz is ideal for network protocol fuzzing, but what if you&rsquo;re dealing with a custom protocol? The framework allows you to define custom packet structures, message flows, and encoding formats.</p>
 <p><strong>Custom Protocol Fuzzing Example:</strong></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">from</span> boofuzz <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
@@ -238,7 +238,7 @@ We will be using <code>netcat</code> as simple network server.</p>
 </span></span><span style="display:flex;"><span>    main()
 </span></span></code></pre></div><p>Let&rsquo;s verify the results using <code>netcat</code> and <code>xxd</code>:
 <img src="https://github.com/KernW0lf/Materials/blob/main/Misc/structure_boofuzz.png?raw=true" alt="Structure"></p>
-<h2 id="targeted-fuzzing-for-known-vulnerabilities">Targeted Fuzzing for Known Vulnerabilities</h2>
+<h3 id="targeted-fuzzing-for-known-vulnerabilities">Targeted Fuzzing for Known Vulnerabilities</h3>
 <p>If you&rsquo;re fuzzing a specific application or protocol with known vulnerabilities, targeted fuzzing can help focus on potentially dangerous areas of the code, such as user inputs or particular functions.</p>
 <p><strong>Example: Fuzzing an HTTP POST Request</strong></p>
 <p>Below is a practical example of how to use the boofuzz library to fuzz an HTTP request:</p>
@@ -270,7 +270,7 @@ We will be using <code>netcat</code> as simple network server.</p>
 </span></span><span style="display:flex;"><span>    main()
 </span></span></code></pre></div><p>In this example, we target an HTTP GET request while fuzzing only the endpoint. The other components of the request—such as the headers—remain intact.</p>
 <p>We can set up a listener on port 8000 using <code>netcat</code>, and then run the script to check if it’s functioning correctly.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ nc -nlp <span style="color:#ae81ff">8000</span> -k
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ nc -nlp <span style="color:#ae81ff">8000</span> -k
 </span></span><span style="display:flex;"><span>GET /!@#$%%^#$%#$@<span style="color:#75715e">#$%$$@#$%^^**(()HTTP/1.1</span>
 </span></span><span style="display:flex;"><span>Host: 127.0.0.1
 </span></span><span style="display:flex;"><span>User-Agent: boofuzz/0.4.2
@@ -302,7 +302,7 @@ We will be using <code>netcat</code> as simple network server.</p>
 </span></span><span style="display:flex;"><span>session<span style="color:#f92672">.</span>fuzz()
 </span></span></code></pre></div><p>Once the fuzzing session starts, open your browser and navigate to http://localhost:26000. You’ll be able to see real-time updates on the fuzzing process, making it easier to track progress or investigate crashes.</p>
 <p>This web interface provides a user-friendly way to manage and visualize your fuzzing efforts, especially during long or complex fuzzing sessions.</p>
-<h2 id="fuzzing-ftp-server">Fuzzing FTP Server</h2>
+<h3 id="fuzzing-ftp-server">Fuzzing FTP Server</h3>
 <p>To fuzz an FTP server that requires authentication (username and password), you can use Boofuzz to simulate an FTP connection, provide the credentials, and fuzz different parts of the FTP protocol. Since your FTP server runs on port <code>2221</code> and the credentials are <code>admin:password</code>, we’ll need to build an authenticated fuzzing session.</p>
 <p>Here&rsquo;s an example of how you can fuzz your FTP server with Boofuzz:</p>
 <p><strong>Boofuzz Script for Fuzzing FTP</strong></p>

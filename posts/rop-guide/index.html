@@ -134,7 +134,7 @@ By controlling the stack and chaining together gadgets that manipulate registers
 <h3 id="installation">Installation</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>pip install ropper
 </span></span></code></pre></div><p>Check it ropper is correctly installed</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ ropper --version
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ropper --version
 </span></span><span style="display:flex;"><span>Version: Ropper 1.13.8
 </span></span><span style="display:flex;"><span>Author: Sascha Schirra
 </span></span><span style="display:flex;"><span>Website: http://scoding.de/ropper
@@ -255,7 +255,7 @@ The basic command structure for Ropper is straightforward. You just need to spec
 </span></span><span style="display:flex;"><span>  --single              No multiple processes are used for gadget scanning
 </span></span></code></pre></div><p>For this demonstration, please use the necessary binaries and the corresponding libc they require. Here&rsquo;s the <a href="https://github.com/KernW0lf/Materials/tree/main/rop_tuts">link</a>:</p>
 <p><strong>Searching for Specific Gadgets</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e">#ropper --file /path/to/binary --search &#34;pop rdi&#34;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#75715e">#ropper --file /path/to/binary --search &#34;pop rdi&#34;</span>
 </span></span><span style="display:flex;"><span>$ ropper --file shell_x86 --search <span style="color:#e6db74">&#34;ret&#34;</span>
 </span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>[INFO] Load gadgets from cache
 </span></span><span style="display:flex;"><span>[LOAD] loading... 100%
@@ -269,18 +269,18 @@ The basic command structure for Ropper is straightforward. You just need to spec
 </span></span></code></pre></div><p>Bingo! Now you have the address of the gadget you need.</p>
 <p><strong>Working with Multiple Architectures</strong></p>
 <p>Ropper is versatile and works with various architectures. If you’re dealing with a binary for ARM, MIPS, or another architecture, just specify it with the <code>-a/--arch</code> option:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --arch arm</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --arch arm</span>
 </span></span><span style="display:flex;"><span>$ <span style="color:#75715e"># Supported architectures are: x86, x86_64, MIPS, MIPS64, ARM, ARMTHUMB, ARM64, PPC, PPC64, SPARC64</span>
 </span></span><span style="display:flex;"><span>$ ropper --file shell_arm --arch ARM
 </span></span></code></pre></div><p>Interestingly, even if you don’t specify <code>--arch</code>, Ropper will still print the gadgets it finds. This means you can get results without worrying about architecture, although specifying it can help narrow down your search.</p>
 <p><strong>Searching for strings</strong></p>
 <p>Ropper isn’t just a gadget-finding wizard; it can also help you locate specific strings within your binary.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --string &#34;your_string_here&#34;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --string &#34;your_string_here&#34;</span>
 </span></span><span style="display:flex;"><span>$ ropper --file shell_arm --string <span style="color:#e6db74">&#34;/bin/sh&#34;</span>
 </span></span></code></pre></div><p><strong>Stack Pivoting</strong></p>
 <p>Ropper isn’t just your go-to tool for finding gadgets; it can also assist you in locating pivot gadgets that are essential for stack pivoting techniques. Stack pivoting allows you to change the stack pointer to a controlled area, enabling you to execute your payload even in the face of modern protections.
 To find potential stack pivot gadgets, you can use Ropper to search for specific sequences of instructions that manipulate the stack pointer. For example, you might want to look for gadgets that involve <code>pop rsp</code> or similar instructions.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --stack-pivot </span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --stack-pivot </span>
 </span></span><span style="display:flex;"><span>$ ropper --file shell_x86 --stack-pivot 
 </span></span></code></pre></div><p><strong>Generating ROP Chains</strong></p>
 <p>One of the coolest features of Ropper is its ability to generate complete ROP chains. You can use the <code>--chain</code> option to create a chain of gadgets that can be directly used for exploitation:</p>
@@ -288,7 +288,7 @@ To find potential stack pivot gadgets, you can use Ropper to search for specific
 </span></span><span style="display:flex;"><span>  execve (execve[=&lt;cmd&gt;], default /bin/sh) [Linux x86, x86_64]
 </span></span><span style="display:flex;"><span>  mprotect  (mprotect address=0xdeadbeef size=0x10000) [Linux x86, x86_64]
 </span></span><span style="display:flex;"><span>  virtualprotect (virtualprotect address=0xdeadbeef) [Windows x86]
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --chain</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --chain</span>
 </span></span><span style="display:flex;"><span>$ ropper --file libc.so.6 --chain <span style="color:#e6db74">&#34;execve execve=/bin/sh&#34;</span>
 </span></span><span style="display:flex;"><span>$ ropper --file libc.so.6 --chain <span style="color:#e6db74">&#34;mprotect address=0xdeadbeef size=0x10000&#34;</span>
 </span></span></code></pre></div><h3 id="getting-binary-info-using-ropper">Getting Binary Info Using Ropper</h3>
@@ -296,7 +296,7 @@ To find potential stack pivot gadgets, you can use Ropper to search for specific
 <p><strong>Viewing Binary Information</strong></p>
 <p>To retrieve information about a binary file, you can use the <code>--info</code> option. This command will give you an overview of various attributes, such as sections, symbols, and architecture.</p>
 <p>Here’s how to use it:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --info</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#75715e"># ropper --file /path/to/binary --info</span>
 </span></span><span style="display:flex;"><span>$ ropper --file shell_arm --info
 </span></span></code></pre></div><p>This command will output detailed information about the binary.</p>
 <p>Some more options:</p>
@@ -362,7 +362,7 @@ To find potential stack pivot gadgets, you can use Ropper to search for specific
 <p>ROPgadget was created by Jonathan Salwan, a well-respected figure in the cybersecurity community. You can find more about Jonathan Salwan and his work on his GitHub <a href="https://github.com/JonathanSalwan">page</a>. ROPgadget is a powerful tool that assists security researchers and exploit developers in finding useful ROP (Return-Oriented Programming) gadgets within binary files. ROPgadget scans binaries and extracts gadgets that can be used in ROP chains. Ropper is a tool inspired by ROPgadget, built to enhance gadget discovery and facilitate more advanced exploitation techniques. ROPgadget supports ELF/PE/Mach-O/Raw formats on x86, x64, ARM, ARM64, PowerPC, SPARC, MIPS, RISC-V 64, and RISC-V Compressed architectures.</p>
 <h3 id="installation-1">Installation</h3>
 <p>Refer <a href="https://github.com/JonathanSalwan/ROPgadget">here</a></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ pip install capstone
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ pip install capstone
 </span></span><span style="display:flex;"><span>$ pip install ROPgadget
 </span></span></code></pre></div><h2 id="usage">Usage</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>$ ROPgadget -h
