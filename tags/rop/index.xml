@@ -8,8 +8,15 @@
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
-    <lastBuildDate>Mon, 21 Oct 2024 13:09:38 -0400</lastBuildDate>
+    <lastBuildDate>Tue, 29 Oct 2024 02:10:12 -0400</lastBuildDate>
     <atom:link href="http://kernw0lf.github.io/tags/rop/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Mastering x86 Linux Exploitation: A Comprehensive Guide for Hackers</title>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/00/</link>
+      <pubDate>Tue, 29 Oct 2024 02:10:12 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/00/</guid>
+      <description>Welcome to this comprehensive guide on x86 Linux exploit development. In this series, we&amp;rsquo;ll delve into the fundamentals of binary exploitation on x86 Linux systems. Throughout this journey, we will explore various techniques and methodologies used by security researchers and hackers alike to exploit vulnerabilities, understand system weaknesses, and ultimately strengthen defenses.&#xA;What to Expect?&#xA;In this series, we will cover a range of topics, starting from the basics and gradually moving towards more advanced techniques.</description>
+    </item>
     <item>
       <title>Mastering Gadget Hunting with Ropper, ROPgadget, and One_Gadget: A Practical Guide</title>
       <link>http://kernw0lf.github.io/posts/rop-guide/</link>

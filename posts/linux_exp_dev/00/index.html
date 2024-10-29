@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="en-us">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
-
+  <head>
     <title>
-LINUX EXPLOIT DEVELOPMENT  | KernW0lf
+Mastering x86 Linux Exploitation: A Comprehensive Guide for Hackers | KernW0lf
 </title>
 
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -14,7 +12,7 @@ LINUX EXPLOIT DEVELOPMENT  | KernW0lf
 <meta name="generator" content="Hugo 0.131.0">
 
 
-<link rel="canonical" href="http://localhost:1313/posts/linux_exp_dev/00/" >
+<link rel="canonical" href="http://kernw0lf.github.io/posts/linux_exp_dev/00/" >
 
 
 
@@ -25,35 +23,50 @@ LINUX EXPLOIT DEVELOPMENT  | KernW0lf
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 
-    
-    
-    
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
 
-
+    
+    
+    
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
 
     <style>
-        body {
-             
-            font-family: 'Fira Code','Source Code Pro','Roboto', sans-serif; 
-        }
-        .highlight {
-            font-size: 20px;  
-        }
+      @font-face {
+        font-family: "0xProto Nerd Font";  
+        src: url("/fonts/0xProtoNerd/0xProtoNerdFont-Regular.ttf")
+          format("truetype");
+        font-weight: normal;
+        font-style: normal;
+      }
 
-        
+      body {
+         
+        font-family: "Fira Code Retina", "Source Code Pro", "Roboto", sans-serif;
+      }
+      code {
+        font-family: "Source Code Pro", monospace, "Courier New", Courier,
+          monospace;
+        font-size: 17px;
+      }
+
+      .highlight {
+        font-family: "Source Code Pro", monospace;
+        font-size: 20px;
+      }
     </style>
+
     
+    
+  </head>
 
-</head>
-
-<body>
-
+  <body>
     <div class="flexWrapper">
-        <header class="headerWrapper">
+      <header class="headerWrapper">
     <div class="header">
         <div>
-            <a class="terminal" href="http://localhost:1313/">
+            <a class="terminal" href="http://kernw0lf.github.io/">
                 <span>KernW0lf@github.io ~ $</span>
             </a>
         </div>
@@ -63,17 +76,17 @@ LINUX EXPLOIT DEVELOPMENT  | KernW0lf
             <ul>
                 
                 <li>
-                    <a href="http://localhost:1313/about/about/" title="" >
+                    <a href="http://kernw0lf.github.io/about/about/" title="" >
                         ~/about</a>
                 </li>
                 
                 <li>
-                    <a href="http://localhost:1313/projects" title="" >
+                    <a href="http://kernw0lf.github.io/projects" title="" >
                         ~/projects</a>
                 </li>
                 
                 <li>
-                    <a href="http://localhost:1313/posts" title="" >
+                    <a href="http://kernw0lf.github.io/posts" title="" >
                         ~/posts</a>
                 </li>
                 
@@ -83,11 +96,10 @@ LINUX EXPLOIT DEVELOPMENT  | KernW0lf
 </header>
 
 
-        <div class="content">
-            <main class="main">
-                
+      <div class="content">
+        <main class="main">
 <div class="postWrapper">
-    <h1>LINUX EXPLOIT DEVELOPMENT </h1>
+    <h1>Mastering x86 Linux Exploitation: A Comprehensive Guide for Hackers</h1>
     
     
     <section class="postMetadata">
@@ -96,16 +108,18 @@ LINUX EXPLOIT DEVELOPMENT  | KernW0lf
                 
 <dt>tags</dt>
 <dd><span></span>
+    <a href="/tags/x86/">#X86</a><span></span>
     <a href="/tags/linux/">#Linux</a><span></span>
     <a href="/tags/exploit/">#Exploit</a><span></span>
-    <a href="/tags/bufferoverflow/">#Bufferoverflow</a></dd>
+    <a href="/tags/bufferoverflow/">#Bufferoverflow</a><span></span>
+    <a href="/tags/rop/">#ROP</a></dd>
             
             
             
             
                 <dt>published</dt>
                 
-                <dd><time datetime="2024-02-29">February 29, 2024</time></dd>
+                <dd><time datetime="2024-10-29">October 29, 2024</time></dd>
             
             
                 <dt>reading time</dt>
@@ -115,41 +129,27 @@ LINUX EXPLOIT DEVELOPMENT  | KernW0lf
     </section>
     
     <div>
-        <h1 id="linux-exploit-development">LINUX EXPLOIT DEVELOPMENT</h1>
-<h2 id="content">Content:</h2>
-<ul>
-<li>Module 1: Linux Stack Smashing</li>
-<li>Module 2: Linux Exploit Countermeasures &amp; Bypasses</li>
-<li>Module 3: Linux Return Oriented Programming</li>
-<li>Module 4: Linux Shellcoding</li>
-<li>Module 5: Linux Advanced Exploitation</li>
-</ul>
-<h2 id="introduction">Introduction</h2>
-<p>Welcome to the world of Linux Exploit Development! This blog series aims to delve into the fascinating realm of exploiting vulnerabilities in the Linux operating system. Throughout this journey, we will explore various techniques and methodologies used by security researchers and hackers alike to exploit vulnerabilities, understand system weaknesses, and ultimately strengthen defenses.</p>
+        <p>Welcome to this comprehensive guide on x86 Linux exploit development. In this series, we&rsquo;ll delve into the fundamentals of binary exploitation on x86 Linux systems. Throughout this journey, we will explore various techniques and methodologies used by security researchers and hackers alike to exploit vulnerabilities, understand system weaknesses, and ultimately strengthen defenses.</p>
 <p><strong>What to Expect?</strong></p>
-<p>In this series, we will cover a range of topics, starting from the basics and gradually moving towards more advanced techniques. Whether you are a beginner looking to understand the fundamentals or an experienced developer interested in the intricacies of Linux exploitation, there will be something for everyone.
-Modules Overview</p>
+<p>In this series, we will cover a range of topics, starting from the basics and gradually moving towards more advanced techniques. Whether you are a beginner looking to understand the fundamentals or an experienced developer interested in the intricacies of Linux exploitation, there will be something for everyone.</p>
 <p><strong>Let&rsquo;s take a brief look at the modules we will be covering:</strong></p>
-<h2 id="content-1">Content:</h2>
-<h3 id="module-1-linux-stack-smashing01"><a href="../01">Module 1: Linux Stack Smashing</a></h3>
-<p>Explore the foundational concepts of Linux exploitation, beginning with an introduction to the ELF file format. Understand the role of the Global Offset Table (GOT) and Procedure Linkage Table (PLT), along with the implications of Set-User-ID (SUID) and Set-Group-ID (SGID) permissions.</p>
-<h3 id="module-2-linux-exploit-countermeasures--bypasses02"><a href="../02">Module 2: Linux Exploit Countermeasures &amp; Bypasses</a></h3>
-<p>In this module, we delve into the countermeasures designed to protect against Linux exploits. We explore the various protections such as NoExecute (NX), Address Space Layout Randomization (ASLR), Stack Cookies, RELRO, and other defense mechanisms.</p>
-<h3 id="module-3-linux-return-oriented-programming-rop03"><a href="../03">Module 3: Linux Return Oriented Programming (ROP)</a></h3>
-<p>In Module 3, we explore the concept of Return Oriented Programming (ROP) as a powerful technique used in modern exploit development. ROP allows attackers to execute arbitrary code by chaining together small snippets of existing code sequences, known as gadgets.</p>
-<h3 id="module-4-linux-shellcoding04"><a href="../04">Module 4: Linux Shellcoding</a></h3>
-<p>Module 4 focuses on Linux Shellcoding, a crucial aspect of exploit development. Shellcode allows an attacker to execute specific commands or spawn a shell on a compromised system. We&rsquo;ll cover the basics of x86 and x64 assembly language and how to craft shellcode for various purposes.</p>
-<h3 id="module-5-linux-advanced-exploitation05"><a href="../05">Module 5: Linux Advanced Exploitation</a></h3>
-<p>Module 5 introduces key programming concepts essential for understanding and developing exploits. We&rsquo;ll explore Format String Vulnerabilities and their exploitation on Linux systems, including considerations for 64-bit architectures.</p>
+<h3 id="1-understanding-stack-based-buffer-overflows01"><a href="../01">1. Understanding Stack-Based Buffer Overflows</a></h3>
+<p>Dive into stack-based buffer overflows, exploring how they work, their impact on program control flow, and the fundamentals of analyzing binaries. Learn the mechanics behind stack smashing, including how to identify overflow points in binaries, and leverage this classic vulnerability for exploitation on Linux systems.</p>
+<h3 id="2-linux-exploit-countermeasures-and-bypasses02"><a href="../02">2. Linux Exploit Countermeasures and Bypasses</a></h3>
+<p>Discover the common security mechanisms designed to prevent exploitation, such as stack canaries, ASLR, and non-executable memory. Learn bypass techniques and understand how to navigate these defenses to craft effective exploits.</p>
+<h3 id="3-return-oriented-programming-rop-on-linux03"><a href="../03">3. Return-Oriented Programming (ROP) on Linux</a></h3>
+<p>Master ROP, an exploitation technique for bypassing modern security protections. ROP allows attackers to execute arbitrary code by chaining together small snippets of existing code sequences, known as gadgets.</p>
+<h3 id="4-linux-shellcoding04"><a href="../04">4. Linux Shellcoding</a></h3>
+<p>Uncover the essentials of shellcoding, including writing and testing custom shellcode for Linux exploitation. Shellcode allows an attacker to execute specific commands or spawn a shell on a compromised system.</p>
+<h3 id="5-advanced-exploitation-techniques-on-linux05"><a href="../05">5. Advanced Exploitation Techniques on Linux</a></h3>
+<p>Explore complex exploitation techniques beyond stack smashing and ROP, including return-to-PLT (ret2plt) attacks, format string vulnerabilities, and other advanced methods.</p>
 
     </div>
 </div>
+</main>
+      </div>
 
-            </main>
-        </div>
-
-
-        <footer class="footer">
+      <footer class="footer">
     
         <span>
             © 2024 KernW0lf, Built with
@@ -159,7 +159,5 @@ Modules Overview</p>
     
 </footer>
     </div>
-
-</body>
-
+  </body>
 </html>

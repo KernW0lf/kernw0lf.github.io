@@ -2,22 +2,46 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>http://kernw0lf.github.io/</loc>
+    <lastmod>2024-10-29T02:27:59-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/posts/</loc>
+    <lastmod>2024-10-29T02:27:59-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/posts/linux_exp_dev/02/</loc>
+    <lastmod>2024-10-29T02:27:48-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/posts/linux_exp_dev/01/</loc>
+    <lastmod>2024-10-29T02:27:45-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/tags/bufferoverflow/</loc>
+    <lastmod>2024-10-29T02:10:12-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/tags/exploit/</loc>
+    <lastmod>2024-10-29T02:10:12-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/tags/linux/</loc>
+    <lastmod>2024-10-29T02:10:12-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/posts/linux_exp_dev/00/</loc>
+    <lastmod>2024-10-29T02:10:12-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/tags/rop/</loc>
+    <lastmod>2024-10-29T02:10:12-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/tags/</loc>
+    <lastmod>2024-10-29T02:10:12-04:00</lastmod>
+  </url><url>
+    <loc>http://kernw0lf.github.io/tags/x86/</loc>
+    <lastmod>2024-10-29T02:10:12-04:00</lastmod>
+  </url><url>
     <loc>http://kernw0lf.github.io/posts/spike-fuzz/</loc>
     <lastmod>2024-10-28T13:55:28-04:00</lastmod>
   </url><url>
     <loc>http://kernw0lf.github.io/tags/fuzzing/</loc>
     <lastmod>2024-10-28T13:55:28-04:00</lastmod>
   </url><url>
-    <loc>http://kernw0lf.github.io/</loc>
-    <lastmod>2024-10-28T13:55:28-04:00</lastmod>
-  </url><url>
-    <loc>http://kernw0lf.github.io/posts/</loc>
-    <lastmod>2024-10-28T13:55:28-04:00</lastmod>
-  </url><url>
     <loc>http://kernw0lf.github.io/tags/spike/</loc>
-    <lastmod>2024-10-28T13:55:28-04:00</lastmod>
-  </url><url>
-    <loc>http://kernw0lf.github.io/tags/</loc>
     <lastmod>2024-10-28T13:55:28-04:00</lastmod>
   </url><url>
     <loc>http://kernw0lf.github.io/tags/boofuzz/</loc>
@@ -30,9 +54,6 @@
     <lastmod>2024-10-21T13:09:38-04:00</lastmod>
   </url><url>
     <loc>http://kernw0lf.github.io/tags/one_gadget/</loc>
-    <lastmod>2024-10-21T13:09:38-04:00</lastmod>
-  </url><url>
-    <loc>http://kernw0lf.github.io/tags/rop/</loc>
     <lastmod>2024-10-21T13:09:38-04:00</lastmod>
   </url><url>
     <loc>http://kernw0lf.github.io/tags/ropgadget/</loc>
@@ -94,21 +115,6 @@
   </url><url>
     <loc>http://kernw0lf.github.io/posts/qemu_debug/</loc>
     <lastmod>2024-03-03T02:09:24-05:00</lastmod>
-  </url><url>
-    <loc>http://kernw0lf.github.io/posts/linux_exp_dev/05/</loc>
-    <lastmod>2024-02-29T03:51:07-05:00</lastmod>
-  </url><url>
-    <loc>http://kernw0lf.github.io/posts/linux_exp_dev/04/</loc>
-    <lastmod>2024-02-29T03:51:05-05:00</lastmod>
-  </url><url>
-    <loc>http://kernw0lf.github.io/posts/linux_exp_dev/03/</loc>
-    <lastmod>2024-02-29T03:51:04-05:00</lastmod>
-  </url><url>
-    <loc>http://kernw0lf.github.io/posts/linux_exp_dev/02/</loc>
-    <lastmod>2024-02-29T03:51:03-05:00</lastmod>
-  </url><url>
-    <loc>http://kernw0lf.github.io/posts/linux_exp_dev/01/</loc>
-    <lastmod>2024-02-29T03:51:01-05:00</lastmod>
   </url><url>
     <loc>http://kernw0lf.github.io/projects/01/</loc>
     <lastmod>2024-02-29T03:48:50-05:00</lastmod>

@@ -8,8 +8,29 @@
     <language>en-us</language>
     <managingEditor>info.kernw0lf@proton.me (KernW0lf)</managingEditor>
     <webMaster>info.kernw0lf@proton.me (KernW0lf)</webMaster>
-    <lastBuildDate>Mon, 28 Oct 2024 13:55:28 -0400</lastBuildDate>
+    <lastBuildDate>Tue, 29 Oct 2024 02:27:48 -0400</lastBuildDate>
     <atom:link href="http://kernw0lf.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>2. Linux Exploit Countermeasures and Bypasses</title>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/02/</link>
+      <pubDate>Tue, 29 Oct 2024 02:27:48 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/02/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>1. Understanding Stack-Based Buffer Overflows</title>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/01/</link>
+      <pubDate>Tue, 29 Oct 2024 02:27:45 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/01/</guid>
+      <description>Decoding the Binary: A Prelude to Linux Stack Smashing and Exploit Development Before diving into the world of Linux stack smashing, it&amp;rsquo;s crucial to begin with binary analysis. Analyzing the binary executable provides us with valuable insights into its structure, functions, and potential vulnerabilities. Through binary analysis, we can identify the layout of the stack, the presence of buffer overflows, and other crucial details that will aid us in crafting our exploit.</description>
+    </item>
+    <item>
+      <title>Mastering x86 Linux Exploitation: A Comprehensive Guide for Hackers</title>
+      <link>http://kernw0lf.github.io/posts/linux_exp_dev/00/</link>
+      <pubDate>Tue, 29 Oct 2024 02:10:12 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
+      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/00/</guid>
+      <description>Welcome to this comprehensive guide on x86 Linux exploit development. In this series, we&amp;rsquo;ll delve into the fundamentals of binary exploitation on x86 Linux systems. Throughout this journey, we will explore various techniques and methodologies used by security researchers and hackers alike to exploit vulnerabilities, understand system weaknesses, and ultimately strengthen defenses.&#xA;What to Expect?&#xA;In this series, we will cover a range of topics, starting from the basics and gradually moving towards more advanced techniques.</description>
+    </item>
     <item>
       <title>Comprehensive Guide to Fuzzing with Spike</title>
       <link>http://kernw0lf.github.io/posts/spike-fuzz/</link>
@@ -86,41 +107,6 @@
       <pubDate>Sun, 03 Mar 2024 02:09:24 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
       <guid>http://kernw0lf.github.io/posts/qemu_debug/</guid>
       <description>In this step-by-step tutorial, we&amp;rsquo;ll walk through the entire process of building a custom Linux kernel, creating a minimal filesystem using Busybox, running it on QEMU, and debugging the kernel. Finally, we&amp;rsquo;ll wrap up by learning how to compile and add custom Linux kernel modules to enhance our kernel. I&amp;rsquo;m using a Linux system for this demonstration, specifically Ubuntu 16.04.7 LTS with kernel version 4.15.0-142-generic. However, the steps should be similar for other Linux distributions.</description>
-    </item>
-    <item>
-      <title>Module 5: Linux Advanced Exploitation</title>
-      <link>http://kernw0lf.github.io/posts/linux_exp_dev/05/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:07 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/05/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Module 4: Linux Shellcoding</title>
-      <link>http://kernw0lf.github.io/posts/linux_exp_dev/04/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:05 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/04/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Module 3: Linux Return Oriented Programming</title>
-      <link>http://kernw0lf.github.io/posts/linux_exp_dev/03/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:04 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/03/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Module 2: Linux Exploit Countermeasures &amp; Bypasses</title>
-      <link>http://kernw0lf.github.io/posts/linux_exp_dev/02/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:03 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/02/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Module 1: Linux Stack Smashing</title>
-      <link>http://kernw0lf.github.io/posts/linux_exp_dev/01/</link>
-      <pubDate>Thu, 29 Feb 2024 03:51:01 -0500</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/01/</guid>
-      <description>Decoding the Binary: A Prelude to Linux Stack Smashing and Exploit Development Before diving into the world of Linux stack smashing, it&amp;rsquo;s crucial to begin with binary analysis. Analyzing the binary executable provides us with valuable insights into its structure, functions, and potential vulnerabilities. Through binary analysis, we can identify the layout of the stack, the presence of buffer overflows, and other crucial details that will aid us in crafting our exploit.</description>
     </item>
     <item>
       <title>BinAnalyze</title>
