@@ -123,7 +123,7 @@
         <p>Before we dive into exploit countermeasures and bypasses, let’s quickly revisit the essentials of a stack overflow. In simple terms, stack overflows happen when we input more data than a program expects, causing it to spill over into other areas of memory. By controlling this overflow, we can manipulate the program’s execution.</p>
 <p>Let&rsquo;s dive deeper into understanding buffer overflows. A <em>buffer</em> is simply a designated space in memory used to store data, often a fixed-size region allocated for handling input or temporary data. When more data than the buffer’s size is written, it spills over into adjacent memory regions—a phenomenon we call <em>buffer overflow</em>.</p>
 <p>The following image illustrates the structure of a buffer and how it resides in memory:</p>
-<p><img src="/images/exp-dev/buffer.png" alt="buffer"></p>
+<p><img src="./buffer.png" alt="buffer"></p>
 <p>In the illustration above, we have a character buffer defined as <code>char buff[5]</code>, meaning it holds 5 bytes. Each element of the buffer is 1 byte in size, so if the address of the first element is <code>0x100</code>, the second element will be at <code>0x101</code>, and so on, with the fifth element at <code>0x104</code>.</p>
 <p>Now, if we write more than 5 bytes into this buffer (like filling it with extra As), we begin to overwrite data at addresses immediately following <code>0x104</code>. This overflow is the beginning of potential unintended behavior, as data outside the buffer is altered—an introduction to buffer overflow mechanics.</p>
 <p>In the following code we will call a function which allocates space for buffer in its stack frame.</p>
@@ -278,7 +278,7 @@ The <strong>prologue</strong> in <code>newFun()</code> prepares the function’s
 <li><code>EIP</code> has been overwritten with 0x44414544 (&ldquo;DEAD&rdquo;).</li>
 </ul>
 <p>The diagram below, created by me, will help clarify the concepts discussed. 😊</p>
-<p><img src="/images/exp-dev/buffer-overflow.png" alt="buffer-overflow"></p>
+<p><img src="./buffer-overflow.png" alt="buffer-overflow"></p>
 <p>Now that you have a solid understanding of buffer overflow, let’s shift our focus away from using the <code>win</code> function, as we did in the previous section of this series. We will briefly explore the concept of shellcode. A more in-depth explanation of shellcode will be provided in a later part of this series.</p>
 <h3 id="shellcode-101">Shellcode 101</h3>
 <p>Shellcode is a small piece of code used as the payload in the exploitation of a software vulnerability. It is typically written in assembly language and is designed to execute a specific function when injected into a running process. Shellcode gets its name because it often spawns a command shell, allowing an attacker to execute arbitrary commands on the compromised system.</p>
@@ -420,7 +420,7 @@ The <strong>prologue</strong> in <code>newFun()</code> prepares the function’s
 </span></span><span style="display:flex;"><span>...
 </span></span></code></pre></div><p>Success! We have successfully controlled the EIP! 🎉</p>
 <p>Now that we’ve successfully controlled the <code>EIP</code>, let’s move on to constructing our exploit! For reference, take a look at the diagram I created for you:</p>
-<p><img src="/images/exp-dev/eip.png" alt="buffer"></p>
+<p><img src="./eip.png" alt="buffer"></p>
 <p>As illustrated in the diagram, we’ll generate our exploit in such a way that the <code>EIP</code> points to our NOP sled. Following the NOP sled, we’ll place our shellcode. If the shellcode doesn’t fill the required length, we can add some &ldquo;junk&rdquo; data to pad it out. Finally, we’ll include the address of our NOP sled to overwrite the return address, ensuring the program redirects execution to our NOP sled, ultimately leading to the execution of the shellcode! 🚀</p>
 <p>With this approach, we can effectively take control of the program flow and execute our malicious payload. Let’s get to work on crafting this exploit! 💻✨</p>
 <p>Note: Please disable Address Space Layout Randomization (ASLR) by running the following command:</p>
@@ -455,7 +455,7 @@ The <strong>prologue</strong> in <code>newFun()</code> prepares the function’s
 </span></span><span style="display:flex;"><span>Invalid address 0x42424242
 </span></span><span style="display:flex;"><span>...
 </span></span></code></pre></div><p>The following diagram, created by me, will help clarify your understanding.
-<img src="/images/exp-dev/eip-arrow.png" alt="buffer-overflow"></p>
+<img src="./eip-arrow.png" alt="buffer-overflow"></p>
 <p>As you can see, instead of using &ldquo;BBBB&rdquo; we can directly use the address <code>0xffffd59e</code> in little-endian format.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
 </span></span><span style="display:flex;"><span>
@@ -584,7 +584,7 @@ When we used &ldquo;BBBB&rdquo; to overwrite <code>EIP</code> and analyze the co
 </span></span><span style="display:flex;"><span>   0xf7d83fe3:	jmp    eax
 </span></span></code></pre></div><p>This confirms that <code>0xf7d83fe3</code> is indeed the correct address of the <code>jmp eax</code> gadget. 🎉</p>
 <p>Following diagram will clarify it further:
-<img src="/images/exp-dev/jmp-eax.png" alt="buffer"></p>
+<img src="./jmp-eax.png" alt="buffer"></p>
 <p>Let&rsquo;s update our exploit and use <code>struct</code> module:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># exp1.py</span>
