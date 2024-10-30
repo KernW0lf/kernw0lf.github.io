@@ -1,0 +1,5 @@
++++
+title = '3. Return-Oriented Programming (ROP) on Linux'
+date = 2024-10-29T02:27:51-04:00
+draft = true
++++
