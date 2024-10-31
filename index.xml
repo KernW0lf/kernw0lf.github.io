@@ -18,13 +18,6 @@
       <description>To make exploitation more challenging, several mitigations have been developed and widely implemented. Let’s dive into some of the most popular ones and understand how they work:&#xA;1. DEP/NX (Data Execution Prevention / No eXecute):&#xA;Data Execution Prevention (DEP), also called No eXecute (NX), is a security feature that prevents code from running in non-executable memory regions like the stack or heap, blocking buffer overflow attacks that inject shellcode into these areas.</description>
     </item>
     <item>
-      <title>2. Linux Exploit Countermeasures and Bypasses (3)</title>
-      <link>http://kernw0lf.github.io/posts/linux_exp_dev/04/</link>
-      <pubDate>Wed, 30 Oct 2024 13:09:47 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
-      <guid>http://kernw0lf.github.io/posts/linux_exp_dev/04/</guid>
-      <description></description>
-    </item>
-    <item>
       <title>2. Linux Exploit Countermeasures and Bypasses (1)</title>
       <link>http://kernw0lf.github.io/posts/linux_exp_dev/02/</link>
       <pubDate>Tue, 29 Oct 2024 02:27:48 -0400</pubDate><author>info.kernw0lf@proton.me (KernW0lf)</author>
