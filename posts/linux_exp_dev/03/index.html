@@ -194,7 +194,26 @@ By setting <code>/proc/sys/kernel/randomize_va_space</code> to <code>0</code>, A
 </span></span><span style="display:flex;"><span>Address of heap variable: 0x5655a1a0
 </span></span></code></pre></div><p>With ASLR disabled, addresses stay constant on each run, removing the randomization layer, making it easier for attackers to predict addresses and exploit memory vulnerabilities.</p>
 <p>It&rsquo;s important to note that even with ASLR enabled, the offset for functions and gadgets within libc remains the same. This means that once we know the libc base address, we can determine the address of any libc function or gadget at runtime simply by adding the known offset to the base.</p>
-<p><strong>3. RELRO (Relocation Read-Only):</strong></p>
+<p><strong>3. Stack Canaries</strong></p>
+<p>Stack canaries, also known as security cookies, are a protective mechanism used to defend against buffer overflow attacks. Stack canaries act as a safeguard against buffer overflow attacks by introducing a random value, referred to as a &ldquo;canary,&rdquo; onto the stack near the return address. This canary serves as a sentinel that monitors any unauthorized modifications to the stack area.</p>
+<p>How it Works:
+During a function call, a random canary value is inserted between the buffer and the return address on the stack. Before returning from a function, the program checks the integrity of this canary value. If it finds that the canary has been altered, it suggests a potential buffer overflow attack, prompting the program to take defensive actions such as terminating execution or invoking additional security measures.</p>
+<p>Types of Stack Canaries:</p>
+<ol>
+<li>
+<p>Terminator Canaries
+These contain common string terminators like <code>\x00</code>, <code>\r</code>, <code>\n</code>, and <code>\xFF</code>. They help prevent attacks involving string operations by stopping prematurely due to these terminators.</p>
+</li>
+<li>
+<p>Random Canaries
+Generated randomly at runtime, typically drawn from /dev/urandom if available. This randomness makes it challenging for attackers to predict or manipulate the canary value.</p>
+</li>
+<li>
+<p>Random XOR Canaries
+Combine random numbers with control data (like the frame pointer and return address) using XOR operations. This ensures even slight modifications to the canary will result in incorrect values, triggering immediate termination.</p>
+</li>
+</ol>
+<p><strong>4. RELRO (Relocation Read-Only):</strong></p>
 <p>Relocation Read-Only (RELRO) is a security feature implemented in the GNU Linker to enhance the security of ELF (Executable and Linkable Format) binaries by protecting certain sections from being overwritten. This feature is particularly focused on safeguarding the Global Offset Table (GOT), which is crucial for dynamic linking and can be exploited in various attacks. RELRO stands for Relocation Read-Only. It primarily aims to prevent attackers from modifying the GOT, which holds addresses for dynamically linked functions. By making these sections read-only after relocation, RELRO mitigates risks associated with binary exploitation techniques, such as GOT overwrite attacks.</p>
 <p>Types of RELRO
 There are two modes of RELRO:</p>
@@ -222,25 +241,6 @@ There are two modes of RELRO:</p>
 </span></span></code></pre></div><p>Full RELRO provides stronger protection against GOT overwrite attacks compared to Partial RELRO. However, it can lead to
 longer startup times since all symbols must be resolved before execution.</p>
 <p>We’ll dive deeper into this concept when we explore bypass techniques.</p>
-<p><strong>4. Stack Canaries</strong></p>
-<p>Stack canaries, also known as security cookies, are a protective mechanism used to defend against buffer overflow attacks. Stack canaries act as a safeguard against buffer overflow attacks by introducing a random value, referred to as a &ldquo;canary,&rdquo; onto the stack near the return address. This canary serves as a sentinel that monitors any unauthorized modifications to the stack area.</p>
-<p>How it Works:
-During a function call, a random canary value is inserted between the buffer and the return address on the stack. Before returning from a function, the program checks the integrity of this canary value. If it finds that the canary has been altered, it suggests a potential buffer overflow attack, prompting the program to take defensive actions such as terminating execution or invoking additional security measures.</p>
-<p>Types of Stack Canaries:</p>
-<ol>
-<li>
-<p>Terminator Canaries
-These contain common string terminators like <code>\x00</code>, <code>\r</code>, <code>\n</code>, and <code>\xFF</code>. They help prevent attacks involving string operations by stopping prematurely due to these terminators.</p>
-</li>
-<li>
-<p>Random Canaries
-Generated randomly at runtime, typically drawn from /dev/urandom if available. This randomness makes it challenging for attackers to predict or manipulate the canary value.</p>
-</li>
-<li>
-<p>Random XOR Canaries
-Combine random numbers with control data (like the frame pointer and return address) using XOR operations. This ensures even slight modifications to the canary will result in incorrect values, triggering immediate termination.</p>
-</li>
-</ol>
 <p><strong>5. PIE (Position Independent Executables)</strong></p>
 <p>Position Independent Executables (PIE) randomize the location of the executable itself, adding another layer of unpredictability to binary loading. Unlike ASLR, which affects shared libraries, PIE applies to the binary’s main code, making it more challenging to predict code locations for return-oriented programming (ROP) attacks.</p>
 <p>How it Works:
@@ -264,7 +264,7 @@ If an attacker tries to jump to a specific function within the executable, PIE w
 <li>PIE: Position Independent Executable is disabled, meaning the executable loads at a fixed address.</li>
 </ul>
 <hr>
-<h2 id="1-depnx-data-execution-prevention--no-execute">1. DEP/NX (Data Execution Prevention / No eXecute):</h2>
+<h2 id="1-bypassing-depnx-data-execution-prevention--no-execute">1. Bypassing DEP/NX (Data Execution Prevention / No eXecute):</h2>
 <p>Now, let’s work on bypassing NX! We’ll attempt to execute the same shellcode from our <code>jmp eax</code> example.</p>
 <p>📝 Note: Make sure ASLR is disabled before proceeding.</p>
 <p>Compile the Binary with NX Enabled</p>
