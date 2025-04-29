@@ -6,23 +6,23 @@
 
 ---
 
-  📱 Android Userland Fuzzing and Exploitation
-  🦠 Android Malware Analysis
-  💻 Languages: C, C++, Rust, Python, Bash, PowerShell
-  ⚙️ Architectures: x86, x64, ARM, AARCH-64, MIPS Assembly
-  🩻 Reverse Engineering Tools: IDA, Binary Ninja, Ghidra, Radare2, Cutter, GDB
-  💡 Linux Kernel Development & Fuzzing with Syzkaller
-  💥 Kernel Exploit Development
-  🌪️ Fuzzing Tools: afl-fuzz, honggfuzz, libfuzzer, boofuzz, spike
-  🐧 Linux System Programming & Linux Exploitation
-  🕵️‍♀️ Linux Rootkit Development
-  🛡️ Red Teaming (eJPT & CRTP)
-  🌐 IoT Exploitation
-  🧑🏽‍🔬 Binary Emulation: unicorn, qiling, qemu
-  🖥️ Windows Userland Exploitation
-  🚀 Linux Driver Development
-  🛠️ Building Embedded Linux Systems
-  🐞 Debugging Linux Kernel
+1. Android Userland Fuzzing and Exploitation
+2. Android Malware Analysis
+3. Languages: C, C++, Rust, Python, Bash, PowerShell
+4. Architectures: x86, x64, ARM, AARCH-64, MIPS Assembly
+5. Reverse Engineering Tools: IDA, Binary Ninja, Ghidra, Radare2, Cutter, GDB
+6. Linux Kernel Development & Fuzzing with Syzkaller
+7. Kernel Exploit Development
+8. Fuzzing Tools: afl-fuzz, honggfuzz, libfuzzer, boofuzz, spike
+9. Linux System Programming & Linux Exploitation
+10. Linux Rootkit Development
+11. Red Teaming (eJPT & CRTP)
+12. IoT Exploitation
+13. Binary Emulation: unicorn, qiling, qemu
+14. Windows Userland Exploitation
+15. Linux Driver Development
+16. Building Embedded Linux Systems
+17. Debugging Linux Kernel
 
 ---
 
