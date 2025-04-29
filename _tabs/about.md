@@ -1,6 +1,10 @@
-# 👨‍💻 About Harry (kernw0lf)  
+---
+title: "About"
 layout: page
 permalink: /about/
+---
+
+# 👨‍💻 About Harry (kernw0lf)  
 
 ### Cybersecurity Researcher | Software Developer | Exploit Engineer
 
