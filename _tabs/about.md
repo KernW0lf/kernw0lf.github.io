@@ -1,7 +1,3 @@
----
-title: "About Me"
----
-
 # 👨‍💻 About Harry (kernw0lf)  
 
 **Cybersecurity Researcher | Software Developer | Exploit Engineer**  
