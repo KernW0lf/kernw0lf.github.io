@@ -1,4 +1,6 @@
 # 👨‍💻 About Harry (kernw0lf)  
+layout: page
+permalink: /about/
 
 ### Cybersecurity Researcher | Software Developer | Exploit Engineer
 
